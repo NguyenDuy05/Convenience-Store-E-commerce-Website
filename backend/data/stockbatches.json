@@ -1,0 +1,407 @@
+[
+  {
+    "_id": {
+      "$oid": "a60000000000000000000001"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000001"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-04-10T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000002"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000002"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-04-10T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000003"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000003"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-02-09T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000004"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000004"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2026-12-11T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000005"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000005"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-06-09T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000006"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000006"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-06-09T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000007"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000007"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-01-10T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000008"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000008"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2026-10-14T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a60000000000000000000009"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000009"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2026-10-14T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000a"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000a"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2026-10-14T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000b"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000b"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-10-12T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000c"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000c"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-07-09T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000d"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000d"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-04-10T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000e"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000e"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2027-01-10T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a6000000000000000000000f"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000f"
+    },
+    "batchCode": "SEED-001",
+    "receivedQuantity": 50,
+    "quantity": 50,
+    "expiryDate": {
+      "$date": "2026-11-11T08:00:00.000Z"
+    },
+    "receivedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "receivedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "_id": {
+      "$oid": "a20000000000000000000001"
+    },
+    "name": "Bronze",
+    "minPoints": 0,
+    "discountPercent": 0,
+    "sortOrder": 1,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a20000000000000000000002"
+    },
+    "name": "Silver",
+    "minPoints": 500,
+    "discountPercent": 3,
+    "sortOrder": 2,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a20000000000000000000003"
+    },
+    "name": "Gold",
+    "minPoints": 2000,
+    "discountPercent": 5,
+    "sortOrder": 3,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  }
+]

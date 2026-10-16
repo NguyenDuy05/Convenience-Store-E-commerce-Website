@@ -1,0 +1,332 @@
+[
+  {
+    "_id": {
+      "$oid": "a70000000000000000000001"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000001"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000001"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000002"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000002"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000002"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000003"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000003"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000003"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000004"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000004"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000004"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000005"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000005"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000005"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000006"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000006"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000006"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000007"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000007"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000007"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000008"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000008"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000008"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a70000000000000000000009"
+    },
+    "productId": {
+      "$oid": "a50000000000000000000009"
+    },
+    "batchId": {
+      "$oid": "a60000000000000000000009"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000a"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000a"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000a"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000b"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000b"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000b"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000c"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000c"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000c"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000d"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000d"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000d"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000e"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000e"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000e"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a7000000000000000000000f"
+    },
+    "productId": {
+      "$oid": "a5000000000000000000000f"
+    },
+    "batchId": {
+      "$oid": "a6000000000000000000000f"
+    },
+    "type": "receive",
+    "quantityChange": 50,
+    "quantityAfter": 50,
+    "reason": "Nhập kho dữ liệu mẫu",
+    "performedBy": {
+      "$oid": "a30000000000000000000001"
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  }
+]

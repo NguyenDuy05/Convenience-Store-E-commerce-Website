@@ -1,0 +1,422 @@
+[
+  {
+    "_id": {
+      "$oid": "a50000000000000000000001"
+    },
+    "name": "Snack khoai tây vị tự nhiên",
+    "slug": "snack-khoai-tay-vi-tu-nhien",
+    "sku": "SP001",
+    "categoryId": {
+      "$oid": "a40000000000000000000001"
+    },
+    "images": [],
+    "unit": "gói",
+    "price": 12000,
+    "priceHistory": [],
+    "mealType": "snack",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000002"
+    },
+    "name": "Bánh quy bơ",
+    "slug": "banh-quy-bo",
+    "sku": "SP002",
+    "categoryId": {
+      "$oid": "a40000000000000000000001"
+    },
+    "images": [],
+    "unit": "gói",
+    "price": 18000,
+    "priceHistory": [],
+    "mealType": "snack",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000003"
+    },
+    "name": "Bánh Chocopie hộp 6 cái",
+    "slug": "banh-chocopie-hop-6-cai",
+    "sku": "SP003",
+    "categoryId": {
+      "$oid": "a40000000000000000000003"
+    },
+    "images": [],
+    "unit": "hộp",
+    "price": 36000,
+    "priceHistory": [],
+    "mealType": "snack",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000004"
+    },
+    "name": "Bánh bông lan cuộn",
+    "slug": "banh-bong-lan-cuon",
+    "sku": "SP004",
+    "categoryId": {
+      "$oid": "a40000000000000000000003"
+    },
+    "images": [],
+    "unit": "cái",
+    "price": 15000,
+    "priceHistory": [],
+    "mealType": "snack",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000005"
+    },
+    "name": "Mì ly bò hầm",
+    "slug": "mi-ly-bo-ham",
+    "sku": "SP005",
+    "categoryId": {
+      "$oid": "a40000000000000000000002"
+    },
+    "images": [],
+    "unit": "ly",
+    "price": 15000,
+    "priceHistory": [],
+    "mealType": "main",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000006"
+    },
+    "name": "Lẩu ly mì chả cá Hàn Quốc",
+    "slug": "lau-ly-mi-cha-ca-han-quoc",
+    "sku": "SP006",
+    "categoryId": {
+      "$oid": "a40000000000000000000002"
+    },
+    "images": [],
+    "unit": "ly",
+    "price": 32000,
+    "priceHistory": [],
+    "mealType": "main",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000007"
+    },
+    "name": "Xúc xích tiệt trùng",
+    "slug": "xuc-xich-tiet-trung",
+    "sku": "SP007",
+    "categoryId": {
+      "$oid": "a40000000000000000000007"
+    },
+    "images": [],
+    "unit": "cây",
+    "price": 8000,
+    "priceHistory": [],
+    "mealType": "main",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000008"
+    },
+    "name": "Bánh mì kẹp thịt nguội",
+    "slug": "banh-mi-kep-thit-nguoi",
+    "sku": "SP008",
+    "categoryId": {
+      "$oid": "a40000000000000000000007"
+    },
+    "images": [],
+    "unit": "cái",
+    "price": 20000,
+    "priceHistory": [],
+    "mealType": "light",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a50000000000000000000009"
+    },
+    "name": "Cơm nắm cá hồi",
+    "slug": "com-nam-ca-hoi",
+    "sku": "SP009",
+    "categoryId": {
+      "$oid": "a40000000000000000000006"
+    },
+    "images": [],
+    "unit": "cái",
+    "price": 22000,
+    "priceHistory": [],
+    "mealType": "main",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000a"
+    },
+    "name": "Cơm hộp gà teriyaki",
+    "slug": "com-hop-ga-teriyaki",
+    "sku": "SP010",
+    "categoryId": {
+      "$oid": "a40000000000000000000006"
+    },
+    "images": [],
+    "unit": "hộp",
+    "price": 35000,
+    "priceHistory": [],
+    "mealType": "main",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000b"
+    },
+    "name": "Nước suối 500ml",
+    "slug": "nuoc-suoi-500ml",
+    "sku": "SP011",
+    "categoryId": {
+      "$oid": "a40000000000000000000004"
+    },
+    "images": [],
+    "unit": "chai",
+    "price": 6000,
+    "priceHistory": [],
+    "mealType": "beverage",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000c"
+    },
+    "name": "Nước ngọt có ga lon 330ml",
+    "slug": "nuoc-ngot-co-ga-lon-330ml",
+    "sku": "SP012",
+    "categoryId": {
+      "$oid": "a40000000000000000000004"
+    },
+    "images": [],
+    "unit": "lon",
+    "price": 10000,
+    "priceHistory": [],
+    "mealType": "beverage",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000d"
+    },
+    "name": "Trà đào đóng chai",
+    "slug": "tra-dao-dong-chai",
+    "sku": "SP013",
+    "categoryId": {
+      "$oid": "a40000000000000000000004"
+    },
+    "images": [],
+    "unit": "chai",
+    "price": 12000,
+    "priceHistory": [],
+    "mealType": "beverage",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000e"
+    },
+    "name": "Sữa tươi tiệt trùng 180ml",
+    "slug": "sua-tuoi-tiet-trung-180ml",
+    "sku": "SP014",
+    "categoryId": {
+      "$oid": "a40000000000000000000005"
+    },
+    "images": [],
+    "unit": "hộp",
+    "price": 9000,
+    "priceHistory": [],
+    "mealType": "beverage",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a5000000000000000000000f"
+    },
+    "name": "Sữa chua uống",
+    "slug": "sua-chua-uong",
+    "sku": "SP015",
+    "categoryId": {
+      "$oid": "a40000000000000000000005"
+    },
+    "images": [],
+    "unit": "chai",
+    "price": 8000,
+    "priceHistory": [],
+    "mealType": "beverage",
+    "status": "active",
+    "stockQuantity": 50,
+    "lowStockThreshold": 10,
+    "ratingAvg": 0,
+    "ratingCount": 0,
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  }
+]

@@ -1,0 +1,73 @@
+[
+  {
+    "_id": {
+      "$oid": "a30000000000000000000001"
+    },
+    "role": "admin",
+    "fullName": "Admin",
+    "email": "admin@store.local",
+    "passwordHash": "$2b$10$gafafTbUD2aeGxDgGLQxwudxQQNQETc/.9EvYeja4ZOwpZp8Ld5qa",
+    "status": "active",
+    "failedLoginCount": 0,
+    "addresses": [],
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a30000000000000000000002"
+    },
+    "role": "staff",
+    "fullName": "Staff Demo",
+    "email": "staff@store.local",
+    "passwordHash": "$2b$10$gafafTbUD2aeGxDgGLQxwudxQQNQETc/.9EvYeja4ZOwpZp8Ld5qa",
+    "status": "active",
+    "failedLoginCount": 0,
+    "addresses": [],
+    "staffInfo": {
+      "employeeCode": "ST001",
+      "position": "Cashier",
+      "hiredAt": {
+        "$date": "2026-10-12T08:00:00.000Z"
+      }
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "a30000000000000000000003"
+    },
+    "role": "customer",
+    "fullName": "Customer Demo",
+    "email": "customer@store.local",
+    "passwordHash": "$2b$10$gafafTbUD2aeGxDgGLQxwudxQQNQETc/.9EvYeja4ZOwpZp8Ld5qa",
+    "status": "active",
+    "failedLoginCount": 0,
+    "addresses": [],
+    "membership": {
+      "tierId": {
+        "$oid": "a20000000000000000000001"
+      },
+      "points": 0,
+      "lifetimePoints": 0
+    },
+    "createdAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-12T08:00:00.000Z"
+    },
+    "__v": 0
+  }
+]
