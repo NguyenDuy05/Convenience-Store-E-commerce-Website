@@ -23,12 +23,20 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  // Đăng ký xong backend trả luôn token => đăng nhập luôn
+  const register = useCallback(async (payload) => {
+    const { data } = await authApi.register(payload);
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch { /* bỏ qua, vẫn xóa token phía client */ }
     localStorage.removeItem('token');
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
+  const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading, login, register, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
