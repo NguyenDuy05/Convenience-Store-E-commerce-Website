@@ -6,28 +6,26 @@ export function Icon({ name, size = '' }) {
 }
 
 const perks = [
-    { icon: 'qr_code_scanner', color: 'blue', title: 'Nhận hàng bằng QR', desc: 'Quét mã, lấy hàng nhanh' },
-    { icon: 'ac_unit', color: 'green', title: 'Bảo quản lạnh 4°C', desc: 'Đồ uống luôn mát' },
-    { icon: 'loyalty', color: 'gold', title: 'Tích điểm thành viên', desc: 'Mỗi lần mua đều có điểm' },
+    { icon: 'qr_code_scanner', color: 'blue', title: 'QR pickup', desc: 'Scan the code, grab your order' },
+    { icon: 'ac_unit', color: 'green', title: 'Chilled at 4°C', desc: 'Drinks stay cold' },
+    { icon: 'loyalty', color: 'gold', title: 'Member rewards', desc: 'Earn points on every purchase' },
 ];
 
-// Khung dùng chung cho Đăng nhập + Đăng ký:
-// ảnh nền toàn trang, bên trái là giới thiệu, bên phải là form trên nền trắng mờ
-export default function AuthShell({ active, children }) {
+// Khung chung cho Login / Register / Forgot / Reset. active = 'login' | 'register' | null (null = ẩn tab)
+export default function AuthShell({ active = null, children }) {
     return (
         <div className="auth-page">
             <div className="auth-overlay" />
 
             <div className="auth-layout">
-                {/* Bên trái: giới thiệu (ẩn trên màn hình nhỏ) */}
                 <section className="auth-hero">
                     <div className="auth-badge">
                         <span className="auth-badge-dot" />
-                        Nhận hàng tại cửa hàng chỉ 15 phút
+                        Pick up in store in just 15 minutes
                     </div>
-                    <h2 className="auth-hero-title">Mua nhanh,<br />nhận gọn mỗi ngày.</h2>
+                    <h2 className="auth-hero-title">Shop fast,<br />pick up easy.</h2>
                     <p className="auth-hero-desc">
-                        Đặt đồ uống, snack và nhu yếu phẩm online, ghé cửa hàng gần nhà và nhận hàng ngay — không chờ đợi.
+                        Order snacks, drinks and daily essentials online, then collect them at the store. No queue, no delivery wait.
                     </p>
                     <div className="auth-perks">
                         {perks.map((p) => (
@@ -42,16 +40,17 @@ export default function AuthShell({ active, children }) {
                     </div>
                 </section>
 
-                {/* Bên phải: form trên nền trắng mờ */}
                 <div className="auth-panel">
                     <div className="auth-card">
-                        <div className="auth-tabs">
-                            <Link to="/login" className={`auth-tab ${active === 'login' ? 'active' : ''}`}>Đăng nhập</Link>
-                            <Link to="/register" className={`auth-tab ${active === 'register' ? 'active' : ''}`}>Tạo tài khoản</Link>
-                        </div>
+                        {active && (
+                            <div className="auth-tabs">
+                                <Link to="/login" className={`auth-tab ${active === 'login' ? 'active' : ''}`}>Log in</Link>
+                                <Link to="/register" className={`auth-tab ${active === 'register' ? 'active' : ''}`}>Sign up</Link>
+                            </div>
+                        )}
                         {children}
                     </div>
-                    <p className="auth-note"><Icon name="store" size="sm" /> Chỉ nhận hàng tại cửa hàng • Không giao tận nơi</p>
+                    <p className="auth-note"><Icon name="store" size="sm" /> Store pickup only • No delivery</p>
                 </div>
             </div>
         </div>

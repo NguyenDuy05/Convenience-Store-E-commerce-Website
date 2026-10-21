@@ -1,7 +1,7 @@
 /* Giao diện Đăng nhập / Đăng ký: ảnh nền + form kính mờ bên phải.
    Mọi class đều bắt đầu bằng "auth-" nên không đụng CSS của trang khác. */
 
-/* Ảnh nền: đặt ảnh thật tại  frontend/public/auth-bg.jpg  (không có thì dùng auth-bg.svg mặc định) */
+/* Ảnh nền: đặt ảnh thật tại  frontend/public/auth_background.png  (không có thì dùng auth-bg.svg) */
 .auth-page {
     --auth-nav-h: 58px;
     /* chiều cao NavBar, chỉnh nếu NavBar cao/thấp hơn */
@@ -617,4 +617,71 @@ body:has(.auth-page) {
 
 .auth-foot a:hover {
     color: var(--a-primary-dark);
+}
+
+/* ----- Google + liên kết + dòng "or" (thêm cho Google / Forgot Password) ----- */
+.auth-google {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+    margin-top: 18px;
+}
+
+.auth-google-off {
+    margin-top: 18px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px dashed rgba(12, 24, 66, .25);
+    background: rgba(255, 255, 255, .55);
+    color: var(--a-outline);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.auth-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 0;
+    color: var(--a-outline);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.auth-or::before,
+.auth-or::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(12, 24, 66, .14);
+}
+
+.auth-btn-link {
+    text-decoration: none;
+    margin-top: 20px;
+}
+
+.auth-btn-link:hover {
+    color: #fff;
+}
+
+.auth-textbtn {
+    all: unset;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--a-primary);
+    text-decoration: underline;
+}
+
+.auth-textbtn:hover {
+    color: var(--a-primary-dark);
+}
+
+.auth-textbtn:focus-visible {
+    outline: 2px solid var(--a-primary);
+    outline-offset: 2px;
 }

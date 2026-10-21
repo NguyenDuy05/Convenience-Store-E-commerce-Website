@@ -20,7 +20,7 @@ export default function AuthField({ label, hint, icon, error, type = 'text', ...
                     className={`auth-input ${isPassword ? 'has-eye' : ''} ${error ? 'invalid' : ''}`}
                 />
                 {isPassword && (
-                    <button type="button" className="auth-eye" onClick={() => setShow(!show)} aria-label="Hiện/ẩn mật khẩu">
+                    <button type="button" className="auth-eye" onClick={() => setShow(!show)} aria-label="Show or hide password">
                         <Icon name={show ? 'visibility_off' : 'visibility'} />
                     </button>
                 )}
