@@ -16,12 +16,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (email, password) => {
-    const { data } = await authApi.login({ email, password });
+  const saveSession = (data) => {
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data.user;
-  }, []);
+  };
+
+  const login = useCallback(async (email, password) => saveSession((await authApi.login({ email, password })).data), []);
+  // Đăng ký xong backend trả luôn token => đăng nhập luôn
+  const register = useCallback(async (payload) => saveSession((await authApi.register(payload)).data), []);
+  // Google: đăng nhập nếu đã có tài khoản, chưa có thì tự tạo tài khoản customer mới
+  const googleLogin = useCallback(async (credential) => saveSession((await authApi.googleLogin({ credential })).data), []);
 
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch { /* bỏ qua, vẫn xóa token phía client */ }
@@ -29,6 +34,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
+  const value = useMemo(() => ({ user, loading, login, register, googleLogin, logout }), [user, loading, login, register, googleLogin, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -6,6 +6,8 @@ const { authenticate } = require('../middlewares/auth.middleware');
 router.post('/register', c.register);
 // UC-03/14/26 Login (Customer, Staff, Admin)
 router.post('/login', c.login);
+// Đăng ký / đăng nhập bằng Google
+router.post('/google', c.googleLogin);
 // UC-04/15/27 Logout
 router.post('/logout', authenticate, c.logout);
 // UC-05/16 Forgot Password (Customer, Staff)

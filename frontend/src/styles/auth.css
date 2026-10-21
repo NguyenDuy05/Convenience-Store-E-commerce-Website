@@ -1,0 +1,687 @@
+/* Giao diện Đăng nhập / Đăng ký: ảnh nền + form kính mờ bên phải.
+   Mọi class đều bắt đầu bằng "auth-" nên không đụng CSS của trang khác. */
+
+/* Ảnh nền: đặt ảnh thật tại  frontend/public/auth_background.png  (không có thì dùng auth-bg.svg) */
+.auth-page {
+    --auth-nav-h: 58px;
+    /* chiều cao NavBar, chỉnh nếu NavBar cao/thấp hơn */
+    --a-primary: #0058bc;
+    --a-primary-container: #1c71e4;
+    --a-primary-dark: #004494;
+    --a-secondary: #356b0a;
+    --a-secondary-container: #b4f486;
+    --a-on-secondary-container: #3b7112;
+    --a-tertiary: #6f5d0e;
+    --a-text: #0c1842;
+    --a-text-variant: #424754;
+    --a-outline: #727785;
+    --a-error: #ba1a1a;
+    --a-error-container: #ffdad6;
+    --a-on-error-container: #93000a;
+
+    /* thoát khỏi khung .container để ảnh nền phủ kín chiều ngang, bù lại padding 24px của container */
+    position: relative;
+    width: 100vw;
+    margin: -24px 0 -24px calc(50% - 50vw);
+    min-height: calc(100vh - var(--auth-nav-h));
+    box-sizing: border-box;
+    padding: 40px 24px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--a-text);
+
+    /* lớp trên cùng = ảnh thật; nếu thiếu file thì lộ lớp svg, rồi tới gradient */
+    background-color: #0b3d91;
+    background-image: url('/auth_background.png'), url('/auth-bg.svg'), linear-gradient(135deg, #0b3d91, #1c71e4 55%, #3b9b3b);
+    background-size: cover, cover, cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* 100vw tính cả thanh cuộn nên chặn cuộn ngang */
+body:has(.auth-page) {
+    overflow-x: hidden;
+}
+
+/* Lớp phủ tối dần từ trái sang phải để chữ trắng bên trái dễ đọc */
+.auth-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(5, 25, 70, .70) 0%, rgba(5, 25, 70, .35) 55%, rgba(5, 25, 70, .10) 100%);
+}
+
+/* Bố cục 2 cột: giới thiệu | form */
+.auth-layout {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: 56px;
+    align-items: center;
+}
+
+@media (max-width: 980px) {
+    .auth-layout {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+
+    .auth-hero {
+        display: none;
+    }
+
+    .auth-overlay {
+        background: rgba(5, 25, 70, .45);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 24px 12px;
+    }
+}
+
+/* ---------- Bên trái: giới thiệu ---------- */
+.auth-hero {
+    color: #fff;
+}
+
+.auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    margin-bottom: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.auth-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--a-secondary-container);
+}
+
+.auth-hero-title {
+    margin: 0 0 16px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 48px;
+    line-height: 56px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+}
+
+.auth-hero-desc {
+    margin: 0 0 28px;
+    max-width: 460px;
+    font-size: 16px;
+    line-height: 24px;
+    color: rgba(255, 255, 255, .9);
+}
+
+.auth-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+}
+
+.auth-perk {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.auth-perk-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-perk-icon.blue {
+    color: var(--a-primary);
+}
+
+.auth-perk-icon.green {
+    color: var(--a-secondary);
+}
+
+.auth-perk-icon.gold {
+    color: var(--a-tertiary);
+}
+
+.auth-perk-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.auth-perk-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-perk-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, .8);
+}
+
+/* ---------- Bên phải: thẻ form kính mờ ---------- */
+.auth-panel {
+    width: 100%;
+    max-width: 480px;
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 980px) {
+    .auth-panel {
+        justify-self: center;
+    }
+}
+
+.auth-card {
+    width: 100%;
+    padding: 32px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .78);
+    /* trắng mờ */
+    border: 1px solid rgba(255, 255, 255, .65);
+    box-shadow: 0 24px 60px rgba(0, 20, 60, .35);
+    backdrop-filter: blur(18px) saturate(140%);
+    /* làm mờ ảnh phía sau */
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .auth-card {
+        background: rgba(255, 255, 255, .94);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 24px 18px;
+    }
+}
+
+.auth-note {
+    margin: 16px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: rgba(255, 255, 255, .92);
+    text-align: center;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .35);
+}
+
+.auth-note .auth-icon {
+    color: var(--a-secondary-container);
+}
+
+/* Icon */
+.auth-icon {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 400;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.auth-icon.sm {
+    font-size: 14px;
+}
+
+.auth-icon.md {
+    font-size: 18px;
+}
+
+.auth-icon.lg {
+    font-size: 24px;
+}
+
+/* Tab */
+.auth-tabs {
+    display: flex;
+    padding: 4px;
+    margin-bottom: 24px;
+    background: rgba(228, 231, 255, .65);
+    border-radius: 10px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--a-text-variant);
+    transition: all .15s;
+}
+
+.auth-tab:hover {
+    color: var(--a-text);
+}
+
+.auth-tab.active {
+    background: #fff;
+    color: var(--a-primary);
+    box-shadow: 0 1px 4px rgba(25, 36, 78, .15);
+}
+
+/* Tiêu đề thẻ */
+.auth-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.auth-head-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(25, 36, 78, .15);
+}
+
+.auth-head-icon.blue {
+    background: var(--a-primary-container);
+    color: #fff;
+}
+
+.auth-head-icon.green {
+    background: var(--a-secondary-container);
+    color: var(--a-on-secondary-container);
+}
+
+.auth-title {
+    margin: 0;
+    font-family: 'Rubik', sans-serif;
+    font-size: 26px;
+    line-height: 34px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--a-text);
+}
+
+.auth-sub {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--a-text-variant);
+}
+
+/* Form */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.auth-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 480px) {
+    .auth-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--a-text);
+}
+
+.auth-hint {
+    font-weight: 400;
+    color: var(--a-outline);
+}
+
+.auth-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.auth-input-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--a-outline);
+    pointer-events: none;
+}
+
+.auth-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px 0 44px;
+    border: 1px solid rgba(12, 24, 66, .08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .88);
+    color: var(--a-text);
+    font-family: inherit;
+    font-size: 14px;
+    box-shadow: 0 1px 2px rgba(25, 36, 78, .06);
+    transition: all .15s;
+}
+
+.auth-input.has-eye {
+    padding-right: 44px;
+}
+
+.auth-input::placeholder {
+    color: var(--a-outline);
+}
+
+.auth-input:focus {
+    outline: 2px solid var(--a-primary);
+    outline-offset: 0;
+    background: #fff;
+}
+
+.auth-input.invalid {
+    outline: 2px solid var(--a-error);
+}
+
+.auth-eye {
+    position: absolute;
+    right: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--a-outline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-eye:hover {
+    background: transparent;
+    color: var(--a-text);
+}
+
+.auth-field-error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px 0 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--a-error);
+}
+
+.auth-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--a-primary);
+}
+
+.auth-link:hover {
+    color: var(--a-primary-dark);
+}
+
+/* Checkbox điều khoản */
+.auth-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.auth-check input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--a-primary);
+    cursor: pointer;
+}
+
+.auth-check a {
+    color: var(--a-primary);
+}
+
+.auth-check a:hover {
+    text-decoration: underline;
+}
+
+/* Nút chính */
+.auth-btn {
+    width: 100%;
+    height: 48px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    background: var(--a-primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    box-shadow: 0 6px 16px rgba(0, 88, 188, .35);
+    transition: all .15s;
+}
+
+.auth-btn:hover {
+    background: var(--a-primary-dark);
+}
+
+.auth-btn:active {
+    transform: scale(.99);
+}
+
+.auth-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, .35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: auth-spin .7s linear infinite;
+}
+
+@keyframes auth-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Banner lỗi / thành công */
+.auth-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    animation: auth-fade .2s ease;
+}
+
+.auth-banner.error {
+    background: var(--a-error-container);
+    color: var(--a-on-error-container);
+}
+
+.auth-banner.error .auth-banner-title,
+.auth-banner.error .auth-icon {
+    color: var(--a-error);
+}
+
+.auth-banner.success {
+    background: var(--a-secondary-container);
+    color: var(--a-on-secondary-container);
+}
+
+.auth-banner-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.auth-banner-text {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+@keyframes auth-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Chân thẻ */
+.auth-foot {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--a-text-variant);
+}
+
+.auth-foot a {
+    font-weight: 600;
+    color: var(--a-primary);
+    text-decoration: underline;
+}
+
+.auth-foot a:hover {
+    color: var(--a-primary-dark);
+}
+
+/* ----- Google + liên kết + dòng "or" (thêm cho Google / Forgot Password) ----- */
+.auth-google {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+    margin-top: 18px;
+}
+
+.auth-google-off {
+    margin-top: 18px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px dashed rgba(12, 24, 66, .25);
+    background: rgba(255, 255, 255, .55);
+    color: var(--a-outline);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.auth-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 0;
+    color: var(--a-outline);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.auth-or::before,
+.auth-or::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(12, 24, 66, .14);
+}
+
+.auth-btn-link {
+    text-decoration: none;
+    margin-top: 20px;
+}
+
+.auth-btn-link:hover {
+    color: #fff;
+}
+
+.auth-textbtn {
+    all: unset;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--a-primary);
+    text-decoration: underline;
+}
+
+.auth-textbtn:hover {
+    color: var(--a-primary-dark);
+}
+
+.auth-textbtn:focus-visible {
+    outline: 2px solid var(--a-primary);
+    outline-offset: 2px;
+}

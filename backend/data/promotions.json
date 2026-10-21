@@ -1,0 +1,132 @@
+[
+    {
+        "_id": {
+            "$oid": "a80000000000000000000001"
+        },
+        "name": "Chào tuần mới – giảm 10% toàn cửa hàng",
+        "description": "Giảm 10% cho mọi sản phẩm, tối đa 20.000đ mỗi sản phẩm.",
+        "type": "percent",
+        "value": 10,
+        "maxDiscount": 20000,
+        "scope": "all",
+        "categoryIds": [],
+        "productIds": [],
+        "status": "active",
+        "createdBy": {
+            "$oid": "a30000000000000000000001"
+        },
+        "startDate": {
+            "$date": "2026-10-12T00:00:00.000Z"
+        },
+        "endDate": {
+            "$date": "2026-12-31T16:59:59.000Z"
+        },
+        "createdAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "updatedAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "__v": 0
+    },
+    {
+        "_id": {
+            "$oid": "a80000000000000000000002"
+        },
+        "name": "Giải khát – giảm 2.000đ",
+        "description": "Giảm 2.000đ cho mỗi sản phẩm nhóm Nước uống.",
+        "type": "fixed",
+        "value": 2000,
+        "scope": "category",
+        "categoryIds": [
+            {
+                "$oid": "a40000000000000000000004"
+            }
+        ],
+        "productIds": [],
+        "status": "active",
+        "createdBy": {
+            "$oid": "a30000000000000000000001"
+        },
+        "startDate": {
+            "$date": "2026-10-12T00:00:00.000Z"
+        },
+        "endDate": {
+            "$date": "2026-12-31T16:59:59.000Z"
+        },
+        "createdAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "updatedAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "__v": 0
+    },
+    {
+        "_id": {
+            "$oid": "a80000000000000000000003"
+        },
+        "name": "Cơm nắm & cơm hộp – giảm 15%",
+        "description": "Bữa trưa tiện lợi, giảm 15% cho nhóm Cơm nắm & Cơm hộp.",
+        "type": "percent",
+        "value": 15,
+        "maxDiscount": 8000,
+        "scope": "category",
+        "categoryIds": [
+            {
+                "$oid": "a40000000000000000000006"
+            }
+        ],
+        "productIds": [],
+        "status": "active",
+        "createdBy": {
+            "$oid": "a30000000000000000000001"
+        },
+        "startDate": {
+            "$date": "2026-10-12T00:00:00.000Z"
+        },
+        "endDate": {
+            "$date": "2026-12-31T16:59:59.000Z"
+        },
+        "createdAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "updatedAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "__v": 0
+    },
+    {
+        "_id": {
+            "$oid": "a80000000000000000000004"
+        },
+        "name": "Mì ly bò hầm – giảm 3.000đ",
+        "description": "Ưu đãi riêng cho Mì ly bò hầm.",
+        "type": "fixed",
+        "value": 3000,
+        "scope": "product",
+        "categoryIds": [],
+        "productIds": [
+            {
+                "$oid": "a50000000000000000000005"
+            }
+        ],
+        "status": "active",
+        "createdBy": {
+            "$oid": "a30000000000000000000001"
+        },
+        "startDate": {
+            "$date": "2026-10-12T00:00:00.000Z"
+        },
+        "endDate": {
+            "$date": "2026-12-31T16:59:59.000Z"
+        },
+        "createdAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "updatedAt": {
+            "$date": "2026-10-12T08:00:00.000Z"
+        },
+        "__v": 0
+    }
+]

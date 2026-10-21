@@ -27,7 +27,7 @@ reviewSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 // mỗi khách chỉ review 1 lần cho 1 sản phẩm trong 1 đơn
 reviewSchema.index(
   { customerId: 1, orderId: 1, productId: 1 },
-  { unique: true, partialFilterExpression: { targetType: 'product', status: { $ne: 'deleted' } } }
+  { unique: true, partialFilterExpression: { targetType: 'product', status: { $in: ['visible', 'hidden'] } } }
 );
 
 module.exports = mongoose.model('Review', reviewSchema);

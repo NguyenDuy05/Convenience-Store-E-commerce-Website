@@ -15,12 +15,12 @@ export default function NavBar({ links, brand = 'Convenience Store' }) {
         {user ? (
           <>
             <span>{user.fullName}</span>
-            <button onClick={logout}>Đăng xuất</button>
+            <button onClick={logout}>Log out</button>
           </>
         ) : (
           <>
-            <Link to="/login">Đăng nhập</Link>
-            <Link to="/register">Đăng ký</Link>
+            <Link to="/login">Log in</Link>
+            <Link to="/register">Sign up</Link>
           </>
         )}
       </div>

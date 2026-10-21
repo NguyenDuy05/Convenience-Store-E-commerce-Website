@@ -18,6 +18,7 @@ const userSchema = new Schema({
   phone: { type: String, trim: true },
   passwordHash: { type: String, required: true, select: false },   // bcrypt
   avatarUrl: String,
+  googleId: String,                                                  // đăng nhập bằng Google (Google user id)
 
   // active | locked (staff bị admin khóa / customer bị khóa do nhập sai) | deleted (xóa mềm)
   status: { type: String, enum: ['active', 'locked', 'deleted'], default: 'active', index: true },
