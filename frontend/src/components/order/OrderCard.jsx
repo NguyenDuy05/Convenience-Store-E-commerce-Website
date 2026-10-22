@@ -4,7 +4,7 @@ import '../../styles/order-card.css';
 import Icon from '../common/Icon';
 import OrderStatusBadge from './OrderStatusBadge';
 import { formatCurrency, formatDateTime, formatTime } from '../../utils/format';
-import { paymentSummary } from '../../utils/orderMeta';
+import { ACTIVE_STATUSES, paymentSummary } from '../../utils/orderMeta';
 
 const MAX_THUMBS = 4;
 
@@ -116,9 +116,16 @@ export default function OrderCard({ order, storeName }) {
           {order.status === 'ready_for_pickup' && <><Icon name="verified" size="md" />Đã đóng gói tại cửa hàng</>}
           {order.status === 'completed' && <><Icon name="check_circle" size="md" />Hoàn tất</>}
         </span>
-        <Link className="ocard-btn" to={`/orders/${order._id}`}>
-          Xem chi tiết <Icon name="arrow_forward" size="md" />
-        </Link>
+        <div className="ocard-actions">
+          {ACTIVE_STATUSES.includes(order.status) && (
+            <Link className="ocard-btn ghost" to={`/orders/${order._id}/tracking`}>
+              <Icon name="local_shipping" size="md" />Theo dõi
+            </Link>
+          )}
+          <Link className="ocard-btn" to={`/orders/${order._id}`}>
+            Xem chi tiết <Icon name="arrow_forward" size="md" />
+          </Link>
+        </div>
       </footer>
     </article>
   );

@@ -1,0 +1,42 @@
+.ohrow {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--qk-surface);
+    box-shadow: var(--qk-shadow-sm);
+    font-family: var(--qk-font-body);
+    color: var(--qk-text);
+    transition: box-shadow .2s;
+}
+
+.ohrow:hover { box-shadow: var(--qk-shadow-md); }
+
+.ohrow-date { width: 56px; height: 56px; border-radius: 12px; background: var(--qk-surface-low); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ohrow-date b { font-family: var(--qk-font-display); font-size: 20px; line-height: 22px; }
+.ohrow-date span { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+
+.ohrow-main { min-width: 0; }
+.ohrow-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ohrow-code { font-size: 16px; line-height: 22px; font-weight: 700; color: var(--qk-text); text-decoration: none; word-break: break-all; }
+.ohrow-code:hover { color: var(--qk-primary); text-decoration: underline; }
+.ohrow-summary { margin: 4px 0 0; font-size: 13px; line-height: 18px; color: var(--qk-text-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ohrow-meta { margin: 2px 0 0; font-size: 12px; line-height: 16px; color: var(--qk-outline); }
+
+.ohrow-thumbs { display: flex; gap: 6px; }
+.ohrow-thumb { width: 40px; height: 40px; padding: 3px; border-radius: 8px; background: var(--qk-surface-low); color: var(--qk-outline); display: flex; align-items: center; justify-content: center; }
+.ohrow-thumb img { width: 100%; height: 100%; object-fit: contain; }
+
+.ohrow-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.ohrow-side b { font-family: var(--qk-font-display); font-size: 18px; line-height: 22px; white-space: nowrap; }
+.ohrow-link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--qk-primary); text-decoration: none; white-space: nowrap; }
+.ohrow-link:hover { text-decoration: underline; color: var(--qk-primary-dark); }
+
+@media (max-width: 720px) {
+    .ohrow { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
+    .ohrow-date { width: 48px; height: 48px; }
+    .ohrow-thumbs { display: none; }
+    .ohrow-side { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; }
+}

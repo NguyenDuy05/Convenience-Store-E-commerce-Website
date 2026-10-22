@@ -11,6 +11,8 @@
 .odetail-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -.015em; word-break: break-all; }
 .odetail-head p { margin: 6px 0 0; font-size: 14px; color: var(--qk-text-variant); }
 
+.odetail-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
 .odetail-btn {
     display: inline-flex;
     align-items: center;

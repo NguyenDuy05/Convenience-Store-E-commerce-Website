@@ -6,7 +6,8 @@ import useAuth from '../../hooks/useAuth';
 
 const links = [
   { to: '/profile', label: 'Hồ sơ cá nhân', icon: 'person' },
-  { to: '/orders', label: 'Đơn hàng của tôi', icon: 'receipt_long', badge: true },
+  { to: '/orders', label: 'Đơn hàng của tôi', icon: 'receipt_long', badge: true, end: true },
+  { to: '/orders/history', label: 'Lịch sử mua hàng', icon: 'history' },
   { to: '/addresses', label: 'Địa chỉ', icon: 'location_on' },
   { to: '/reviews', label: 'Đánh giá của tôi', icon: 'rate_review' },
   { to: '/membership', label: 'Thành viên & điểm', icon: 'stars' },
@@ -38,7 +39,7 @@ export default function AccountSidebar({ activeCount = 0 }) {
         </div>
         <nav className="aside-nav" aria-label="Menu tài khoản">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} className={({ isActive }) => `aside-link ${isActive ? 'active' : ''}`}>
+            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `aside-link ${isActive ? 'active' : ''}`}>
               {({ isActive }) => (
                 <>
                   <span className="aside-link-label"><Icon name={l.icon} fill={isActive} />{l.label}</span>

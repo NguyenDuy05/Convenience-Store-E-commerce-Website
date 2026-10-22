@@ -1,0 +1,109 @@
+/* Trang "Theo dõi đơn hàng" (UC-09.3). Class bắt đầu bằng "otrack-". */
+.otrack { font-family: var(--qk-font-body); color: var(--qk-text); }
+
+.otrack-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
+.otrack-crumb a { color: inherit; text-decoration: none; }
+.otrack-crumb a:hover { color: var(--qk-primary); }
+.otrack-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; }
+
+.otrack-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.otrack-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.otrack-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: -.015em; word-break: break-all; }
+.otrack-head p { margin: 6px 0 0; font-size: 14px; color: var(--qk-text-variant); }
+
+.otrack-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--qk-primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--qk-shadow-sm);
+}
+
+.otrack-btn:hover:not(:disabled) { background: var(--qk-primary-dark); color: #fff; }
+.otrack-btn:disabled { opacity: .6; cursor: not-allowed; }
+.otrack-btn.ghost { background: var(--qk-surface); color: var(--qk-text); }
+.otrack-btn.ghost:hover { background: var(--qk-surface-high); color: var(--qk-text); }
+.otrack-btn.small { padding: 6px 14px; font-size: 12px; }
+
+/* ----- Cảnh báo dữ liệu cũ ----- */
+.otrack-warn { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.otrack-warn > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.otrack-warn strong { font-size: 14px; }
+.otrack-warn span { font-size: 12px; line-height: 18px; }
+
+/* ----- Banner trạng thái ----- */
+.otrack-banner { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; border-radius: 12px; background: var(--qk-surface-low); }
+.otrack-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.otrack-banner strong { font-size: 16px; line-height: 22px; }
+.otrack-banner div span { font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+.otrack-banner-icon { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.otrack-banner.success .otrack-banner-icon { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.otrack-banner.info .otrack-banner-icon { background: var(--qk-primary-container); color: #fff; }
+.otrack-banner.warn .otrack-banner-icon { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.otrack-banner.neutral .otrack-banner-icon { background: var(--qk-surface-high); color: var(--qk-secondary); }
+.otrack-banner.error { background: rgba(255, 218, 214, .45); }
+.otrack-banner.error .otrack-banner-icon { background: var(--qk-error-container); color: var(--qk-error); }
+
+/* ----- Lưới ----- */
+.otrack-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
+.otrack-side { display: flex; flex-direction: column; gap: 16px; }
+
+@media (max-width: 900px) {
+    .otrack-grid { grid-template-columns: minmax(0, 1fr); }
+    .otrack-head h1 { font-size: 22px; line-height: 28px; }
+}
+
+.otrack-card { padding: 20px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.otrack-card h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; }
+.otrack-card h2 .qk-icon { color: var(--qk-primary); }
+.otrack-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.otrack-refresh { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 0; border-radius: 8px; background: var(--qk-surface-low); color: var(--qk-primary); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.otrack-refresh:hover:not(:disabled) { background: var(--qk-surface-high); }
+.otrack-refresh:disabled { opacity: .6; cursor: progress; }
+
+.otrack-meta { margin: 8px 0 20px; font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.otrack-meta b { color: var(--qk-text); }
+
+/* ----- Thẻ nhận hàng ----- */
+.otrack-text { margin: 12px 0; font-size: 13px; line-height: 20px; color: var(--qk-text-variant); }
+.otrack-text b { color: var(--qk-text); }
+.otrack-store { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.otrack-store span { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.otrack-store span .qk-icon { color: var(--qk-primary); }
+
+.otrack-code { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 16px; padding: 12px; border-radius: 12px; background: var(--qk-surface-low); }
+.otrack-code span { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.otrack-code b { font-family: var(--qk-font-display); font-size: 20px; letter-spacing: .04em; color: var(--qk-primary); word-break: break-all; text-align: center; }
+
+.otrack-times { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0 0; font-size: 12px; }
+.otrack-times:empty { display: none; }
+.otrack-times dt { color: var(--qk-text-variant); }
+.otrack-times dd { margin: 0; text-align: right; font-weight: 600; }
+
+/* ----- Đang tải / lỗi ----- */
+.otrack-skeleton {
+    height: 360px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%);
+    background-size: 200% 100%;
+    animation: otrack-shimmer 1.4s linear infinite;
+}
+
+@keyframes otrack-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .otrack-skeleton { animation: none; } }
+
+.otrack-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.otrack-state > .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.otrack-state h2 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; line-height: 28px; color: var(--qk-text); }
+.otrack-state p { margin: 0; max-width: 380px; font-size: 14px; line-height: 20px; }
+.otrack-state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }

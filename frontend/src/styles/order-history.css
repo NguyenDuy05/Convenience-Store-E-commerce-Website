@@ -1,0 +1,82 @@
+/* Trang "Lịch sử mua hàng" (UC-09.4). Class bắt đầu bằng "ohist-". */
+.ohist { font-family: var(--qk-font-body); color: var(--qk-text); }
+
+.ohist-crumb { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
+.ohist-crumb a { color: inherit; text-decoration: none; }
+.ohist-crumb a:hover { color: var(--qk-primary); }
+.ohist-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; }
+
+.ohist-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.ohist-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -.015em; }
+.ohist-head p { margin: 8px 0 0; max-width: 560px; font-size: 14px; line-height: 20px; color: var(--qk-text-variant); }
+
+.ohist-link { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 12px; background: var(--qk-surface); color: var(--qk-text); font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: var(--qk-shadow-sm); }
+.ohist-link:hover { background: var(--qk-surface-high); color: var(--qk-text); }
+
+.ohist-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px; align-items: start; }
+.ohist-side { position: sticky; top: 16px; }
+.ohist-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ohist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 900px) {
+    .ohist-grid { grid-template-columns: minmax(0, 1fr); }
+    .ohist-side { position: static; order: 2; }
+    .ohist-head h1 { font-size: 28px; line-height: 34px; }
+}
+
+/* ----- Bộ lọc ----- */
+.ohist-filters { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+
+.ohist-seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 10px; background: var(--qk-surface-low); align-self: flex-start; }
+.ohist-seg button { padding: 8px 14px; border: 0; border-radius: 8px; background: transparent; color: var(--qk-text-variant); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ohist-seg button:hover { color: var(--qk-text); }
+.ohist-seg button.active { background: var(--qk-primary); color: #fff; box-shadow: var(--qk-shadow-sm); }
+
+.ohist-range { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ohist-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.ohist-presets button { padding: 6px 12px; border: 1px solid var(--qk-outline-variant); border-radius: 999px; background: var(--qk-surface); color: var(--qk-text-variant); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.ohist-presets button:hover { background: var(--qk-surface-low); }
+.ohist-presets button.active { border-color: var(--qk-primary); background: var(--qk-primary-fixed); color: var(--qk-on-primary-fixed); }
+
+.ohist-dates { display: flex; flex-wrap: wrap; gap: 12px; }
+.ohist-dates label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.ohist-dates input { padding: 6px 10px; border: 1px solid var(--qk-outline-variant); border-radius: 8px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 13px; }
+.ohist-dates input:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+
+.ohist-invalid { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--qk-error); }
+
+/* ----- Thống kê ----- */
+.ohist-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ohist-summary > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border-radius: 12px; background: var(--qk-surface-low); }
+.ohist-summary span { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.ohist-summary b { font-family: var(--qk-font-display); font-size: 18px; line-height: 24px; }
+
+@media (max-width: 560px) { .ohist-summary { grid-template-columns: minmax(0, 1fr); } }
+
+/* ----- Skeleton / trống / lỗi ----- */
+.ohist-skeleton {
+    height: 92px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%);
+    background-size: 200% 100%;
+    box-shadow: var(--qk-shadow-sm);
+    animation: ohist-shimmer 1.4s linear infinite;
+}
+
+@keyframes ohist-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .ohist-skeleton { animation: none; } }
+
+.ohist-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.ohist-state .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.ohist-state.error .qk-icon { background: rgba(255, 218, 214, .5); color: var(--qk-error); }
+.ohist-state h3 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; line-height: 28px; color: var(--qk-text); }
+.ohist-state p { margin: 0; max-width: 380px; font-size: 14px; line-height: 20px; }
+
+.ohist-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; padding: 12px 24px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.ohist-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+
+/* ----- Phân trang ----- */
+.ohist-pager { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; font-size: 14px; color: var(--qk-text-variant); }
+.ohist-pager button { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border: 0; border-radius: 10px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.ohist-pager button:hover:not(:disabled) { background: var(--qk-surface-high); }
+.ohist-pager button:disabled { opacity: .45; cursor: not-allowed; }

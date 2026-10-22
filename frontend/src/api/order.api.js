@@ -9,6 +9,12 @@ export const listMyOrders = (params) => api.get(`/orders/my`, { params });
 // UC-09.2 View Order Details (404 nếu đơn không tồn tại hoặc không thuộc khách)
 export const getMyOrder = (id, params) => api.get(`/orders/my/${id}`, { params });
 
+// UC-09.3 Track Order Status -> { status, statusHistory, updatedAt, serverTime, fulfillment, store, ... }
+export const trackMyOrder = (id) => api.get(`/orders/my/${id}/tracking`);
+
+// UC-09.4 View Order History (query: status=completed|failed, from, to (ISO), page, limit) -> { items, total, page, limit, summary, store }
+export const listMyOrderHistory = (params) => api.get(`/orders/my/history`, { params });
+
 // UC-22 Create Store Order
 export const createStoreOrder = (data) => api.post(`/orders/store`, data);
 

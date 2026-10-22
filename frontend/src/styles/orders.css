@@ -10,6 +10,9 @@
 .orders-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -.015em; }
 .orders-head p { margin: 8px 0 0; max-width: 520px; font-size: 14px; line-height: 20px; color: var(--qk-text-variant); }
 
+.orders-link { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 12px; background: var(--qk-surface); color: var(--qk-text); font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: var(--qk-shadow-sm); }
+.orders-link:hover { background: var(--qk-surface-high); color: var(--qk-text); }
+
 .orders-chips { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
 .orders-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
 .orders-chip .qk-icon { color: var(--qk-primary); }

@@ -41,3 +41,23 @@ export function paymentSummary(order) {
   if (order.paymentMethod === 'cash') return 'Trả tiền mặt khi nhận hàng';
   return method ? `Chưa thanh toán (${method})` : 'Chưa thanh toán';
 }
+
+// Thông điệp ngắn theo trạng thái (dùng ở trang chi tiết và trang theo dõi)
+export const ORDER_STATUS_MESSAGE = {
+  pending_payment: { tone: 'warn', icon: 'payments', title: 'Đơn đang chờ thanh toán', text: 'Cửa hàng chỉ chuẩn bị đơn sau khi thanh toán thành công.' },
+  confirmed: { tone: 'info', icon: 'task_alt', title: 'Cửa hàng đã xác nhận đơn', text: 'Đơn sẽ được chuẩn bị trong ít phút.' },
+  preparing: { tone: 'info', icon: 'inventory_2', title: 'Nhân viên đang chuẩn bị đơn hàng', text: 'Trạng thái sẽ đổi sang “Sẵn sàng nhận hàng” khi đơn xong.' },
+  ready_for_pickup: { tone: 'success', icon: 'storefront', title: 'Đơn đã sẵn sàng, mời bạn đến cửa hàng nhận', text: 'Đọc mã đơn cho nhân viên khi nhận hàng.' },
+  completed: { tone: 'neutral', icon: 'check_circle', title: 'Bạn đã nhận hàng', text: 'Cảm ơn bạn đã mua sắm tại cửa hàng.' },
+  failed: { tone: 'error', icon: 'error', title: 'Thanh toán không thành công', text: 'Đơn chưa được xác nhận. Bạn có thể đặt lại từ giỏ hàng.' },
+};
+
+// Trạng thái còn hiện mã đơn để nhận hàng
+export const SHOW_PICKUP_CODE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
+
+// Kết quả của đơn đã kết thúc (tab trang lịch sử)
+export const HISTORY_TABS = [
+  { key: '', label: 'Tất cả' },
+  { key: 'completed', label: 'Đã nhận hàng' },
+  { key: 'failed', label: 'Thanh toán lỗi' },
+];

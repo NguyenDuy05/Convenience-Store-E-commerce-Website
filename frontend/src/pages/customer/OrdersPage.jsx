@@ -81,6 +81,7 @@ export default function OrdersPage() {
           <h1>Đơn hàng của tôi</h1>
           <p>Theo dõi đơn đang chuẩn bị và xem lại các đơn đã mua. Tất cả đơn đều nhận trực tiếp tại cửa hàng.</p>
         </div>
+        <Link className="orders-link" to="/orders/history"><Icon name="history" size="md" />Lịch sử mua hàng</Link>
         {counts && (counts.ready_for_pickup > 0 || counts.preparing > 0) && (
           <div className="orders-chips">
             <span className="orders-chip ready"><i />{counts.ready_for_pickup} sẵn sàng nhận</span>

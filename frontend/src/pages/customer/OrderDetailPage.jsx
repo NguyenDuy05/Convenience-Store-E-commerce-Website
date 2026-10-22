@@ -7,19 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import Icon from '../../components/common/Icon';
 import OrderStatusBadge from '../../components/order/OrderStatusBadge';
 import { formatCurrency, formatDateTime } from '../../utils/format';
-import { PAYMENT_METHOD, PAYMENT_STATUS } from '../../utils/orderMeta';
-
-// Thông điệp ngắn đầu trang theo trạng thái
-const BANNER = {
-  pending_payment: { tone: 'warn', icon: 'payments', title: 'Đơn đang chờ thanh toán', text: 'Cửa hàng chỉ chuẩn bị đơn sau khi thanh toán thành công.' },
-  confirmed: { tone: 'info', icon: 'task_alt', title: 'Cửa hàng đã xác nhận đơn', text: 'Đơn sẽ được chuẩn bị trong ít phút.' },
-  preparing: { tone: 'info', icon: 'inventory_2', title: 'Nhân viên đang chuẩn bị đơn hàng', text: 'Trạng thái sẽ đổi sang “Sẵn sàng nhận hàng” khi đơn xong.' },
-  ready_for_pickup: { tone: 'success', icon: 'storefront', title: 'Đơn đã sẵn sàng, mời bạn đến cửa hàng nhận', text: 'Đọc mã đơn cho nhân viên khi nhận hàng.' },
-  completed: { tone: 'neutral', icon: 'check_circle', title: 'Bạn đã nhận hàng', text: 'Cảm ơn bạn đã mua sắm tại cửa hàng.' },
-  failed: { tone: 'error', icon: 'error', title: 'Thanh toán không thành công', text: 'Đơn chưa được xác nhận. Bạn có thể đặt lại từ giỏ hàng.' },
-};
-
-const SHOW_CODE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
+import { ORDER_STATUS_MESSAGE, PAYMENT_METHOD, PAYMENT_STATUS, SHOW_PICKUP_CODE } from '../../utils/orderMeta';
 
 const todayHours = (store) => {
   const h = store?.openingHours?.find((x) => x.day === new Date().getDay());
@@ -106,7 +94,10 @@ export default function OrderDetailPage() {
     );
   }
 
-  const banner = BANNER[order.status];
+  const banner = ORDER_STATUS_MESSAGE[order.status];
+  // Quay lại đúng nơi khách đến (danh sách hoặc lịch sử)
+  const backTo = location.state?.from || '/orders';
+  const backLabel = backTo.startsWith('/orders/history') ? 'Quay lại lịch sử' : 'Quay lại danh sách';
   const payStatus = PAYMENT_STATUS[order.paymentStatus];
   const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
   const hours = todayHours(order.store);
@@ -123,7 +114,10 @@ export default function OrderDetailPage() {
           </div>
           <p>Đặt lúc {formatDateTime(order.createdAt)} • {itemCount} sản phẩm</p>
         </div>
-        <Link className="odetail-btn ghost" to="/orders"><Icon name="arrow_back" size="md" />Quay lại danh sách</Link>
+        <div className="odetail-actions">
+          <Link className="odetail-btn" to={`/orders/${order._id}/tracking`}><Icon name="local_shipping" size="md" />Theo dõi đơn</Link>
+          <Link className="odetail-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />{backLabel}</Link>
+        </div>
       </header>
 
       {banner && (
@@ -136,6 +130,9 @@ export default function OrderDetailPage() {
       <div className="odetail-grid">
         <section className="odetail-card odetail-items">
           <h2>Sản phẩm trong đơn</h2>
+          {order.items.length === 0 && (
+            <p className="odetail-muted">Chi tiết sản phẩm của đơn này không còn được lưu nên không thể hiển thị. Tổng tiền và thông tin thanh toán vẫn được giữ nguyên.</p>
+          )}
           <ul>
             {order.items.map((it, idx) => (
               <li key={`${it.sku || it.name}-${idx}`} className="odetail-item">
@@ -170,7 +167,7 @@ export default function OrderDetailPage() {
               </div>
             ) : <p className="odetail-muted">Chưa có thông tin cửa hàng.</p>}
 
-            {SHOW_CODE.includes(order.status) && (
+            {SHOW_PICKUP_CODE.includes(order.status) && (
               <div className="odetail-code">
                 <span>Mã đơn khi nhận hàng</span>
                 <b>{order.orderCode}</b>
