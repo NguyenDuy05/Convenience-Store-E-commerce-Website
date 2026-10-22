@@ -3,10 +3,10 @@ import api from './axios';
 // UC-09.1 Create Order
 export const createOrder = (data) => api.post(`/orders`, data);
 
-// UC-10.1, 10.4 View Orders / Order History
+// UC-09.1 View Orders (query: status, page, limit) -> { items, total, page, limit, counts, store }
 export const listMyOrders = (params) => api.get(`/orders/my`, { params });
 
-// UC-10.2, 10.3 View Order Details / Track Order Status
+// UC-09.2 View Order Details (404 nếu đơn không tồn tại hoặc không thuộc khách)
 export const getMyOrder = (id, params) => api.get(`/orders/my/${id}`, { params });
 
 // UC-22 Create Store Order

@@ -1,0 +1,125 @@
+/* Trang "Chi tiết đơn hàng" (UC-09.2). Class bắt đầu bằng "odetail-". */
+.odetail { font-family: var(--qk-font-body); color: var(--qk-text); }
+
+.odetail-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
+.odetail-crumb a { color: inherit; text-decoration: none; }
+.odetail-crumb a:hover { color: var(--qk-primary); }
+.odetail-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; word-break: break-all; }
+
+.odetail-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.odetail-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.odetail-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -.015em; word-break: break-all; }
+.odetail-head p { margin: 6px 0 0; font-size: 14px; color: var(--qk-text-variant); }
+
+.odetail-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--qk-primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--qk-shadow-sm);
+}
+
+.odetail-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+.odetail-btn.ghost { background: var(--qk-surface); color: var(--qk-text); }
+.odetail-btn.ghost:hover { background: var(--qk-surface-high); color: var(--qk-text); }
+
+/* ----- Banner trạng thái ----- */
+.odetail-banner { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; border-radius: 12px; background: var(--qk-surface-low); }
+.odetail-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.odetail-banner strong { font-size: 16px; line-height: 22px; }
+.odetail-banner div span { font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+.odetail-banner-icon { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.odetail-banner.success .odetail-banner-icon { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.odetail-banner.info .odetail-banner-icon { background: var(--qk-primary-container); color: #fff; }
+.odetail-banner.warn .odetail-banner-icon { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.odetail-banner.neutral .odetail-banner-icon { background: var(--qk-surface-high); color: var(--qk-secondary); }
+.odetail-banner.error { background: rgba(255, 218, 214, .45); }
+.odetail-banner.error .odetail-banner-icon { background: var(--qk-error-container); color: var(--qk-error); }
+
+/* ----- Lưới 2 cột ----- */
+.odetail-grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 24px; align-items: start; }
+.odetail-side { display: flex; flex-direction: column; gap: 16px; }
+
+@media (max-width: 900px) {
+    .odetail-grid { grid-template-columns: minmax(0, 1fr); }
+    .odetail-head h1 { font-size: 24px; line-height: 30px; }
+}
+
+.odetail-card { padding: 16px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.odetail-card h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 16px; line-height: 22px; font-weight: 700; }
+.odetail-card h2 .qk-icon { color: var(--qk-primary); }
+
+/* ----- Danh sách sản phẩm ----- */
+.odetail-items ul { list-style: none; margin: 0; padding: 0; }
+.odetail-item { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--qk-surface-container); }
+.odetail-item:first-child { border-top: 0; padding-top: 4px; }
+
+.odetail-thumb { width: 64px; height: 64px; flex-shrink: 0; padding: 4px; border-radius: 8px; background: var(--qk-surface-low); color: var(--qk-outline); display: flex; align-items: center; justify-content: center; }
+.odetail-thumb img { width: 100%; height: 100%; object-fit: contain; }
+
+.odetail-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.odetail-item-name { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--qk-text); text-decoration: none; }
+a.odetail-item-name:hover { color: var(--qk-primary); text-decoration: underline; }
+.odetail-item-sub { font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+.odetail-item-disc { font-size: 12px; font-weight: 600; color: var(--qk-secondary); }
+.odetail-item-total { font-family: var(--qk-font-display); font-size: 16px; font-weight: 700; white-space: nowrap; }
+
+/* ----- Cửa hàng / mã đơn ----- */
+.odetail-store { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.odetail-store span { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.odetail-store span .qk-icon { color: var(--qk-primary); }
+
+.odetail-code { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 16px; padding: 12px; border-radius: 12px; background: var(--qk-surface-low); }
+.odetail-code span { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.odetail-code b { font-family: var(--qk-font-display); font-size: 20px; letter-spacing: .04em; color: var(--qk-primary); word-break: break-all; text-align: center; }
+
+.odetail-times { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0 0; font-size: 12px; }
+.odetail-times:empty { display: none; }
+.odetail-times dt { color: var(--qk-text-variant); }
+.odetail-times dd { margin: 0; text-align: right; font-weight: 600; }
+
+.odetail-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--qk-surface-low); font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.odetail-note .qk-icon { color: var(--qk-tertiary); }
+
+/* ----- Thanh toán / tổng kết ----- */
+.odetail-pay, .odetail-sum { display: flex; flex-direction: column; gap: 8px; }
+.odetail-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--qk-text-variant); }
+.odetail-row > span:last-child { color: var(--qk-text); font-weight: 600; text-align: right; }
+.odetail-row.strong { color: var(--qk-text); font-weight: 700; }
+.odetail-row.strong > span:last-child { font-family: var(--qk-font-display); font-size: 20px; color: var(--qk-primary); }
+.odetail-sep { height: 1px; background: var(--qk-surface-high); margin: 4px 0; }
+.odetail-muted { margin: 0; font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.odetail-earned { display: flex; align-items: center; gap: 4px; margin: 4px 0 0; font-size: 12px; font-weight: 700; color: var(--qk-secondary); }
+
+.odetail-chip { padding: 2px 10px; border-radius: 999px; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.odetail-row > .odetail-chip { font-weight: 700; }
+.odetail-chip.success { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container) !important; }
+.odetail-chip.warn { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed) !important; }
+.odetail-chip.error { background: var(--qk-error-container); color: var(--qk-on-error-container) !important; }
+
+/* ----- Đang tải / lỗi ----- */
+.odetail-skeleton {
+    height: 360px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%);
+    background-size: 200% 100%;
+    animation: odetail-shimmer 1.4s linear infinite;
+}
+
+@keyframes odetail-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .odetail-skeleton { animation: none; } }
+
+.odetail-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.odetail-state > .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.odetail-state h2 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; line-height: 28px; color: var(--qk-text); }
+.odetail-state p { margin: 0; max-width: 380px; font-size: 14px; line-height: 20px; }
+.odetail-state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }

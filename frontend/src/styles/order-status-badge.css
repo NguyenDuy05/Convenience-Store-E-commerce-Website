@@ -1,0 +1,38 @@
+.obadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: var(--qk-font-body);
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.obadge.info { background: var(--qk-primary-fixed); color: var(--qk-on-primary-fixed); }
+.obadge.success { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.obadge.warn { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.obadge.error { background: var(--qk-error-container); color: var(--qk-on-error-container); }
+.obadge.neutral { background: var(--qk-surface-high); color: var(--qk-text); }
+.obadge.neutral .qk-icon { color: var(--qk-secondary); }
+
+.obadge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--qk-secondary);
+    animation: obadge-pulse 1.6s ease-out infinite;
+}
+
+@keyframes obadge-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(53, 107, 10, .5); }
+    80%, 100% { box-shadow: 0 0 0 7px rgba(53, 107, 10, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .obadge-dot { animation: none; }
+}

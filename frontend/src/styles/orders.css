@@ -1,0 +1,102 @@
+/* Trang "Đơn hàng của tôi" (UC-09.1). Class bắt đầu bằng "orders-". */
+.orders { font-family: var(--qk-font-body); color: var(--qk-text); }
+
+.orders-crumb { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
+.orders-crumb a { color: inherit; text-decoration: none; }
+.orders-crumb a:hover { color: var(--qk-primary); }
+.orders-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; }
+
+.orders-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.orders-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 36px; line-height: 44px; font-weight: 700; letter-spacing: -.015em; }
+.orders-head p { margin: 8px 0 0; max-width: 520px; font-size: 14px; line-height: 20px; color: var(--qk-text-variant); }
+
+.orders-chips { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.orders-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.orders-chip .qk-icon { color: var(--qk-primary); }
+.orders-chip.ready { color: var(--qk-text); }
+.orders-chip.ready i { width: 10px; height: 10px; margin-right: 2px; border-radius: 50%; background: var(--qk-secondary); }
+.orders-chip-sep { color: var(--qk-outline-variant); }
+
+.orders-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px; align-items: start; }
+.orders-side { position: sticky; top: 16px; }
+.orders-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.orders-list { display: flex; flex-direction: column; gap: 16px; }
+
+@media (max-width: 900px) {
+    .orders-grid { grid-template-columns: minmax(0, 1fr); }
+    .orders-side { position: static; order: 2; }
+    .orders-head h1 { font-size: 28px; line-height: 34px; }
+}
+
+/* ----- Skeleton khi đang tải ----- */
+.orders-skeleton {
+    height: 190px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%);
+    background-size: 200% 100%;
+    box-shadow: var(--qk-shadow-sm);
+    animation: orders-shimmer 1.4s linear infinite;
+}
+
+@keyframes orders-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .orders-skeleton { animation: none; } }
+
+/* ----- Trạng thái trống / lỗi ----- */
+.orders-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 56px 24px;
+    border-radius: 12px;
+    background: var(--qk-surface);
+    box-shadow: var(--qk-shadow-sm);
+    color: var(--qk-text-variant);
+}
+
+.orders-state .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.orders-state.error .qk-icon { background: rgba(255, 218, 214, .5); color: var(--qk-error); }
+.orders-state h3 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; line-height: 28px; color: var(--qk-text); }
+.orders-state p { margin: 0; max-width: 360px; font-size: 14px; line-height: 20px; }
+
+.orders-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 12px 24px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--qk-primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--qk-shadow-sm);
+}
+
+.orders-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+
+/* ----- Phân trang ----- */
+.orders-pager { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; font-size: 14px; color: var(--qk-text-variant); }
+
+.orders-pager button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--qk-surface);
+    color: var(--qk-text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--qk-shadow-sm);
+}
+
+.orders-pager button:hover:not(:disabled) { background: var(--qk-surface-high); }
+.orders-pager button:disabled { opacity: .45; cursor: not-allowed; }

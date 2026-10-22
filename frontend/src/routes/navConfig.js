@@ -1,31 +1,31 @@
 // Sinh tự động từ danh sách trang. Sửa nhãn menu tại đây.
 export const customerNav = [
   {
-    "to": "//profile",
+    "to": "/profile",
     "label": "Hồ sơ cá nhân"
   },
   {
-    "to": "//addresses",
+    "to": "/addresses",
     "label": "Địa chỉ"
   },
   {
-    "to": "//cart",
+    "to": "/cart",
     "label": "Giỏ hàng"
   },
   {
-    "to": "//orders",
+    "to": "/orders",
     "label": "Đơn hàng của tôi"
   },
   {
-    "to": "//reviews",
+    "to": "/reviews",
     "label": "Đánh giá của tôi"
   },
   {
-    "to": "//membership",
+    "to": "/membership",
     "label": "Thành viên"
   },
   {
-    "to": "//support",
+    "to": "/support",
     "label": "Hỗ trợ"
   }
 ];

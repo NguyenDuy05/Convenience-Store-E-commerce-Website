@@ -1,0 +1,69 @@
+.otabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px;
+    background: var(--qk-surface);
+    border-radius: 12px;
+    box-shadow: var(--qk-shadow-sm);
+    overflow-x: auto;
+    font-family: var(--qk-font-body);
+}
+
+.otabs-list { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+.otabs-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--qk-text-variant);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.otabs-tab:hover { background: var(--qk-surface-low); color: var(--qk-text); }
+
+.otabs-tab.active { background: var(--qk-primary); color: #fff; box-shadow: var(--qk-shadow-sm); }
+
+.otabs-tab:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 2px; }
+
+.otabs-badge {
+    min-width: 20px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--qk-surface-container);
+    color: var(--qk-text);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.otabs-tab.active .otabs-badge { background: var(--qk-primary-container); color: #fff; }
+.otabs-tab.ready:not(.active) .otabs-badge { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+
+.otabs-sort {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-right: 8px;
+    color: var(--qk-text-variant);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .otabs-sort { display: none; }
+}

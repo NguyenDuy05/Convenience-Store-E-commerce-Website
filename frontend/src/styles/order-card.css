@@ -1,0 +1,174 @@
+.ocard {
+    background: var(--qk-surface);
+    border-radius: 12px;
+    box-shadow: var(--qk-shadow-sm);
+    overflow: hidden;
+    font-family: var(--qk-font-body);
+    color: var(--qk-text);
+    transition: box-shadow .2s;
+}
+
+.ocard:hover { box-shadow: var(--qk-shadow-md); }
+
+.ocard-head { padding: 16px 16px 8px; }
+.ocard-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.ocard-title { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; letter-spacing: -.01em; word-break: break-all; }
+
+.ocard-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--qk-text-variant);
+}
+
+.ocard-store { display: inline-flex; align-items: center; gap: 2px; color: var(--qk-primary); font-weight: 600; }
+
+.ocard-body { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ----- Khối nổi bật theo trạng thái ----- */
+.ocard-callout {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--qk-surface-low);
+}
+
+.ocard-callout-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ocard-callout.ready .ocard-callout-icon { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.ocard-callout.info .ocard-callout-icon { background: var(--qk-primary-container); color: #fff; }
+.ocard-callout.warn .ocard-callout-icon { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.ocard-callout.error { background: rgba(255, 218, 214, .45); }
+.ocard-callout.error .ocard-callout-icon { background: var(--qk-error-container); color: var(--qk-error); }
+
+.ocard-callout-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ocard-callout-text strong { font-size: 16px; line-height: 22px; font-weight: 700; }
+.ocard-callout-text span { font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+.ocard-callout.ready .ocard-callout-text span { color: var(--qk-secondary); font-weight: 600; }
+
+.ocard-code {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: var(--qk-surface);
+    box-shadow: var(--qk-shadow-sm);
+    flex-shrink: 0;
+}
+
+.ocard-code span { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.ocard-code b { font-family: var(--qk-font-display); font-size: 16px; letter-spacing: .04em; color: var(--qk-primary); }
+
+.ocard-progress { width: 120px; height: 8px; flex-shrink: 0; border-radius: 999px; background: var(--qk-surface-high); overflow: hidden; }
+.ocard-progress i { display: block; width: 40%; height: 100%; border-radius: 999px; background: var(--qk-primary); animation: ocard-slide 1.6s ease-in-out infinite; }
+
+@keyframes ocard-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+@media (prefers-reduced-motion: reduce) { .ocard-progress i { animation: none; width: 66%; } }
+
+/* ----- Sản phẩm + tổng tiền ----- */
+.ocard-items-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.ocard-items { flex: 1 1 260px; min-width: 0; }
+.ocard-thumbs { display: flex; align-items: center; gap: 12px; padding-top: 6px; overflow-x: auto; padding-bottom: 4px; }
+
+.ocard-thumb {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    padding: 4px;
+    border-radius: 8px;
+    background: var(--qk-surface-low);
+    color: var(--qk-outline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ocard-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.ocard-thumb.more { color: var(--qk-text-variant); font-size: 14px; font-weight: 700; }
+
+.ocard-qty {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--qk-text);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ocard-summary {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--qk-text-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ocard-total { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.ocard-price { font-family: var(--qk-font-display); font-size: 18px; line-height: 22px; font-weight: 700; }
+.ocard-sub { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+
+@media (max-width: 560px) {
+    .ocard-total { align-items: flex-start; text-align: left; }
+    .ocard-callout { flex-wrap: wrap; }
+    .ocard-progress { width: 100%; }
+}
+
+/* ----- Chân thẻ ----- */
+.ocard-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(243, 242, 255, .6);
+}
+
+.ocard-foot-note { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-secondary); }
+
+.ocard-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 9px 18px;
+    border-radius: 12px;
+    background: var(--qk-primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: var(--qk-shadow-sm);
+    transition: background .15s, transform .1s;
+}
+
+.ocard-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+.ocard-btn:active { transform: scale(.97); }
+.ocard-btn:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 2px; }

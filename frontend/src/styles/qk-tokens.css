@@ -1,0 +1,29 @@
+/* Biến màu/font lấy từ thiết kế mẫu (order-cus/code.html). Tiền tố --qk- để không đụng CSS khác. */
+:root {
+    --qk-primary: #0058bc;
+    --qk-primary-dark: #004494;
+    --qk-primary-container: #1c71e4;
+    --qk-primary-fixed: #d8e2ff;
+    --qk-on-primary-fixed: #001a41;
+    --qk-secondary: #356b0a;
+    --qk-secondary-container: #b4f486;
+    --qk-on-secondary-container: #3b7112;
+    --qk-tertiary: #6f5d0e;
+    --qk-tertiary-fixed: #fbe187;
+    --qk-on-tertiary-fixed: #221b00;
+    --qk-error: #ba1a1a;
+    --qk-error-container: #ffdad6;
+    --qk-on-error-container: #93000a;
+    --qk-text: #0c1842;
+    --qk-text-variant: #424754;
+    --qk-outline: #727785;
+    --qk-outline-variant: #c2c6d6;
+    --qk-surface: #ffffff;
+    --qk-surface-low: #f3f2ff;
+    --qk-surface-container: #ecedff;
+    --qk-surface-high: #e4e7ff;
+    --qk-shadow-sm: 0 1px 3px rgba(25, 36, 78, .08);
+    --qk-shadow-md: 0 6px 18px rgba(25, 36, 78, .12);
+    --qk-font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --qk-font-display: 'Rubik', 'Inter', system-ui, sans-serif;
+}
