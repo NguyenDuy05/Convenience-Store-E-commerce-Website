@@ -3,11 +3,17 @@ import api from './axios';
 // UC-09.1 Create Order
 export const createOrder = (data) => api.post(`/orders`, data);
 
-// UC-10.1, 10.4 View Orders / Order History
+// UC-09.1 View Orders (query: status, page, limit) -> { items, total, page, limit, counts, store }
 export const listMyOrders = (params) => api.get(`/orders/my`, { params });
 
-// UC-10.2, 10.3 View Order Details / Track Order Status
+// UC-09.2 View Order Details (404 nếu đơn không tồn tại hoặc không thuộc khách)
 export const getMyOrder = (id, params) => api.get(`/orders/my/${id}`, { params });
+
+// UC-09.3 Track Order Status -> { status, statusHistory, updatedAt, serverTime, fulfillment, store, ... }
+export const trackMyOrder = (id) => api.get(`/orders/my/${id}/tracking`);
+
+// UC-09.4 View Order History (query: status=completed|failed, from, to (ISO), page, limit) -> { items, total, page, limit, summary, store }
+export const listMyOrderHistory = (params) => api.get(`/orders/my/history`, { params });
 
 // UC-22 Create Store Order
 export const createStoreOrder = (data) => api.post(`/orders/store`, data);

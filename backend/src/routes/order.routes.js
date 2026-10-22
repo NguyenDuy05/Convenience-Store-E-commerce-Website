@@ -4,9 +4,13 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 // UC-09.1 Create Order
 router.post('/', authenticate, authorize('customer'), c.createOrder);
-// UC-10.1, 10.4 View Orders / Order History
+// UC-09.1 View Orders
 router.get('/my', authenticate, authorize('customer'), c.listMyOrders);
-// UC-10.2, 10.3 View Order Details / Track Order Status
+// UC-09.4 View Order History (đặt trước '/my/:id' để 'history' không bị hiểu là id)
+router.get('/my/history', authenticate, authorize('customer'), c.listMyOrderHistory);
+// UC-09.3 Track Order Status
+router.get('/my/:id/tracking', authenticate, authorize('customer'), c.trackMyOrder);
+// UC-09.2 View Order Details
 router.get('/my/:id', authenticate, authorize('customer'), c.getMyOrder);
 // UC-22 Create Store Order
 router.post('/store', authenticate, authorize('staff'), c.createStoreOrder);

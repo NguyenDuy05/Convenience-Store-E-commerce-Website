@@ -1,0 +1,46 @@
+.otl { list-style: none; margin: 0; padding: 0; font-family: var(--qk-font-body); color: var(--qk-text); }
+.otl-empty { margin: 0; font-size: 14px; color: var(--qk-text-variant); }
+
+.otl-step { position: relative; display: flex; gap: 16px; padding-bottom: 24px; }
+.otl-step:last-child { padding-bottom: 0; }
+
+/* Đường nối giữa các mốc */
+.otl-step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--qk-surface-high); }
+.otl-step:last-child::before { display: none; }
+.otl-step.done::before { background: var(--qk-secondary); }
+
+.otl-mark {
+    position: relative;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--qk-surface-high);
+    color: #fff;
+}
+
+.otl-step.done .otl-mark { background: var(--qk-secondary); }
+.otl-step.error .otl-mark { background: var(--qk-error); }
+.otl-step.current .otl-mark { background: var(--qk-primary); animation: otl-pulse 1.8s ease-out infinite; }
+.otl-step.current .otl-mark i { width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+
+@keyframes otl-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 88, 188, .45); }
+    80%, 100% { box-shadow: 0 0 0 9px rgba(0, 88, 188, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) { .otl-step.current .otl-mark { animation: none; } }
+
+.otl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 3px; }
+.otl-body strong { font-size: 15px; line-height: 22px; font-weight: 700; }
+.otl-desc { font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
+.otl-time { font-size: 12px; line-height: 18px; font-weight: 600; color: var(--qk-text-variant); }
+
+.otl-step.upcoming .otl-body strong { color: var(--qk-outline); font-weight: 600; }
+.otl-step.upcoming .otl-time { font-weight: 400; color: var(--qk-outline); }
+.otl-step.current .otl-time { color: var(--qk-primary); }
+.otl-step.error .otl-body strong { color: var(--qk-error); }

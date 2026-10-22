@@ -20,6 +20,8 @@ import CheckoutPage from '../pages/customer/CheckoutPage';
 import PaymentResultPage from '../pages/customer/PaymentResultPage';
 import OrdersPage from '../pages/customer/OrdersPage';
 import OrderDetailPage from '../pages/customer/OrderDetailPage';
+import OrderTrackingPage from '../pages/customer/OrderTrackingPage';
+import OrderHistoryPage from '../pages/customer/OrderHistoryPage';
 import MyReviewsPage from '../pages/customer/MyReviewsPage';
 import MembershipPage from '../pages/customer/MembershipPage';
 import SupportPage from '../pages/customer/SupportPage';
@@ -73,7 +75,9 @@ export default function AppRouter() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/payment/result" element={<PaymentResultPage />} />
         <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/history" element={<OrderHistoryPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
+        <Route path="/orders/:id/tracking" element={<OrderTrackingPage />} />
         <Route path="/reviews" element={<MyReviewsPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/support" element={<SupportPage />} />
