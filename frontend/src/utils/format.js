@@ -10,3 +10,13 @@ export const formatDateTime = (d) =>
 // 18:15
 export const formatTime = (d) =>
   (d ? new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '');
+
+export const formatVND = (n) =>
+  `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(n) || 0)} VND`;
+
+const unitNames = {
+  'cái': 'item', 'gói': 'pack', 'chai': 'bottle', 'hộp': 'box',
+  'ly': 'cup', 'lon': 'can', 'cây': 'piece', 'túi': 'bag',
+};
+
+export const formatProductUnit = (unit) => unitNames[unit] || unit || 'item';

@@ -1,15 +1,19 @@
+
 import { Link } from 'react-router-dom';
-import { formatCurrency } from '../../utils/format';
+import { formatProductUnit, formatVND } from '../../utils/format';
+import AddToCartButton from './AddToCartButton';
 
 export default function ProductCard({ product }) {
-  const inStock = product.stockQuantity > 0;
+  const inStock = product.status === 'active' && product.stockQuantity > 0;
   return (
-    <Link to={`/products/${product._id}`} className="card">
-      <div className="card-img">{product.images?.[0] ? <img src={product.images[0]} alt={product.name} /> : 'Chưa có ảnh'}</div>
-      <h3>{product.name}</h3>
-      <p className="muted">{product.categoryId?.name}</p>
-      <p className="price">{formatCurrency(product.price)} <span className="muted">/ {product.unit}</span></p>
-      <p className={inStock ? 'ok' : 'out'}>{inStock ? `Còn ${product.stockQuantity}` : 'Hết hàng'}</p>
-    </Link>
+    <article className="card cart-product-card">
+      <Link to={`/products/${product._id}`} className="cart-product-link">
+        <div className="card-img">{product.images?.[0] ? <img src={product.images[0]} alt={product.name} /> : 'No image'}</div>
+        <h3>{product.name}</h3>
+        <p className="price">{formatVND(product.price)} <span className="muted">/ {formatProductUnit(product.unit)}</span></p>
+        <p className={inStock ? 'ok' : 'out'}>{inStock ? `${product.stockQuantity} in stock` : 'Out of stock'}</p>
+      </Link>
+      <AddToCartButton product={product} />
+    </article>
   );
 }
