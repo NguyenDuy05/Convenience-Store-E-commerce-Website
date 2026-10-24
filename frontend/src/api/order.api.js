@@ -1,7 +1,12 @@
 import api from './axios';
 
-// UC-09.1 Create Order
-export const createOrder = (data) => api.post(`/orders`, data);
+// UC-08.1 Create Order. Header Idempotency-Key: gửi lại cùng khoá thì server trả lại đúng đơn cũ, không tạo đơn thứ hai.
+// data: { paymentMethod: 'cash'|'vnpay'|'momo', discountCode?, customerNote?, expectedTotal } -> { order, replayed }
+export const createOrder = (data, idempotencyKey) =>
+  api.post(`/orders`, data, idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined);
+
+// UC-08.1 Xem trước đơn: giá, khuyến mãi, mã giảm giá, tồn kho tại thời điểm hiện tại
+export const previewCheckout = (data) => api.post(`/orders/preview`, data);
 
 // UC-09.1 View Orders (query: status, page, limit) -> { items, total, page, limit, counts, store }
 export const listMyOrders = (params) => api.get(`/orders/my`, { params });

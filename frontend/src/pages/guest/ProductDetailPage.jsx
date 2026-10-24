@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getProduct } from '../../api/product.api';
 import Loading from '../../components/common/Loading';
+import AddToCart from '../../components/cart/AddToCart';
 import { formatCurrency } from '../../utils/format';
 
 // UC-02.2 View Product Details
@@ -28,6 +29,7 @@ export default function ProductDetailPage() {
       <p className={product.stockQuantity > 0 ? 'ok' : 'out'}>
         {product.stockQuantity > 0 ? `Còn ${product.stockQuantity} sản phẩm` : 'Hết hàng'}
       </p>
+      <AddToCart product={product} />
       {product.description && <p>{product.description}</p>}
     </section>
   );

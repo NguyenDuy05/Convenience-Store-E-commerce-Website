@@ -1,0 +1,49 @@
+/* Trang "Thanh toán đơn hàng" (UC-08.2). Class bắt đầu bằng "pay-". */
+.pay { font-family: var(--qk-font-body); color: var(--qk-text); }
+.pay-crumb { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
+.pay-crumb a { color: inherit; text-decoration: none; }
+.pay-crumb a:hover { color: var(--qk-primary); }
+.pay-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; }
+.pay-title { margin: 0 0 20px; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; letter-spacing: -.015em; word-break: break-all; }
+
+.pay-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .pay-grid { grid-template-columns: minmax(0, 1fr); } .pay-title { font-size: 22px; line-height: 28px; } }
+
+.pay-card, .pay-side { padding: 20px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.pay-card h2, .pay-side h2 { margin: 18px 0 12px; font-size: 16px; }
+.pay-side h2 { margin-top: 0; }
+
+.pay-timer { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; background: var(--qk-surface-low); color: var(--qk-primary); }
+.pay-timer > div { display: flex; flex-direction: column; gap: 2px; color: var(--qk-text); }
+.pay-timer strong { font-family: var(--qk-font-display); font-size: 18px; }
+.pay-timer span { font-size: 12px; line-height: 16px; color: var(--qk-text-variant); }
+
+.pay-alert { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: 13px; line-height: 18px; }
+.pay-alert.warn { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+
+.pay-error { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; font-size: 13px; font-weight: 600; line-height: 18px; color: var(--qk-error); }
+
+.pay-side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.pay-side li { display: flex; justify-content: space-between; gap: 12px; color: var(--qk-text-variant); }
+.pay-side li b { color: var(--qk-text); white-space: nowrap; }
+.pay-total { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--qk-surface-high); font-weight: 700; }
+.pay-total b { font-family: var(--qk-font-display); font-size: 20px; color: var(--qk-primary); }
+.pay-link { display: block; margin-top: 14px; text-align: center; font-size: 14px; font-weight: 600; color: var(--qk-primary); text-decoration: none; }
+.pay-link:hover { text-decoration: underline; }
+
+.pay-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; padding: 13px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.pay-btn.block { width: 100%; }
+.pay-btn.ghost { background: var(--qk-surface); color: var(--qk-text); box-shadow: inset 0 0 0 1px var(--qk-outline-variant); }
+.pay-btn:hover:not(:disabled) { background: var(--qk-primary-dark); color: #fff; }
+.pay-btn.ghost:hover:not(:disabled) { background: var(--qk-surface-low); color: var(--qk-text); }
+.pay-btn:disabled { background: var(--qk-outline-variant); cursor: not-allowed; box-shadow: none; }
+
+.pay-skeleton { height: 320px; border-radius: 12px; background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%); background-size: 200% 100%; animation: pay-shimmer 1.4s linear infinite; }
+@keyframes pay-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .pay-skeleton { animation: none; } }
+
+.pay-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.pay-state > .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.pay-state h2 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; color: var(--qk-text); }
+.pay-state p { margin: 0; max-width: 380px; font-size: 14px; line-height: 20px; }
+.pay-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }

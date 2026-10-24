@@ -2,7 +2,8 @@ const router = require('express').Router();
 const c = require('../controllers/order.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
-// UC-09.1 Create Order
+// UC-08.1 Create Order (xem trước đơn rồi đặt hàng)
+router.post('/preview', authenticate, authorize('customer'), c.previewCheckout);
 router.post('/', authenticate, authorize('customer'), c.createOrder);
 // UC-09.1 View Orders
 router.get('/my', authenticate, authorize('customer'), c.listMyOrders);
