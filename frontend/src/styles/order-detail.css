@@ -31,6 +31,8 @@
 }
 
 .odetail-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+.odetail-btn.pay { background: var(--qk-secondary); }
+.odetail-btn.pay:hover { background: #2a5707; }
 .odetail-btn.ghost { background: var(--qk-surface); color: var(--qk-text); }
 .odetail-btn.ghost:hover { background: var(--qk-surface-high); color: var(--qk-text); }
 

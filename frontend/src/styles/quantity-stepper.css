@@ -1,0 +1,7 @@
+.qs { display: inline-flex; align-items: center; border: 1px solid var(--qk-outline-variant); border-radius: 10px; background: var(--qk-surface); font-family: var(--qk-font-body); }
+.qs span { min-width: 36px; text-align: center; font-size: 14px; font-weight: 700; color: var(--qk-text); }
+.qs button { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 9px; background: transparent; color: var(--qk-primary); cursor: pointer; }
+.qs button:hover:not(:disabled) { background: var(--qk-surface-low); }
+.qs button:disabled { color: var(--qk-outline-variant); cursor: not-allowed; }
+.qs button:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: -2px; }
+.qs.disabled { opacity: .7; }

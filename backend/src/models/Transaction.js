@@ -14,6 +14,7 @@ const transactionSchema = new Schema({
   status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending', index: true },
 
   txnRef: { type: String, unique: true, sparse: true },        // mã tham chiếu gửi sang cổng thanh toán
+  paymentUrl: String,                                          // link thanh toán đã tạo (dùng lại nếu khách quay lại trước khi hết hạn)
   gateway: {                                                   // dữ liệu cổng trả về (callback/IPN)
     provider: String,
     transactionNo: String,

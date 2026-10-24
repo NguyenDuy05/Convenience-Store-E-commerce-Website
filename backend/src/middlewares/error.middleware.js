@@ -4,7 +4,7 @@ const notFound = (req, res) => res.status(404).json({ message: 'Không tìm th�
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  if (err instanceof ApiError) return res.status(err.status).json({ message: err.message });
+  if (err instanceof ApiError) return res.status(err.status).json({ ...(err.data || {}), message: err.message });
   if (err.name === 'ValidationError') {
     return res.status(400).json({ message: 'Dữ liệu không hợp lệ', errors: Object.values(err.errors).map((e) => e.message) });
   }

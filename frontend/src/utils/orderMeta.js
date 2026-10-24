@@ -61,3 +61,18 @@ export const HISTORY_TABS = [
   { key: 'completed', label: 'Đã nhận hàng' },
   { key: 'failed', label: 'Thanh toán lỗi' },
 ];
+
+// Thông điệp trạng thái có xét thanh toán: đơn chờ thanh toán mà lần thanh toán gần nhất lỗi -> khuyến khích thử lại
+export function statusMessage(order) {
+  if (order.status === 'pending_payment' && order.paymentStatus === 'failed') {
+    return { tone: 'warn', icon: 'payments', title: 'Thanh toán chưa thành công', text: 'Đơn vẫn được giữ hàng đến khi hết hạn. Bạn có thể thanh toán lại hoặc chọn cổng khác.' };
+  }
+  return ORDER_STATUS_MESSAGE[order.status];
+}
+
+// Phương thức khách được chọn khi đặt hàng online
+export const CHECKOUT_METHODS = [
+  { key: 'cash', label: 'Tiền mặt khi nhận hàng', desc: 'Thanh toán trực tiếp tại quầy khi đến lấy hàng', icon: 'payments' },
+  { key: 'vnpay', label: 'VNPay', desc: 'Thẻ ATM / QR ngân hàng / thẻ quốc tế', icon: 'account_balance' },
+  { key: 'momo', label: 'Ví MoMo', desc: 'Thanh toán bằng ví điện tử MoMo', icon: 'account_balance_wallet' },
+];
