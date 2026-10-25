@@ -1,0 +1,29 @@
+.oiss { font-family: var(--qk-font-body); color: var(--qk-text); display: flex; flex-direction: column; gap: 14px; }
+.oiss-empty { margin: 0; font-size: 14px; color: var(--qk-text-variant); }
+.oiss-sub { margin: 6px 0 0; font-size: 13px; color: var(--qk-text-variant); }
+.oiss-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.oiss-item { padding: 12px 14px; border-radius: 12px; background: var(--qk-surface-low); }
+.oiss-item.open { box-shadow: inset 3px 0 0 var(--qk-error); background: rgba(255, 218, 214, .3); }
+.oiss-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.oiss-badge { padding: 2px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.oiss-badge.open { background: var(--qk-error-container); color: var(--qk-on-error-container); }
+.oiss-badge.resolved { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.oiss-meta { font-size: 12px; color: var(--qk-text-variant); }
+.oiss-desc { margin: 8px 0 0; font-size: 14px; line-height: 20px; white-space: pre-wrap; word-break: break-word; }
+.oiss-res { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--qk-surface-high); font-size: 13px; line-height: 19px; }
+.oiss-res .qk-icon { color: var(--qk-secondary); }
+.oiss-res small { display: block; margin-top: 2px; font-size: 12px; color: var(--qk-text-variant); }
+
+.oiss-form, .oiss-add { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.oiss-add { margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--qk-surface-high); }
+.oiss label { font-size: 12px; font-weight: 700; color: var(--qk-text-variant); }
+.oiss textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical; background: var(--qk-surface); color: var(--qk-text); }
+.oiss textarea:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.oiss-error { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; color: var(--qk-error); }
+.oiss-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.oiss-btn { align-self: flex-start; padding: 9px 18px; border: 0; border-radius: 10px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.oiss-btn:hover:not(:disabled) { background: var(--qk-primary-dark); }
+.oiss-btn:disabled { background: var(--qk-outline-variant); cursor: not-allowed; }
+.oiss-btn.ghost { margin-top: 10px; background: var(--qk-surface); color: var(--qk-text); box-shadow: inset 0 0 0 1px var(--qk-outline-variant); }
+.oiss-actions .oiss-btn.ghost { margin-top: 0; }
+.oiss-btn.ghost:hover:not(:disabled) { background: var(--qk-surface-high); }

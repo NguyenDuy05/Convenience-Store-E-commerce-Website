@@ -43,6 +43,15 @@ function startExpiryJob(intervalMs = 60 * 1000) {
   return timer;
 }
 
+// Hệ thống tự mở sự cố trên đơn khi thanh toán bất thường để admin xử lý ở UC-34.4. Cùng nội dung chỉ tạo một lần.
+async function raiseSystemIssue(orderId, description) {
+  try {
+    await Order.updateOne({ _id: orderId, 'issues.description': { $ne: description } }, { $push: { issues: { description, status: 'open' } } });
+  } catch (e) {
+    console.error('Tạo sự cố tự động lỗi:', e);
+  }
+}
+
 const txnRefFor = (order, attempt) => `${order.orderCode.replace(/-/g, '')}T${attempt}`;
 
 // Khách bấm thanh toán online cho một đơn pending_payment. Trả { paymentUrl, txnRef, expiresAt, method, reused }.
@@ -106,7 +115,10 @@ async function startOnlinePayment({ order, method, ipAddr }) {
 async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) {
   const txn = await Transaction.findOne({ txnRef }).lean();
   if (!txn) return { result: 'unknown_txn' };
-  if (Number(amount) !== Number(txn.amount)) return { result: 'amount_mismatch', txn };   // số tiền không khớp -> không tin
+  if (Number(amount) !== Number(txn.amount)) {                                            // số tiền không khớp -> không tin
+    await raiseSystemIssue(txn.orderId, `Cổng thanh toán báo số tiền ${amount}đ khác số tiền giao dịch ${txn.amount}đ (mã ${txnRef}). Cần đối soát với cổng thanh toán.`);
+    return { result: 'amount_mismatch', txn };
+  }
   if (txn.status !== 'pending') return { result: 'duplicate', txn };                       // callback gửi lặp
 
   const gw = { ...(txn.gateway || {}), ...(gateway || {}) };
@@ -131,6 +143,8 @@ async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) 
     if (!order) {
       // Tiền đã về nhưng đơn không còn chờ thanh toán (đã hết hạn/hoàn kho hoặc đã được trả bởi giao dịch khác): cần admin xử lý (UC-41.4)
       await Transaction.updateOne({ _id: txn._id }, { $set: { failureReason: 'Thanh toán thành công nhưng đơn không còn ở trạng thái chờ thanh toán, cần quản trị viên xử lý/hoàn tiền' } });
+      const now2 = await Order.findById(txn.orderId).select('status').lean();
+      await raiseSystemIssue(txn.orderId, `Đã nhận thanh toán ${txn.amount}đ (mã ${txnRef}) nhưng đơn đang ở trạng thái "${now2 ? now2.status : 'không xác định'}", không còn chờ thanh toán. Cần liên hệ khách và hoàn tiền hoặc xác nhận đơn.`);
       return { result: 'late_success', txn: claimed };
     }
     return { result: 'success', txn: claimed, order };

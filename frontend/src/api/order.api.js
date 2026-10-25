@@ -23,14 +23,17 @@ export const listMyOrderHistory = (params) => api.get(`/orders/my/history`, { pa
 // UC-22 Create Store Order
 export const createStoreOrder = (data) => api.post(`/orders/store`, data);
 
-// UC-35.1, 35.2 View / Search Orders
+// UC-34.1 View Orders + UC-34.2 Search Orders (Admin)
+// params: { q, status, source, paymentStatus, paymentMethod, from, to (ISO), hasIssue: '1', sort, page, limit }
+// -> { items, total, page, limit, counts, openIssueTotal }
 export const listOrders = (params) => api.get(`/orders`, { params });
 
-// UC-35.3 View Order Details
+// UC-34.3 View Order Details (Admin) -> đơn đầy đủ: khách, sản phẩm, giao dịch, lịch sử trạng thái, sự cố, nextTransition
 export const getOrder = (id, params) => api.get(`/orders/${id}`, { params });
 
-// Chuyển trạng thái đơn: preparing, ready_for_pickup, completed
+// Chuyển trạng thái đơn theo thứ tự confirmed -> preparing -> ready_for_pickup -> completed. data: { status, note?, cashCollected? }
 export const updateOrderStatus = (id, data) => api.patch(`/orders/${id}/status`, data);
 
-// UC-35.4 Handle Order Issue
+// UC-34.4 Handle Order Issue: báo sự cố { description } rồi xử lý xong { resolution }
 export const handleOrderIssue = (id, data) => api.post(`/orders/${id}/issues`, data);
+export const resolveOrderIssue = (id, issueId, data) => api.patch(`/orders/${id}/issues/${issueId}`, data);

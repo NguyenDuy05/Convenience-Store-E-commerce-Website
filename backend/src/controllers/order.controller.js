@@ -12,21 +12,7 @@ const NOT_FOUND = 'Không tìm thấy đơn hàng';
 // Đơn đã kết thúc (thuộc lịch sử): đã nhận hàng hoặc thanh toán lỗi
 const HISTORY_STATUSES = ['completed', 'failed'];
 
-// Dòng hàng trả về cho khách: snapshot trong đơn + ảnh/đơn vị lấy từ Product (đơn cũ vẫn đúng giá, tên)
-const toItem = (it) => {
-  const product = it.productId && it.productId._id ? it.productId : null;
-  return {
-    productId: product ? product._id : null,
-    name: it.name,
-    sku: it.sku,
-    unitPrice: it.unitPrice,
-    quantity: it.quantity,
-    discountAmount: it.discountAmount || 0,
-    lineTotal: it.lineTotal,
-    image: product?.images?.[0] || null,
-    unit: product?.unit || null,
-  };
-};
+const { toItem } = require('../utils/orderDto');
 
 // Tóm tắt một đơn cho danh sách (dùng chung cho View Orders và View Order History)
 const toListItem = (o) => ({
@@ -243,6 +229,14 @@ exports.listMyOrderHistory = asyncHandler(async (req, res) => {
   });
 });
 
+// ---- Admin (UC-34): code nằm ở adminOrder.controller.js ----
+const admin = require('./adminOrder.controller');
+exports.listOrders = admin.listOrders;
+exports.getOrder = admin.getOrder;
+exports.updateOrderStatus = admin.updateOrderStatus;
+exports.handleOrderIssue = admin.handleOrderIssue;
+exports.resolveOrderIssue = admin.resolveOrderIssue;
+
 // ---- Chưa triển khai: thay từng dòng bằng code thật ----
 // UC-08.1 Create Order, bước xem trước (hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền hiện tại)
 // POST /api/orders/preview  body: { discountCode? }
@@ -260,7 +254,3 @@ exports.createOrder = asyncHandler(async (req, res) => {
   res.status(replayed ? 200 : 201).json({ order, replayed });
 });
 exports.createStoreOrder = notImplemented('UC-22 Create Store Order');
-exports.listOrders = notImplemented('UC-35.1, 35.2 View / Search Orders');
-exports.getOrder = notImplemented('UC-35.3 View Order Details');
-exports.updateOrderStatus = notImplemented('Chuyển trạng thái đơn: preparing, ready_for_pickup, completed');
-exports.handleOrderIssue = notImplemented('UC-35.4 Handle Order Issue');
