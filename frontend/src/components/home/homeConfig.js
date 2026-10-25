@@ -51,18 +51,42 @@ export function discountOf(promo, price) {
     return Math.min(Math.round(d), price);
 }
 
-// Chọn khuyến mãi giảm nhiều nhất cho sản phẩm (hiển thị tham khảo, không cộng dồn)
+
+// Chọn khuyến mãi giảm nhiều nhất cho sản phẩm
+// Chỉ hiển thị tham khảo, không cộng dồn.
 export function bestPromo(product, promos) {
+    if (!product || !Number.isFinite(Number(product.price))) {
+        return null;
+    }
+
+    // Chuẩn hóa dữ liệu đầu vào để tránh lỗi "promos is not iterable"
+    if (!Array.isArray(promos)) {
+        promos = Array.isArray(promos?.items) ? promos.items : [];
+    }
+
     let best = null;
+    const price = Number(product.price);
+
     for (const promo of promos) {
-        if (!promoApplies(promo, product)) continue;
-        const amount = discountOf(promo, product.price);
+        if (!promo || !promoApplies(promo, product)) continue;
+
+        const amount = discountOf(promo, price);
+
         if (amount > 0 && (!best || amount > best.amount)) {
-            best = { promo, amount, finalPrice: product.price - amount, percent: Math.round((amount / product.price) * 100) };
+            best = {
+                promo,
+                amount,
+                finalPrice: price - amount,
+                percent: price > 0
+                    ? Math.round((amount / price) * 100)
+                    : 0
+            };
         }
     }
+
     return best;
 }
+
 
 export const promoValueText = (p) => (p.type === 'percent' ? `-${p.value}%` : `-${p.value} đ`);
 

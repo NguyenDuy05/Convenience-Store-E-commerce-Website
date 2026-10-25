@@ -1,0 +1,117 @@
+/* Trang Staff > Khuyến mãi (UC-20). Cùng ngôn ngữ thiết kế với trang "Chi tiết đơn hàng" (odetail-).
+   Class bắt đầu bằng "spt-". Dùng biến --qk-* của dự án; nếu chưa khai báo thì dùng giá trị dự phòng. */
+.spt {
+    --spt-primary: var(--qk-primary, #0058bc);
+    --spt-primary-dark: var(--qk-primary-dark, #004494);
+    --spt-primary-fixed: var(--qk-primary-fixed, #d8e2ff);
+    --spt-secondary: var(--qk-secondary, #356b0a);
+    --spt-secondary-container: var(--qk-secondary-container, #b4f486);
+    --spt-on-secondary-container: var(--qk-on-secondary-container, #3b7112);
+    --spt-tertiary-fixed: var(--qk-tertiary-fixed, #fbe187);
+    --spt-on-tertiary-fixed: var(--qk-on-tertiary-fixed, #221b00);
+    --spt-error: var(--qk-error, #ba1a1a);
+    --spt-error-container: var(--qk-error-container, #ffdad6);
+    --spt-on-error-container: var(--qk-on-error-container, #93000a);
+    --spt-text: var(--qk-text, #0c1842);
+    --spt-text-variant: var(--qk-text-variant, #424754);
+    --spt-outline: var(--qk-outline, #727785);
+    --spt-surface: var(--qk-surface, #ffffff);
+    --spt-surface-low: var(--qk-surface-low, #f3f2ff);
+    --spt-surface-container: var(--qk-surface-container, #ecedff);
+    --spt-surface-high: var(--qk-surface-high, #e4e7ff);
+    --spt-shadow-sm: var(--qk-shadow-sm, 0 1px 4px rgba(12, 24, 66, .08));
+    --spt-font-body: var(--qk-font-body, 'Inter', system-ui, sans-serif);
+    --spt-font-display: var(--qk-font-display, 'Rubik', 'Inter', system-ui, sans-serif);
+    font-family: var(--spt-font-body);
+    color: var(--spt-text);
+}
+
+.spt-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--spt-text-variant); }
+.spt-crumb a { color: inherit; text-decoration: none; }
+.spt-crumb a:hover { color: var(--spt-primary); }
+.spt-crumb span[aria-current] { color: var(--spt-text); font-weight: 600; }
+
+.spt-head { margin-bottom: 16px; }
+.spt-head h1 { margin: 0; font-family: var(--spt-font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -.015em; }
+.spt-head p { margin: 6px 0 0; font-size: 14px; color: var(--spt-text-variant); }
+
+.spt-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border: 0; border-radius: 12px;
+    background: var(--spt-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: var(--spt-shadow-sm);
+}
+.spt-btn:hover { background: var(--spt-primary-dark); }
+.spt-btn:disabled { opacity: .5; cursor: not-allowed; }
+.spt-btn.ghost { background: var(--spt-surface); color: var(--spt-text); }
+.spt-btn.ghost:hover { background: var(--spt-surface-high); }
+.spt-btn.sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+.spt-card { padding: 16px; border-radius: 12px; background: var(--spt-surface); box-shadow: var(--spt-shadow-sm); }
+.spt-card h2 { margin: 0 0 12px; font-size: 16px; line-height: 22px; font-weight: 700; }
+.spt-section-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 12px; }
+.spt-section-title h2 { margin: 0; font-family: var(--spt-font-display); font-size: 22px; line-height: 28px; }
+
+.spt-input {
+    width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: var(--spt-surface-low);
+    color: var(--spt-text); font-family: inherit; font-size: 14px; outline: none;
+}
+.spt-input:focus { box-shadow: 0 0 0 2px var(--spt-primary); background: var(--spt-surface); }
+.spt-search { display: flex; gap: 8px; max-width: 420px; flex: 1; }
+
+/* ----- Danh sách khuyến mãi ----- */
+.spt-promos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.spt-promo { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 12px; background: var(--spt-surface); box-shadow: var(--spt-shadow-sm); border: 2px solid transparent; }
+.spt-promo.selected { border-color: var(--spt-primary); background: var(--spt-surface-low); }
+.spt-promo h3 { margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; }
+.spt-promo p { margin: 0; font-size: 13px; line-height: 18px; color: var(--spt-text-variant); }
+.spt-value { font-family: var(--spt-font-display); font-size: 24px; line-height: 28px; font-weight: 700; color: var(--spt-primary); }
+.spt-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.spt-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--spt-surface-high); color: var(--spt-text-variant); }
+.spt-chip.success { background: var(--spt-secondary-container); color: var(--spt-on-secondary-container); }
+.spt-chip.warn { background: var(--spt-tertiary-fixed); color: var(--spt-on-tertiary-fixed); }
+.spt-promo .spt-btn { margin-top: auto; }
+
+/* ----- Áp dụng vào đơn ----- */
+.spt-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
+.spt-side { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 900px) { .spt-grid { grid-template-columns: minmax(0, 1fr); } .spt-head h1 { font-size: 24px; line-height: 30px; } }
+
+.spt-results { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.spt-results li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 8px; background: var(--spt-surface-low); font-size: 14px; }
+.spt-results li span:first-child { min-width: 0; }
+.spt-sub { font-size: 12px; color: var(--spt-text-variant); }
+
+.spt-lines { list-style: none; margin: 16px 0 0; padding: 0; }
+.spt-line { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--spt-surface-container); }
+.spt-line:first-child { border-top: 0; }
+.spt-line-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.spt-line-name { font-size: 14px; font-weight: 600; }
+.spt-line .spt-input { width: 72px; text-align: center; }
+.spt-line-total { min-width: 90px; text-align: right; font-family: var(--spt-font-display); font-weight: 700; }
+.spt-line-disc { color: var(--spt-secondary); font-size: 12px; font-weight: 600; }
+.spt-remove { background: transparent; color: var(--spt-error); box-shadow: none; padding: 6px 10px; }
+.spt-remove:hover { background: var(--spt-error-container); }
+
+.spt-radio { display: flex; flex-direction: column; gap: 8px; }
+.spt-radio label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--spt-surface-low); cursor: pointer; font-size: 14px; }
+.spt-radio input { margin-top: 3px; }
+.spt-radio label.on { box-shadow: 0 0 0 2px var(--spt-primary); background: var(--spt-surface); }
+
+.spt-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.spt-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--spt-text-variant); }
+.spt-row > span:last-child { color: var(--spt-text); font-weight: 600; }
+.spt-row.discount > span:last-child { color: var(--spt-secondary); }
+.spt-row.strong { color: var(--spt-text); font-weight: 700; }
+.spt-row.strong > span:last-child { font-family: var(--spt-font-display); font-size: 20px; color: var(--spt-primary); }
+.spt-sep { height: 1px; background: var(--spt-surface-high); margin: 4px 0; }
+
+.spt-banner { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; padding: 12px 16px; border-radius: 12px; background: var(--spt-surface-low); }
+.spt-banner strong { font-size: 14px; }
+.spt-banner span { font-size: 12px; color: var(--spt-text-variant); }
+.spt-banner.success { background: rgba(180, 244, 134, .35); }
+.spt-banner.error { background: rgba(255, 218, 214, .55); }
+
+.spt-skeleton { height: 140px; border-radius: 12px; background: linear-gradient(90deg, var(--spt-surface) 25%, var(--spt-surface-low) 50%, var(--spt-surface) 75%); background-size: 200% 100%; animation: spt-shimmer 1.4s linear infinite; }
+@keyframes spt-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .spt-skeleton { animation: none; } }
+.spt-state { text-align: center; padding: 32px 16px; color: var(--spt-text-variant); font-size: 14px; }
+.spt-state h3 { margin: 0 0 4px; font-family: var(--spt-font-display); color: var(--spt-text); }
