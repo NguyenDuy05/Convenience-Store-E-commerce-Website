@@ -10,6 +10,7 @@
     "seed": "node src/scripts/seed.js",
     "seed:orders": "node src/scripts/seed-orders.js",
     "seed:checkout": "node src/scripts/seed-checkout.js",
+    "seed:transactions": "node src/scripts/seed-transactions.js",
     "init-db": "node src/scripts/init-db.js"
   },
   "dependencies": {

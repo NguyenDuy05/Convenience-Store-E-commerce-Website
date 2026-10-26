@@ -14,21 +14,34 @@ const POPULATE = [
   { path: 'processedBy', select: 'fullName email' },
 ];
 
+// BR-22: Staff chỉ xem giao dịch của cửa hàng được phân công. Hệ thống hiện chỉ có 1 cửa hàng (Store) và
+// Transaction/Order chưa có storeId, nên mọi giao dịch đều thuộc phạm vi này. Khi mở rộng nhiều cửa hàng,
+// chỉ cần trả về điều kiện lọc theo cửa hàng của nhân viên tại đây (áp dụng cho cả danh sách lẫn chi tiết).
+const scopeFilter = () => ({});
+
+// Che dữ liệu nhạy cảm khi Staff xem (UC-23.0.E4)
+const maskEmail = (e) => (e ? e.replace(/^(.{1,2})[^@]*(@.*)$/, '$1***$2') : e);
+const maskTail = (v, keep = 4) => (v && String(v).length > keep ? `${'*'.repeat(String(v).length - keep)}${String(v).slice(-keep)}` : v);
+const maskPhone = (v) => maskTail(v, 3);
+
 // Chỉ trả các trường được phép hiển thị: không trả gateway.raw (select:false) và không lộ dữ liệu thanh toán nhạy cảm
-function serialize(t) {
+function serialize(t, role = 'admin') {
   const o = t.toObject ? t.toObject() : t;
   const g = o.gateway || {};
+  const isStaff = role === 'staff';
+  const customer = o.customerId && o.customerId._id ? o.customerId : null;
+  const processedBy = o.processedBy && o.processedBy._id ? o.processedBy : null;
   return {
     _id: o._id,
     order: o.orderId && o.orderId._id ? o.orderId : null,
     orderId: o.orderId && o.orderId._id ? o.orderId._id : o.orderId,
-    customer: o.customerId && o.customerId._id ? o.customerId : null,
-    processedBy: o.processedBy && o.processedBy._id ? o.processedBy : null,
+    customer: customer && isStaff ? { _id: customer._id, fullName: customer.fullName, email: maskEmail(customer.email), phone: maskPhone(customer.phone) } : customer,
+    processedBy: processedBy && isStaff ? { _id: processedBy._id, fullName: processedBy.fullName } : processedBy,
     method: o.method,
     amount: o.amount,
     status: o.status,
     txnRef: o.txnRef,
-    gateway: { provider: g.provider, transactionNo: g.transactionNo, responseCode: g.responseCode, bankCode: g.bankCode, payDate: g.payDate },
+    gateway: { provider: g.provider, transactionNo: isStaff ? maskTail(g.transactionNo) : g.transactionNo, responseCode: g.responseCode, bankCode: g.bankCode, payDate: g.payDate },
     cash: o.cash,
     paidAt: o.paidAt,
     failureReason: o.failureReason,
@@ -59,7 +72,7 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   if (from && to && from > to) throw new ApiError(400, 'Khoảng ngày không hợp lệ: "từ ngày" phải trước "đến ngày"');
   if (from && to && (to - from) / 86400000 > MAX_RANGE_DAYS) throw new ApiError(400, `Khoảng ngày tối đa ${MAX_RANGE_DAYS} ngày`);
 
-  const filter = {};
+  const filter = { ...scopeFilter(req) };
   if (status) filter.status = status;
   if (method) filter.method = method;
   if (from || to) filter.createdAt = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
@@ -80,7 +93,7 @@ exports.listTransactions = asyncHandler(async (req, res) => {
     Transaction.find({ ...filter, status: 'success' }).select('amount'),
   ]);
   res.json({
-    items: items.map(serialize),
+    items: items.map((t) => serialize(t, req.user.role)),
     total, page, limit,
     summary: { successAmount: agg.reduce((s, t) => s + t.amount, 0), successCount: agg.length },
   });
@@ -89,10 +102,10 @@ exports.listTransactions = asyncHandler(async (req, res) => {
 // UC-35.2 View Transaction Details (chỉ đọc, không sửa dữ liệu thanh toán/đơn hàng)
 exports.getTransaction = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Không tìm thấy giao dịch');
-  const txn = await Transaction.findById(req.params.id).populate(POPULATE);
+  const txn = await Transaction.findOne({ _id: req.params.id, ...scopeFilter(req) }).populate(POPULATE);
   if (!txn) throw new ApiError(404, 'Không tìm thấy giao dịch');
 
-  const out = serialize(txn);
+  const out = serialize(txn, req.user.role);
   // Các giao dịch khác của cùng đơn (lần thử trước / thử lại) để đối soát
   const siblings = await Transaction.find({ orderId: out.orderId, _id: { $ne: txn._id } })
     .select('method amount status txnRef createdAt paidAt').sort({ createdAt: -1 });
