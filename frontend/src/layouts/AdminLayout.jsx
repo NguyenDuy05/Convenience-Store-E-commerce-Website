@@ -4,7 +4,7 @@ import { adminNav } from '../routes/navConfig';
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
-  if (pathname === '/admin/reviews') return <Outlet />;
+  if (pathname === '/admin/reviews' || pathname.startsWith('/admin/products')) return <Outlet />;   // các trang này tự dựng khung admin (AdminShell)
   return (
     <>
       <NavBar links={adminNav} brand="Quản trị" />
