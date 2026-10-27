@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from '../components/common/NavBar';
 import { customerNav } from '../routes/navConfig';
+import MembershipShell from '../components/home/MembershipShell';
 
 const REVIEW_NAV_LABELS = {
   '/profile': 'Profile',
@@ -14,7 +15,8 @@ const REVIEW_NAV_LABELS = {
 
 export default function CustomerLayout() {
   const { pathname } = useLocation();
-  const onReviewPage = pathname === '/reviews';
+  if (pathname === '/membership') return <MembershipShell><Outlet /></MembershipShell>;
+  const onReviewPage = pathname === '/reviews' || pathname === '/membership';
   const links = customerNav.map((link) => {
     if (!onReviewPage) return link;
     const to = link.to.replace(/^\/\//, '/');

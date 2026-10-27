@@ -2,18 +2,14 @@ const router = require('express').Router();
 const c = require('../controllers/order.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
-// UC-08.1 Create Order (xem trước đơn rồi đặt hàng)
-router.post('/preview', authenticate, authorize('customer'), c.previewCheckout);
+// UC-09.1 Create Order
 router.post('/', authenticate, authorize('customer'), c.createOrder);
-// UC-09.1 View Orders
+// UC-10.1, 10.4 View Orders / Order History
 router.get('/my', authenticate, authorize('customer'), c.listMyOrders);
-// UC-09.4 View Order History (đặt trước '/my/:id' để 'history' không bị hiểu là id)
-router.get('/my/history', authenticate, authorize('customer'), c.listMyOrderHistory);
-// UC-09.3 Track Order Status
-router.get('/my/:id/tracking', authenticate, authorize('customer'), c.trackMyOrder);
-// UC-09.2 View Order Details
+// UC-10.2, 10.3 View Order Details / Track Order Status
 router.get('/my/:id', authenticate, authorize('customer'), c.getMyOrder);
-// UC-22 Create Store Order
+// UC-21 Create Store Order (báo giá/kiểm tra từng dòng, rồi tạo đơn)
+router.post('/store/quote', authenticate, authorize('staff'), c.quoteStoreOrder);
 router.post('/store', authenticate, authorize('staff'), c.createStoreOrder);
 // UC-35.1, 35.2 View / Search Orders
 router.get('/', authenticate, authorize('admin'), c.listOrders);

@@ -76,3 +76,11 @@ export const CHECKOUT_METHODS = [
   { key: 'vnpay', label: 'VNPay', desc: 'Thẻ ATM / QR ngân hàng / thẻ quốc tế', icon: 'account_balance' },
   { key: 'momo', label: 'Ví MoMo', desc: 'Thanh toán bằng ví điện tử MoMo', icon: 'account_balance_wallet' },
 ];
+
+// ---- Admin (UC-34) ----
+export const ORDER_SOURCE = { online: 'Online', store: 'Tại quầy' };
+export const TRANSITION_LABEL = {
+  preparing: 'Bắt đầu chuẩn bị',
+  ready_for_pickup: 'Báo sẵn sàng nhận hàng',
+  completed: 'Xác nhận đã giao khách',
+};

@@ -50,6 +50,7 @@ import StaffProfilePage from '../pages/staff/StaffProfilePage';
 // Admin
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
+import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
 import AdminTransactionsPage from '../pages/admin/AdminTransactionsPage';
 import AdminPaymentsPage from '../pages/admin/AdminPaymentsPage';
 import AdminProductsPage from '../pages/admin/AdminProductsPage';
@@ -140,6 +141,7 @@ export default function AppRouter() {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="orders" element={<AdminOrdersPage />} />
+        <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="transactions" element={<AdminTransactionsPage />} />
         <Route path="payments" element={<AdminPaymentsPage />} />
         <Route path="products" element={<AdminProductsPage />} />

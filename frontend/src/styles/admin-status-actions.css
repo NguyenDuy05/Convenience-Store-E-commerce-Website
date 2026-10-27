@@ -1,0 +1,16 @@
+.asa { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 12px; background: var(--qk-surface-low); font-family: var(--qk-font-body); color: var(--qk-text); }
+.asa.info { flex-direction: row; align-items: flex-start; gap: 12px; color: var(--qk-text-variant); }
+.asa.info p { margin: 0; font-size: 14px; line-height: 20px; }
+.asa-head { display: flex; align-items: flex-start; gap: 12px; color: var(--qk-primary); }
+.asa-head > div { display: flex; flex-direction: column; gap: 2px; color: var(--qk-text); }
+.asa-head strong { font-size: 15px; }
+.asa-head span { font-size: 12px; color: var(--qk-text-variant); }
+.asa-check { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); font-size: 13px; line-height: 18px; font-weight: 600; cursor: pointer; }
+.asa-check input { margin-top: 2px; }
+.asa-label { font-size: 12px; font-weight: 700; color: var(--qk-text-variant); }
+.asa-note { padding: 9px 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--qk-surface); color: var(--qk-text); }
+.asa-note:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.asa-error { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; color: var(--qk-error); }
+.asa-btn { align-self: flex-start; padding: 11px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.asa-btn:hover:not(:disabled) { background: var(--qk-primary-dark); }
+.asa-btn:disabled { background: var(--qk-outline-variant); cursor: not-allowed; box-shadow: none; }
