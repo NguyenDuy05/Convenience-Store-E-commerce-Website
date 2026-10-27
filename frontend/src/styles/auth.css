@@ -1,7 +1,7 @@
 /* Giao diện Đăng nhập / Đăng ký: ảnh nền + form kính mờ bên phải.
    Mọi class đều bắt đầu bằng "auth-" nên không đụng CSS của trang khác. */
 
-/* Ảnh nền: đặt ảnh thật tại  frontend/public/auth_background.png  (không có thì dùng auth-bg.svg) */
+/* Ảnh nền: frontend/public/auth_background.png; dùng gradient nếu thiếu ảnh. */
 .auth-page {
     --auth-nav-h: 58px;
     /* chiều cao NavBar, chỉnh nếu NavBar cao/thấp hơn */
@@ -32,10 +32,10 @@
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--a-text);
 
-    /* lớp trên cùng = ảnh thật; nếu thiếu file thì lộ lớp svg, rồi tới gradient */
+    /* Lớp trên cùng là ảnh; nếu thiếu file thì hiện gradient. */
     background-color: #0b3d91;
-    background-image: url('/auth_background.png'), url('/auth-bg.svg'), linear-gradient(135deg, #0b3d91, #1c71e4 55%, #3b9b3b);
-    background-size: cover, cover, cover;
+    background-image: url('/auth_background.png'), linear-gradient(135deg, #0b3d91, #1c71e4 55%, #3b9b3b);
+    background-size: cover, cover;
     background-position: center;
     background-repeat: no-repeat;
 }

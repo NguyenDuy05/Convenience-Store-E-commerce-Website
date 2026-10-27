@@ -40,9 +40,9 @@ export function promoApplies(promo, product) {
     if (promo.scope === 'all') return true;
     if (promo.scope === 'category') {
         const cid = idOf(product.categoryId);
-        return (promo.categoryIds || []).some((c) => idOf(c) === cid);
+        return (promo.categories || promo.categoryIds || []).some((c) => idOf(c) === cid);
     }
-    return (promo.productIds || []).some((p) => idOf(p) === String(product._id));
+    return (promo.products || promo.productIds || []).some((p) => idOf(p) === String(product._id));
 }
 
 export function discountOf(promo, price) {
@@ -92,7 +92,7 @@ export const promoValueText = (p) => (p.type === 'percent' ? `-${p.value}%` : `-
 
 export function scopeText(p) {
     if (p.scope === 'all') return 'Entire store';
-    const names = (p.scope === 'category' ? p.categoryIds : p.productIds || []).map((x) => x?.name).filter(Boolean);
+    const names = (p.scope === 'category' ? (p.categories || p.categoryIds || []) : (p.products || p.productIds || [])).map((x) => x?.name).filter(Boolean);
     return names.length ? names.join(', ') : p.scope === 'category' ? 'Selected categories' : 'Selected products';
 }
 
