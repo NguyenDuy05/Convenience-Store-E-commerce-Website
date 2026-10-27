@@ -24,8 +24,8 @@ function validate(f) {
     if (f.price === '' || !Number.isInteger(Number(f.price))) e.price = 'Enter a price in VND';
     else if (Number(f.price) > 100000000) e.price = 'Price is too large';
     if (f.lowStockThreshold === '' || !Number.isInteger(Number(f.lowStockThreshold)) || Number(f.lowStockThreshold) < 0) e.lowStockThreshold = 'Enter a whole number ≥ 0';
-    const bad = f.images.find((u) => u.trim() && !/^https?:\/\/\S+$/i.test(u.trim()));
-    if (bad) e.images = 'Image links must start with http:// or https://';
+    const bad = f.images.find((u) => u.trim() && !/^https?:\/\/\S+$/i.test(u.trim()) && !/^data:image\/(png|jpeg|webp|gif);base64,/i.test(u.trim()));
+    if (bad) e.images = 'Choose an image file or enter an http(s) image URL';
     return e;
 }
 
@@ -59,6 +59,16 @@ export default function AdminProductFormPage() {
     const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
     const set = (k, v) => { setForm((f) => ({ ...f, [k]: v })); if (touched) setErrors((e) => ({ ...e, [k]: undefined })); };
     const setImage = (i, v) => set('images', form.images.map((u, idx) => (idx === i ? v : u)));
+    const chooseImage = (i, file) => {
+        if (!file) return;
+        if (!/^image\/(png|jpeg|webp|gif)$/i.test(file.type) || file.size > 2 * 1024 * 1024) {
+            setServerError('Choose a PNG, JPG, WEBP or GIF image up to 2 MB.'); return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => { setImage(i, String(reader.result)); setServerError(''); };
+        reader.onerror = () => setServerError('Could not read the selected image.');
+        reader.readAsDataURL(file);
+    };
     const price = Number(form.price) || 0;
 
     const discard = () => { if (!dirty || window.confirm('Discard your changes?')) navigate(editing ? `/admin/products/${id}` : '/admin/products'); };
@@ -147,18 +157,19 @@ export default function AdminProductFormPage() {
 
                     <div className="ap-col">
                         <section className="ap-card">
-                            <div className="ap-card-head"><h2><span className="review-material-icon">add_photo_alternate</span>Product Imagery</h2><small>Up to 8 links</small></div>
+                            <div className="ap-card-head"><h2><span className="review-material-icon">add_photo_alternate</span>Product Imagery</h2><small>Up to 8 images</small></div>
                             {form.images.map((url, i) => (
                                 <div className="ap-img-row" key={i}>
-                                    <span className="ap-thumb">{url.trim() && /^https?:\/\//i.test(url) ? <img src={url} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <span className="review-material-icon">image</span>}</span>
-                                    <input placeholder="https://… image URL" value={url} onChange={(e) => setImage(i, e.target.value)} />
+                                    <span className="ap-thumb">{url.trim() && (/^https?:\/\//i.test(url) || /^data:image\//i.test(url)) ? <img src={url} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <span className="review-material-icon">image</span>}</span>
+                                    <input placeholder="Image URL or choose a file" value={url.startsWith('data:image/') ? 'Local image selected' : url} onChange={(e) => setImage(i, e.target.value)} />
+                                    <label className="ap-btn soft ap-file-pick">Choose from folder<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(e) => { chooseImage(i, e.target.files?.[0]); e.target.value = ''; }} /></label>
                                     {i === 0 && url.trim() && <span className="ap-main-tag">MAIN</span>}
                                     {form.images.length > 1 && <button type="button" className="ap-icon-btn danger" aria-label="Remove image" onClick={() => set('images', form.images.filter((_, idx) => idx !== i))}><span className="review-material-icon">delete</span></button>}
                                 </div>
                             ))}
                             {errors.images && <small className="err" style={{ color: '#ba1a1a' }}>{errors.images}</small>}
-                            {form.images.length < 8 && <button type="button" className="ap-btn soft" onClick={() => set('images', [...form.images, ''])}><span className="review-material-icon">add</span>Add image link</button>}
-                            <p className="ap-hint">The first image is the main photo. File upload is not available yet; paste a hosted image URL.</p>
+                            {form.images.length < 8 && <button type="button" className="ap-btn soft" onClick={() => set('images', [...form.images, ''])}><span className="review-material-icon">add</span>Add another image</button>}
+                            <p className="ap-hint">The first image is the main photo. Choose an image from your device (PNG, JPG, WEBP or GIF, up to 2 MB), or paste an image URL.</p>
                         </section>
 
                         <section className="ap-card">

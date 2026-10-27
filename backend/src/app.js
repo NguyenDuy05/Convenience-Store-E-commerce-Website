@@ -5,7 +5,7 @@ const { notFound, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || true }));
-app.use(express.json());
+app.use(express.json({ limit: '12mb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api', routes);
