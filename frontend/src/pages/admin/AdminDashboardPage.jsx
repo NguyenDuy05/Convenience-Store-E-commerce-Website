@@ -1,119 +1,66 @@
-import { useMemo, useState } from 'react';
-import useDashboardData from '../../hooks/useDashboardData';
-import KPICards from '../../components/admin/KPICards';
-import SalesOverview from '../../components/admin/SalesOverview';
-import OrderOverview from '../../components/admin/OrderOverview';
-import OrdersByStore from '../../components/admin/OrdersByStore';
-import SalesByCategory from '../../components/admin/SalesByCategory';
-import InventoryAlerts from '../../components/admin/InventoryAlerts';
-import AdminHeader from '../../components/admin/AdminHeader';
-import AdminLayout from '../../components/admin/AdminLayout';
-import '../../styles/admin.css';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import useDashboard from '../../hooks/useDashboard';
+import DashboardHeader, { exportCsv } from '../../components/dashboard/DashboardHeader';
+import { CategoryBreakdown, ChannelSplit, KpiCard, Panel, RecentOrders, SalesChart, StatusBreakdown, StockAlerts, TopProducts, compact } from '../../components/dashboard/DashboardWidgets';
+import { vnd } from '../../components/admin/products/productUtils';
 
-export default function AdminDashboard() {
-  const [dateRange, setDateRange] = useState('7d');
-  const [refresh, setRefresh] = useState(0);
-  const { data, loading, error } = useDashboardData(refresh);
+// Dashboard admin: toàn bộ số liệu lấy từ GET /api/dashboard/admin (dữ liệu thật trong MongoDB).
+// Mục nào chưa có dữ liệu thì hiện 0 / trạng thái trống, sẽ tự có số khi module tương ứng được làm.
+const n = (v) => Number(v || 0).toLocaleString('en-US');
 
-  const stats = useMemo(() => {
-    if (!data) return null;
-    const orders = data.orders || [];
-    const products = data.products || [];
-    const categories = data.categories || [];
-    const stores = data.stores || [];
-
-    // Tính toán KPI
-    const totalSales = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const totalOrders = orders.length;
-    const avgOrderValue = totalOrders ? totalSales / totalOrders : 0;
-    const completedOrders = orders.filter((o) => o.status === 'completed').length;
-    const readyOrders = orders.filter((o) => o.status === 'ready_for_pickup').length;
-    const preparingOrders = orders.filter((o) => o.status === 'preparing').length;
-    const cancelledOrders = orders.filter((o) => o.status === 'cancelled').length;
-    const lowStockProducts = products.filter((p) => (p.stockQuantity || 0) <= (p.lowStockThreshold || 10)).length;
-    const newCustomers = 326; // Từ dữ liệu mẫu, sau thay bằng API
-    const totalCustomers = 8426; // Từ dữ liệu mẫu, sau thay bằng API
-
-    // Theo danh mục (mẫu)
-    const salesByCategory = [
-      { name: 'Drinks', value: 0.38, amount: totalSales * 0.38 },
-      { name: 'Snacks', value: 0.28, amount: totalSales * 0.28 },
-      { name: 'Fresh Food', value: 0.17, amount: totalSales * 0.17 },
-      { name: 'Instant Food', value: 0.10, amount: totalSales * 0.10 },
-      { name: 'Personal Care', value: 0.05, amount: totalSales * 0.05 },
-      { name: 'Household', value: 0.02, amount: totalSales * 0.02 },
-    ];
-
-    // Top sản phẩm (mẫu, sau lấy từ API)
-    const topProducts = products.slice(0, 5).map((p) => ({
-      ...p,
-      unitsSold: Math.floor(Math.random() * 300) + 50,
-      revenue: (p.price || 0) * (Math.floor(Math.random() * 300) + 50),
-    }));
-
-    return {
-      totalSales,
-      totalOrders,
-      avgOrderValue,
-      completedOrders,
-      readyOrders,
-      preparingOrders,
-      cancelledOrders,
-      lowStockProducts,
-      activeStores: stores.length,
-      newCustomers,
-      totalCustomers,
-      activePromos: data.promotions.length,
-      salesByCategory,
-      topProducts,
-    };
-  }, [data]);
-
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="admin-loading">
-          <div className="admin-spinner"></div>
-          <p>Loading dashboard...</p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="admin-error">
-          <h2>Could not load dashboard</h2>
-          <p>{error}</p>
-          <button onClick={() => setRefresh((r) => r + 1)}>Try again</button>
-        </div>
-      </AdminLayout>
-    );
-  }
+export default function AdminDashboardPage() {
+  const [params, setParams] = useState({ range: '7d' });
+  const { data, error, loading, refresh } = useDashboard('admin', params);
+  const k = data?.kpis;
 
   return (
-    <AdminLayout>
-      <AdminHeader dateRange={dateRange} setDateRange={setDateRange} onRefresh={() => setRefresh((r) => r + 1)} />
-      <div className="admin-content">
-        {/* KPI Cards */}
-        {stats && <KPICards stats={stats} />}
+    <div className="ap-page">
+      <DashboardHeader title="Dashboard" pill="Admin Overview" description="Sales, orders, customers and stock across the store."
+        ranges={['today', '7d', '30d', '90d', 'custom']} params={params} onChange={setParams} data={data} loading={loading} onRefresh={refresh}
+        onExport={() => exportCsv(data, `dashboard-${params.range}.csv`)} />
 
-        {/* Main Analytics */}
-        <div className="admin-grid-2">
-          {stats && <SalesOverview orders={data?.orders || []} />}
-          {stats && <OrderOverview orders={data?.orders || []} />}
+      {error && <p className="ap-alert error" role="alert">{error} <button className="ap-link-btn" onClick={refresh}>Try again</button></p>}
+      {!data && loading && <p className="db-empty">Loading dashboard…</p>}
+      {!data && !loading && error && <section className="ap-card" aria-label="Dashboard data unavailable">
+        <h2>Dashboard data is unavailable</h2>
+        <p>Reconnect to the server to load sales, orders and inventory metrics. You can still open these management pages:</p>
+        <div className="ap-actions">
+          <Link className="ap-btn soft" to="/admin/orders">Orders</Link>
+          <Link className="ap-btn soft" to="/admin/products">Products</Link>
+          <Link className="ap-btn soft" to="/admin/inventory">Inventory</Link>
+          <Link className="ap-btn soft" to="/admin/promotions">Promotions</Link>
+        </div>
+      </section>}
+
+      {k && <>
+        <div className="db-kpis">
+          <KpiCard icon="payments" label="Total sales" value={vnd(k.sales.value)} showDelta pct={k.sales.changePct} />
+          <KpiCard icon="receipt_long" label="Orders" value={n(k.orders.value)} showDelta pct={k.orders.changePct} />
+          <KpiCard icon="shopping_basket" tone="gray" label="Avg. order value" value={vnd(k.avgOrderValue)} note={`${n(k.customersServed)} customer(s) ordered`} />
+          <KpiCard icon="group" tone="green" label="Customers" value={n(k.totalCustomers)} note={`${n(k.newCustomers)} new in this period`} />
+          <KpiCard icon="storefront" tone="gray" label="Store status" value={k.totalStores ? `${k.openStores} / ${k.totalStores} open` : '—'} note={k.totalStores ? 'Opening stores' : 'No store configured'} />
+          <KpiCard icon="warning" tone={k.lowStock + k.outOfStock ? 'yellow' : 'gray'} label="Low / out of stock" value={`${n(k.lowStock)} / ${n(k.outOfStock)}`} note={`of ${n(k.activeProducts)} active products`} />
+          <KpiCard icon="campaign" tone="gray" label="Active promotions" value={n(k.activePromotions)} note="Running right now" />
+          <KpiCard icon="event_busy" tone={k.expiringSoon || k.expiredUnits ? 'red' : 'gray'} label="Expiry watch" value={n(k.expiringSoon)} note={`batches within 7 days · ${n(k.expiredUnits)} expired unit(s)`} />
         </div>
 
-        {/* Secondary Analytics */}
-        <div className="admin-grid-2">
-          {stats && <OrdersByStore orders={data?.orders || []} stores={data?.stores || []} />}
-          {stats && <SalesByCategory categories={stats.salesByCategory} />}
+        <div className="db-grid g21">
+          <Panel title="Sales overview" sub={data.range.hourly ? 'Revenue by hour' : 'Revenue by day'}><SalesChart series={data.series} /></Panel>
+          <Panel title="Order status" sub="Orders placed in this period"><StatusBreakdown counts={data.statusCounts} /></Panel>
         </div>
 
-        {/* Inventory Alerts */}
-        {stats && <InventoryAlerts products={data?.products || []} />}
-      </div>
-    </AdminLayout>
+        <div className="db-grid g111">
+          <Panel title="Sales by category" sub="Share of revenue"><CategoryBreakdown items={data.salesByCategory} /></Panel>
+          <Panel title="Top products" sub="By units sold"><TopProducts items={data.topProducts} /></Panel>
+          <Panel title="Sales channel" sub={`Total ${compact(k.sales.value)} VND`}><ChannelSplit channels={data.channels} /></Panel>
+        </div>
+
+        <div className="db-grid g11">
+          <Panel title="Inventory alerts" sub="Products that need restocking"><StockAlerts items={data.stockAlerts} expiringSoon={k.expiringSoon} expiredUnits={k.expiredUnits} /></Panel>
+          <Panel title="Recent orders" sub="Latest 8 orders"><RecentOrders orders={data.recentOrders} /></Panel>
+        </div>
+      </>}
+    </div>
   );
 }

@@ -37,7 +37,12 @@ const cleanImages = (images) => {
   if (!Array.isArray(images)) throw new ApiError(400, 'Danh sách ảnh không hợp lệ');
   const list = images.map((u) => String(u || '').trim()).filter(Boolean);
   if (list.length > MAX_IMAGES) throw new ApiError(400, `Tối đa ${MAX_IMAGES} ảnh`);
-  if (list.some((u) => !/^https?:\/\/\S+$/i.test(u))) throw new ApiError(400, 'Ảnh phải là đường dẫn http(s) hợp lệ');
+  if (list.some((u) => {
+    if (/^https?:\/\/\S+$/i.test(u)) return false;
+    const match = u.match(/^data:image\/(png|jpeg|webp|gif);base64,([A-Za-z0-9+/]+=*)$/i);
+    return !match || Buffer.from(match[2], 'base64').length > 2 * 1024 * 1024;
+  })) throw new ApiError(400, 'Ảnh phải là URL hợp lệ hoặc ảnh PNG/JPG/WEBP/GIF tối đa 2MB');
+  if (list.reduce((sum, u) => sum + (u.startsWith('data:') ? u.length : 0), 0) > 10 * 1024 * 1024) throw new ApiError(400, 'Tổng dung lượng ảnh vượt quá giới hạn');
   return list;
 };
 

@@ -1,4 +1,5 @@
 
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -10,7 +11,6 @@ import AdminLayout from '../layouts/AdminLayout';
 import NotFoundPage from '../pages/NotFoundPage';
 
 // Guest
-import HomePage from '../pages/guest/HomePage';
 import ProductListPage from '../pages/guest/ProductListPage';
 import ProductDetailPage from '../pages/guest/ProductDetailPage';
 import PromotionsPage from '../pages/guest/PromotionsPage';
@@ -67,15 +67,18 @@ import AdminMembershipPage from '../pages/admin/AdminMembershipPage';
 import AdminReviewsPage from '../pages/admin/AdminReviewsPage';
 import AdminProfilePage from '../pages/admin/AdminProfilePage';
 
+const HomePage = lazy(() => import('../pages/guest/HomePage'));
+
 export default function AppRouter() {
   return (
     <Routes>
       {/* Guest */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Suspense fallback={<div className="container">Loading store…</div>}><HomePage /></Suspense>} />
         <Route path="/products" element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/promotions" element={<PromotionsPage />} />
+        <Route path="/promotion" element={<PromotionsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
