@@ -1,12 +1,7 @@
 import { Outlet } from 'react-router-dom';
-import NavBar from '../components/common/NavBar';
-import { staffNav } from '../routes/navConfig';
+import StaffShell from '../components/staff/StaffShell';
 
+// Mọi trang /staff/* dùng chung sidebar + topbar QUICK (giống admin).
 export default function StaffLayout() {
-  return (
-    <>
-      <NavBar links={staffNav} brand="Nhân viên" />
-      <main className="container"><Outlet /></main>
-    </>
-  );
+  return <StaffShell><Outlet /></StaffShell>;
 }

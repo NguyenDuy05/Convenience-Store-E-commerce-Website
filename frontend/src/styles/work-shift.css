@@ -1,0 +1,95 @@
+/* Trang Staff > Ca làm việc (UC-24). Cùng ngôn ngữ thiết kế với trang "Chi tiết đơn hàng" (odetail-).
+   Class bắt đầu bằng "wsp-". Dùng biến --qk-* của dự án; nếu chưa khai báo thì dùng giá trị dự phòng. */
+.wsp {
+    --wsp-primary: var(--qk-primary, #0058bc);
+    --wsp-primary-dark: var(--qk-primary-dark, #004494);
+    --wsp-primary-container: var(--qk-primary-container, #1c71e4);
+    --wsp-secondary: var(--qk-secondary, #356b0a);
+    --wsp-secondary-container: var(--qk-secondary-container, #b4f486);
+    --wsp-on-secondary-container: var(--qk-on-secondary-container, #3b7112);
+    --wsp-tertiary-fixed: var(--qk-tertiary-fixed, #fbe187);
+    --wsp-on-tertiary-fixed: var(--qk-on-tertiary-fixed, #221b00);
+    --wsp-error: var(--qk-error, #ba1a1a);
+    --wsp-error-container: var(--qk-error-container, #ffdad6);
+    --wsp-on-error-container: var(--qk-on-error-container, #93000a);
+    --wsp-text: var(--qk-text, #0c1842);
+    --wsp-text-variant: var(--qk-text-variant, #424754);
+    --wsp-surface: var(--qk-surface, #ffffff);
+    --wsp-surface-low: var(--qk-surface-low, #f3f2ff);
+    --wsp-surface-container: var(--qk-surface-container, #ecedff);
+    --wsp-surface-high: var(--qk-surface-high, #e4e7ff);
+    --wsp-shadow-sm: var(--qk-shadow-sm, 0 1px 4px rgba(12, 24, 66, .08));
+    --wsp-font-body: var(--qk-font-body, 'Inter', system-ui, sans-serif);
+    --wsp-font-display: var(--qk-font-display, 'Rubik', 'Inter', system-ui, sans-serif);
+    font-family: var(--wsp-font-body);
+    color: var(--wsp-text);
+}
+.wsp-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--wsp-text-variant); }
+.wsp-crumb a { color: inherit; text-decoration: none; }
+.wsp-crumb a:hover { color: var(--wsp-primary); }
+.wsp-crumb span[aria-current] { color: var(--wsp-text); font-weight: 600; }
+.wsp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.wsp-head h1 { margin: 0; font-family: var(--wsp-font-display); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -.015em; }
+.wsp-head p { margin: 6px 0 0; font-size: 14px; color: var(--wsp-text-variant); }
+.wsp-now { text-align: right; font-size: 12px; color: var(--wsp-text-variant); }
+.wsp-now strong { display: block; font-family: var(--wsp-font-display); font-size: 26px; line-height: 30px; color: var(--wsp-text); }
+
+.wsp-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border: 0; border-radius: 12px;
+    background: var(--wsp-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: var(--wsp-shadow-sm);
+}
+.wsp-btn:hover { background: var(--wsp-primary-dark); }
+.wsp-btn:disabled { opacity: .5; cursor: not-allowed; }
+.wsp-btn.out { background: var(--wsp-secondary); }
+.wsp-btn.out:hover { background: #2a5707; }
+.wsp-btn.ghost { background: var(--wsp-surface); color: var(--wsp-text); }
+.wsp-btn.ghost:hover { background: var(--wsp-surface-high); }
+.wsp-btn.sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+.wsp-card { padding: 16px; border-radius: 12px; background: var(--wsp-surface); box-shadow: var(--wsp-shadow-sm); }
+.wsp-card h2 { margin: 0 0 12px; font-size: 16px; line-height: 22px; font-weight: 700; }
+.wsp-section { margin: 24px 0 12px; font-family: var(--wsp-font-display); font-size: 22px; line-height: 28px; }
+
+.wsp-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--wsp-surface-high); color: var(--wsp-text-variant); }
+.wsp-chip.in_progress { background: var(--wsp-secondary-container); color: var(--wsp-on-secondary-container); }
+.wsp-chip.scheduled { background: var(--wsp-primary-container); color: #fff; }
+.wsp-chip.completed { background: var(--wsp-surface-high); color: var(--wsp-text); }
+.wsp-chip.missed { background: var(--wsp-error-container); color: var(--wsp-on-error-container); }
+.wsp-chip.warn { background: var(--wsp-tertiary-fixed); color: var(--wsp-on-tertiary-fixed); }
+
+.wsp-current { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; background: var(--wsp-surface-low); }
+.wsp-current.active { background: rgba(180, 244, 134, .35); }
+.wsp-current-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wsp-time { font-family: var(--wsp-font-display); font-size: 28px; line-height: 34px; font-weight: 700; }
+.wsp-sub { font-size: 13px; color: var(--wsp-text-variant); }
+.wsp-reason { font-size: 12px; color: var(--wsp-on-error-container); font-weight: 600; }
+
+.wsp-banner { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; background: var(--wsp-surface-low); }
+.wsp-banner strong { font-size: 14px; }
+.wsp-banner span { font-size: 12px; color: var(--wsp-text-variant); }
+.wsp-banner.success { background: rgba(180, 244, 134, .35); }
+.wsp-banner.error { background: rgba(255, 218, 214, .55); }
+.wsp-banner.warn { background: rgba(251, 225, 135, .5); }
+
+.wsp-upcoming { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.wsp-shift { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 12px; background: var(--wsp-surface); box-shadow: var(--wsp-shadow-sm); }
+.wsp-shift b { font-family: var(--wsp-font-display); font-size: 18px; }
+
+.wsp-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+.wsp-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--wsp-text-variant); }
+.wsp-filters input, .wsp-filters select { min-width: 140px; padding: 9px 12px; border: 0; border-radius: 10px; background: var(--wsp-surface-low); color: var(--wsp-text); font-family: inherit; font-size: 14px; outline: none; }
+.wsp-filters input:focus, .wsp-filters select:focus { box-shadow: 0 0 0 2px var(--wsp-primary); background: var(--wsp-surface); }
+
+.wsp-table-wrap { overflow-x: auto; padding: 0; }
+.wsp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.wsp-table th, .wsp-table td { padding: 12px 16px; text-align: left; border-top: 1px solid var(--wsp-surface-container); white-space: nowrap; }
+.wsp-table thead th { border-top: 0; background: var(--wsp-surface-low); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--wsp-text-variant); }
+.wsp-table tbody tr:hover { background: var(--wsp-surface-low); }
+.wsp-pager { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 16px; font-size: 14px; color: var(--wsp-text-variant); }
+
+.wsp-skeleton { height: 140px; border-radius: 12px; background: linear-gradient(90deg, var(--wsp-surface) 25%, var(--wsp-surface-low) 50%, var(--wsp-surface) 75%); background-size: 200% 100%; animation: wsp-shimmer 1.4s linear infinite; }
+@keyframes wsp-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .wsp-skeleton { animation: none; } }
+.wsp-state { text-align: center; padding: 28px 16px; color: var(--wsp-text-variant); font-size: 14px; }
+.wsp-state h3 { margin: 0 0 4px; font-family: var(--wsp-font-display); color: var(--wsp-text); }
+@media (max-width: 640px) { .wsp-head h1 { font-size: 24px; line-height: 30px; } .wsp-now { text-align: left; } .wsp-filters input, .wsp-filters select { min-width: 0; width: 100%; } .wsp-filters label { flex: 1 1 45%; } }
