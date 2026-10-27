@@ -5,6 +5,7 @@ import { listProducts } from '../../api/product.api';
 import { listStores } from '../../api/store.api';
 import HomeHeader from '../../components/home/HomeHeader';
 import HomeFooter from '../../components/home/HomeFooter';
+import ProductSearchInput from '../../components/home/ProductSearchInput';
 import { bestPromo, scopeText } from '../../components/home/homeConfig';
 import { formatCurrency } from '../../utils/format';
 import '../../styles/home.css';
@@ -83,6 +84,7 @@ export default function PromotionsPage() {
 
   const deals = useMemo(() => products.map((product) => ({ product, offer: bestPromo(product, promotions) }))
     .filter((deal) => deal.offer && deal.offer.amount > 0), [products, promotions]);
+  const dealProducts = useMemo(() => deals.map(({ product }) => product), [deals]);
   const visibleDeals = useMemo(() => {
     let rows = deals.filter(({ product, offer }) => {
       if (filter === 'storewide' && offer.promo.scope !== 'all') return false;
@@ -125,7 +127,7 @@ export default function PromotionsPage() {
 
   return (
     <div className="deals-shell">
-      <HomeHeader store={store} info={null} q={query} setQ={setQuery} active="promotions" onNav={goToSection} onSearch={submitSearch} />
+      <HomeHeader store={store} info={null} q={query} setQ={setQuery} active="promotions" onNav={goToSection} onSearch={submitSearch} products={products} />
 
       <main className="deals-page">
         <div className="deals-context-row">
@@ -156,7 +158,7 @@ export default function PromotionsPage() {
                 <div className="deals-section-head"><div><span className="deals-section-mark"><Icon>verified_user</Icon></span><div><h2>Ưu đãi nổi bật</h2><p>Khuyến mãi đang áp dụng cho sản phẩm trong cửa hàng.</p></div></div>
                   <div className="deals-sort"><label htmlFor="deals-sort">Sắp xếp</label><select id="deals-sort" value={sort} onChange={(event) => setSort(event.target.value)}><option value="discount">Mức giảm cao nhất</option><option value="price-asc">Giá thấp đến cao</option><option value="price-desc">Giá cao đến thấp</option><option value="ending">Sắp kết thúc</option></select></div>
                 </div>
-                <div className="deals-result-line"><span>{visibleDeals.length} sản phẩm ưu đãi</span><form className="deals-inline-search" onSubmit={(event) => event.preventDefault()}><Icon>search</Icon><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm trong ưu đãi..." aria-label="Tìm sản phẩm khuyến mãi" /></form></div>
+                <div className="deals-result-line"><span>{visibleDeals.length} sản phẩm ưu đãi</span><form className="deals-inline-search" onSubmit={(event) => event.preventDefault()}><Icon>search</Icon><ProductSearchInput products={dealProducts} value={query} onChange={setQuery} placeholder="Tìm trong ưu đãi..." ariaLabel="Tìm sản phẩm khuyến mãi" /></form></div>
                 {visibleDeals.length ? <div className="deals-product-grid">{visibleDeals.map((deal) => <DealProductCard key={deal.product._id} deal={deal} />)}</div>
                   : <div className="deals-empty"><Icon>{promotions.length ? 'search_off' : 'local_offer'}</Icon><strong>{promotions.length ? 'Chưa có sản phẩm trong mục này' : 'Hiện chưa có chương trình khuyến mãi'}</strong><span>{promotions.length ? 'Hãy chọn bộ lọc khác hoặc xem tất cả ưu đãi.' : 'Quay lại sau để xem những ưu đãi mới nhất.'}</span>{promotions.length ? <button type="button" onClick={() => { setFilter('all'); setQuery(''); }}>Xem tất cả ưu đãi</button> : <Link to="/products">Khám phá sản phẩm</Link>}</div>}
               </section>

@@ -6,6 +6,7 @@ import { listStores } from '../../api/store.api';
 import { formatCurrency } from '../../utils/format';
 import HomeHeader from '../../components/home/HomeHeader';
 import HomeFooter from '../../components/home/HomeFooter';
+import ProductSearchInput from '../../components/home/ProductSearchInput';
 import '../../styles/product-list.css';
 import '../../styles/home.css';
 
@@ -48,6 +49,7 @@ export default function ProductListPage() {
   const [categories, setCategories] = useState([]);
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
+  const [suggestionProducts, setSuggestionProducts] = useState([]);
   const [q, setQ] = useState(initialSearch);
   const [search, setSearch] = useState(initialSearch);
   const [categoryId, setCategoryId] = useState('');
@@ -64,6 +66,7 @@ export default function ProductListPage() {
   useEffect(() => {
     listCategories().then(({ data }) => setCategories(data || [])).catch(() => {});
     listStores().then(({ data }) => setStore(data?.[0] || null)).catch(() => {});
+    listProducts({ limit: 100 }).then(({ data }) => setSuggestionProducts(data.items || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function ProductListPage() {
 
   return (
     <div className="catalog-shell">
-      <HomeHeader store={store} info={null} q={q} setQ={setQ} active="products"
+      <HomeHeader store={store} info={null} q={q} setQ={setQ} active="products" products={suggestionProducts}
         onNav={(section) => {
           if (section === 'products') { document.querySelector('.catalog-page')?.scrollIntoView({ behavior: 'smooth' }); return; }
           navigate(section === 'store' ? '/#store' : '/');
@@ -181,7 +184,7 @@ export default function ProductListPage() {
 
         <form className="catalog-search" onSubmit={submitSearch}>
           <Icon>search</Icon>
-          <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Tìm đồ uống, đồ ăn vặt, nhu yếu phẩm..." aria-label="Tìm sản phẩm" />
+          <ProductSearchInput products={suggestionProducts} value={q} onChange={setQ} placeholder="Tìm đồ uống, đồ ăn vặt, nhu yếu phẩm..." ariaLabel="Tìm sản phẩm" />
           {q && <button type="button" onClick={() => setQ('')} aria-label="Xóa nội dung tìm kiếm"><Icon>close</Icon></button>}
           <button className="catalog-search-submit" type="submit">Tìm sản phẩm</button>
         </form>

@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { Icon } from './HomeParts';
+import ProductSearchInput from './ProductSearchInput';
 import { BRAND_NAME, LOGO_IMAGE } from './homeConfig';
 
 const NAV = [['top', 'Home'], ['products', 'Products'], ['promotions', 'Deals'], ['store', 'Store']];
 const roleHome = { customer: '/profile', staff: '/staff', admin: '/admin' };
 
 // Header: top info bar + main bar (logo, menu, search, cart, account)
-export default function HomeHeader({ store, info, q, setQ, active, onNav, onSearch }) {
+export default function HomeHeader({ store, info, q, setQ, active, onNav, onSearch, products = [] }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -21,7 +22,7 @@ export default function HomeHeader({ store, info, q, setQ, active, onNav, onSear
     const search = (cls) => (
         <form className={cls} onSubmit={(e) => { setOpen(false); onSearch(e); }}>
             <Icon name="search" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..." aria-label="Search products" />
+            <ProductSearchInput products={products} value={q} onChange={setQ} placeholder="Search products..." ariaLabel="Search products" />
             <button type="submit" className="hp-b hp-find">Find</button>
         </form>
     );

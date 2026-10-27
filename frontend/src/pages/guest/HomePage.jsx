@@ -145,7 +145,7 @@ export default function HomePage() {
   return (
     <div className="hp story-home" ref={rootRef}>
       <ScrollProgress />
-      <HomeHeader store={store} info={info} q={q} setQ={setQ} active={active} onNav={go} onSearch={onSearch} />
+      <HomeHeader store={store} info={info} q={q} setQ={setQ} active={active} onNav={go} onSearch={onSearch} products={products} />
 
       <main className="story-main">
         {/* 01 — Full-screen introduction */}

@@ -20,7 +20,7 @@
 .aisle-search, .aisle-sort { min-height: 46px; display: flex; align-items: center; gap: 10px; border: 1px solid #eeeff8; border-radius: 14px; background: #fff; box-shadow: 0 5px 18px #182c5008; color: #727785; }
 .aisle-search { flex: 1; padding: 0 13px; }
 .aisle-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--aisle-ink); font: inherit; font-size: 11px; }
-.aisle-search button { padding: 0 3px; border: 0; background: transparent; color: #7d8aa2; cursor: pointer; font-size: 20px; }
+.aisle-search > button { padding: 0 3px; border: 0; background: transparent; color: #7d8aa2; cursor: pointer; font-size: 20px; }
 .aisle-sort { padding: 0 9px 0 12px; white-space: nowrap; }
 .aisle-sort span { font-size: 10px; font-weight: 700; }
 .aisle-sort select { max-width: 145px; border: 0; outline: 0; background: transparent; color: var(--aisle-ink); font: inherit; font-size: 10px; cursor: pointer; }

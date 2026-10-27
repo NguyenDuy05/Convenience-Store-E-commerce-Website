@@ -5,6 +5,7 @@ import { ConfirmDialog, PriceDialog } from '../../components/admin/products/Prod
 import { categoryName, errMsg, shortDate, stockState, vnd } from '../../components/admin/products/productUtils';
 import { activateProduct, deactivateProduct, deleteProduct, listProducts, updateProductPrice } from '../../api/product.api';
 import { listCategories } from '../../api/category.api';
+import ProductSearchInput from '../../components/home/ProductSearchInput';
 
 // UC-32.1 View / 32.2 Search / 32.3 View Details (link) / 32.4 Add / 32.5 Update (link) / 32.6 Price / 32.7 Delete / 32.8 Activate / 32.9 Deactivate
 const TABS = [
@@ -113,9 +114,9 @@ export default function AdminProductsPage() {
             ))}
           </div>
           <div className="ap-filters">
-            <label className="ap-search"><span className="review-material-icon">search</span>
-              <input aria-label="Search products" placeholder="Search name, SKU or barcode…" value={q} onChange={(e) => setQ(e.target.value)} />
-            </label>
+            <div className="ap-search"><span className="review-material-icon">search</span>
+              <ProductSearchInput products={items} value={q} onChange={setQ} placeholder="Search name, SKU or barcode…" ariaLabel="Search products" toForProduct={(product) => `/admin/products/${product._id}`} />
+            </div>
             <label className="ap-select"><select aria-label="Category" value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}>
               <option value="">All Categories</option>{categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select></label>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { Media, Icon } from './HomeParts';
+import ProductSearchInput from './ProductSearchInput';
 import { BRAND_NAME, money, catMeta } from './homeConfig';
 import '../../styles/home-store.css';
 
@@ -168,7 +169,7 @@ export default function ProductStoreSection({
         <header className="aisle-heading">
           <div className="aisle-heading-copy"><span className="aisle-eyebrow"><i /> AISLE BY AISLE <b>·</b> QUICK MARKET</span><h2>Shop the everyday.</h2><p>Take a little walk through the shelves and find what you need.</p></div>
           <div className="aisle-controls-top">
-            <label className="aisle-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find something good..." aria-label="Search products" />{query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search">×</button>}</label>
+            <div className="aisle-search"><Search size={16} /><ProductSearchInput products={allProducts} value={query} onChange={setQuery} placeholder="Find something good..." ariaLabel="Search products" />{query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search">×</button>}</div>
             <label className="aisle-sort"><SlidersHorizontal size={15} /><span>Sort</span><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort products"><option value="default">Featured</option><option value="asc">Price: low to high</option><option value="desc">Price: high to low</option><option value="name">Name: A to Z</option></select></label>
           </div>
         </header>
