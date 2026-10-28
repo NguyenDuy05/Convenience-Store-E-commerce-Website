@@ -1,0 +1,6 @@
+.cbadge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-family: var(--qk-font-body); font-size: 10px; line-height: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.cbadge.warn { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed); }
+.cbadge.info { background: var(--qk-primary-fixed); color: var(--qk-on-primary-fixed); }
+.cbadge.success { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.cbadge.type { background: var(--qk-surface-high); color: var(--qk-text); }
+.cbadge.type.complaint { background: var(--qk-error-container); color: var(--qk-on-error-container); }

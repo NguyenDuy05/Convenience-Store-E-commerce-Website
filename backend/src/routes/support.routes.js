@@ -2,13 +2,13 @@ const router = require('express').Router();
 const c = require('../controllers/support.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
-// UC-13.1 Submit Support Request
+// UC-12.1 Submit Support Request
 router.post('/', authenticate, authorize('customer'), c.submitSupportRequest);
-// UC-13.2 View Support Request
+// UC-12.2 View Support Request
 router.get('/my', authenticate, authorize('customer'), c.listMySupportRequests);
-// UC-20.3 Handle Customer Complaint (danh sách)
+// UC-19.3 Handle Customer Complaint: danh sách, xem chi tiết (đặt sau '/my' để 'my' không bị hiểu là id), xử lý
 router.get('/', authenticate, authorize('staff', 'admin'), c.listSupportRequests);
-// UC-20.3 Handle Customer Complaint
+router.get('/:id', authenticate, authorize('staff', 'admin'), c.getSupportRequest);
 router.patch('/:id/handle', authenticate, authorize('staff', 'admin'), c.handleComplaint);
 
 module.exports = router;

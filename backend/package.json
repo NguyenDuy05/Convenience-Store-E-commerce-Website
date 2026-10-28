@@ -12,6 +12,7 @@
     "seed:checkout": "node src/scripts/seed-checkout.js",
     "seed:transactions": "node src/scripts/seed-transactions.js",
     "seed:shifts": "node src/scripts/seed-shifts.js",
+    "seed:complaints": "node src/scripts/seed-complaints.js",
     "init-db": "node src/scripts/init-db.js"
   },
   "dependencies": {
