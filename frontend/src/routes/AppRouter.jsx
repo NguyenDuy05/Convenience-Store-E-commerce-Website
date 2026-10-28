@@ -34,6 +34,8 @@ import StaffProductsPage from '../pages/staff/StaffProductsPage';
 import StaffInventoryPage from '../pages/staff/StaffInventoryPage';
 import StaffCustomersPage from '../pages/staff/StaffCustomersPage';
 import StaffComplaintsPage from '../pages/staff/StaffComplaintsPage';
+import StaffCustomerDetailPage from '../pages/staff/StaffCustomerDetailPage';
+import StaffComplaintDetailPage from '../pages/staff/StaffComplaintDetailPage';
 import StaffPromotionsPage from '../pages/staff/StaffPromotionsPage';
 import WorkShiftPage from '../pages/staff/WorkShiftPage';
 import StaffProfilePage from '../pages/staff/StaffProfilePage';
@@ -95,7 +97,9 @@ export default function AppRouter() {
         <Route path="products" element={<StaffProductsPage />} />
         <Route path="inventory" element={<StaffInventoryPage />} />
         <Route path="customers" element={<StaffCustomersPage />} />
+        <Route path="customers/:id" element={<StaffCustomerDetailPage />} />
         <Route path="complaints" element={<StaffComplaintsPage />} />
+        <Route path="complaints/:id" element={<StaffComplaintDetailPage />} />
         <Route path="promotions" element={<StaffPromotionsPage />} />
         <Route path="shifts" element={<WorkShiftPage />} />
         <Route path="profile" element={<StaffProfilePage />} />
