@@ -3,6 +3,7 @@ const { runAtomic } = require('../utils/atomic');
 const { User, MembershipTier, PointHistory } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
+const { memberCode, memberIdFromCode } = require('../utils/memberCode');
 
 async function findCustomer(id) {
   const user = await User.findOne({ _id: id, role: 'customer', status: 'active' })
@@ -19,7 +20,7 @@ exports.getMyMembership = asyncHandler(async (req, res) => {
   const tiers = await MembershipTier.find().sort({ minPoints: 1, sortOrder: 1, _id: 1 }).lean();
   const tier = user.membership?.tierId || null;
   const nextTier = tiers.find((item) => item.minPoints > Math.max(lifetimePoints, tier?.minPoints ?? 0)) || null;
-  res.json({ fullName: user.fullName, points, lifetimePoints, tier, nextTier,
+  res.json({ fullName: user.fullName, memberCode: memberCode(req.user.id), points, lifetimePoints, tier, nextTier,
     pointsToNextTier: nextTier ? Math.max(0, nextTier.minPoints - lifetimePoints) : 0 });
 });
 
@@ -43,6 +44,15 @@ exports.getMyPointHistory = asyncHandler(async (req, res) => {
     PointHistory.countDocuments(filter),
   ]);
   res.json({ items, total, page, limit, pages: Math.ceil(total / limit) });
+});
+
+// A member code identifies an account; it does not authorize payment or redemption.
+exports.lookupMemberCode = asyncHandler(async (req, res) => {
+  const id = memberIdFromCode(req.query.code);
+  if (!id) throw new ApiError(400, 'Invalid membership code');
+  const member = await User.findOne({ _id: id, role: 'customer', status: 'active' }).select('_id').lean();
+  if (!member) throw new ApiError(404, 'Active member not found');
+  res.json({ customerId: String(member._id) });
 });
 
 function validId(id) {

@@ -5,6 +5,7 @@ export const getMyMembership = (params) => api.get(`/membership/me`, { params })
 
 // UC-12.2 View Point History
 export const getMyPointHistory = (params) => api.get(`/membership/me/history`, { params });
+export const lookupMemberCode = (code) => api.get('/membership/lookup', { params: { code } });
 
 // UC-39.1, 39.2 View / Search Members
 export const listMembers = (params) => api.get(`/membership/members`, { params });
