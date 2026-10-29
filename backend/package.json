@@ -6,6 +6,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "predev": "npm install --prefer-offline --no-audit --no-fund",
     "dev": "node --watch src/server.js",
     "seed": "node src/scripts/seed.js",
     "seed:orders": "node src/scripts/seed-orders.js",

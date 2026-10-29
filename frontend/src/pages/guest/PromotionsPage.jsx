@@ -70,7 +70,7 @@ export default function PromotionsPage() {
     let current = true;
     Promise.allSettled([listPromotions(), listProducts({ limit: 100 }), listStores()]).then(([promoResult, productResult, storeResult]) => {
       if (!current) return;
-      if (promoResult.status === 'fulfilled') setPromotions(promoResult.value.data || []);
+      if (promoResult.status === 'fulfilled') setPromotions(promoResult.value.data.items || []);
       else setError('Không tải được khuyến mãi. Vui lòng thử lại.');
       if (productResult.status === 'fulfilled') {
         const rows = productResult.value.data.items || [];
