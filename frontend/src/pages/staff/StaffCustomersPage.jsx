@@ -7,6 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import Icon from '../../components/common/Icon';
 import { formatDate } from '../../utils/format';
 import { CUSTOMER_STATUS } from '../../utils/complaintMeta';
+import MemberCodeLookup from '../../components/membership/MemberCodeLookup';
 
 const LIMIT = 20;
 
@@ -69,6 +70,7 @@ export default function StaffCustomersPage() {
 
   return (
     <div className="scus">
+      <MemberCodeLookup />
       <div className="scus-head">
         <h1>Khách hàng</h1>
         <p><Icon name="shield_person" size="md" />Thông tin liên hệ được che một phần để bảo vệ khách hàng. Dữ liệu ở đây chỉ để xem, không chỉnh sửa được.</p>
