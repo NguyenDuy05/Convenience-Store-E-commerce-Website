@@ -90,8 +90,18 @@ export default function HomePage() {
       }
       setProducts(p.value.data.items || []);
       if (c.status === 'fulfilled') setCategories(c.value.data || []);
-      if (pr.status === 'fulfilled') { setPromos(pr.value.data.items || []); setPromoError(''); }
-      else setPromoError(pr.reason?.response?.status === 501 ? 'The promotions API is not available on the backend yet.' : 'Could not load promotions.');
+      if (pr.status === 'fulfilled') {
+        const data = pr.value?.data;
+
+        setPromos(
+          Array.isArray(data?.items) ? data.items : []
+        );
+
+        setPromoError('');
+      } else {
+        setPromos([]);
+        setPromoError('Không thể tải danh sách khuyến mãi.');
+      }
       if (s.status === 'fulfilled') setStore(s.value.data[0] || null);
       setStatus({ loading: false, error: '' });
     });
