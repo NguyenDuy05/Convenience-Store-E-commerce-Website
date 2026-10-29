@@ -1,4 +1,3 @@
-const { notImplemented } = require('../utils/notImplemented');
 const mongoose = require('mongoose');
 const { SupportRequest, User, Order } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
@@ -10,7 +9,7 @@ const STATUSES = ['open', 'in_progress', 'resolved'];
 const TYPES = ['support', 'complaint'];
 // Luồng xử lý khiếu nại: mới -> đang xử lý -> đã giải quyết (đã giải quyết là kết thúc, không mở lại)
 const TRANSITIONS = { open: ['in_progress', 'resolved'], in_progress: ['resolved'], resolved: [] };
-const NOT_FOUND = 'Không tìm thấy yêu cầu';
+const NOT_FOUND = 'Support request not found';
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isId = (v) => mongoose.isValidObjectId(v);
 
@@ -51,8 +50,8 @@ exports.listSupportRequests = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
   const { status, type } = req.query;
-  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái không hợp lệ');
-  if (type && !TYPES.includes(type)) throw new ApiError(400, 'Loại yêu cầu không hợp lệ');
+  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Invalid status');
+  if (type && !TYPES.includes(type)) throw new ApiError(400, 'Invalid request type');
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
 
   const base = {};
@@ -99,7 +98,7 @@ exports.listSupportRequests = asyncHandler(async (req, res) => {
 exports.getSupportRequest = asyncHandler(async (req, res) => {
   if (!isId(req.params.id)) throw new ApiError(404, NOT_FOUND);
   const r = await SupportRequest.findById(req.params.id).lean();
-  if (!r) throw new ApiError(404, NOT_FOUND);
+  if (!r || (req.user.role === 'customer' && String(r.customerId) !== String(req.user.id))) throw new ApiError(404, NOT_FOUND);
   res.json(await detailOf(r, req.user.role));
 });
 
@@ -113,11 +112,11 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
   const key = (req.get('Idempotency-Key') || req.body.idempotencyKey || '').toString().trim().slice(0, 100) || null;
   const target = req.body.status;
-  if (target !== undefined && !STATUSES.includes(target)) throw new ApiError(400, 'Trạng thái không hợp lệ');
+  if (target !== undefined && !STATUSES.includes(target)) throw new ApiError(400, 'Invalid status');
   let message;
   if (req.body.message !== undefined && req.body.message !== null && String(req.body.message).trim() !== '') {
     message = String(req.body.message).trim();
-    if (message.length > 2000) throw new ApiError(400, 'Phản hồi tối đa 2000 ký tự');
+    if (message.length > 2000) throw new ApiError(400, 'Response must not exceed 2000 characters');
   }
 
   const r = await SupportRequest.findById(id).lean();
@@ -129,12 +128,12 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   }
 
   const changing = target !== undefined && target !== r.status;
-  if (!message && !changing) throw new ApiError(400, 'Cần nhập phản hồi hoặc chọn trạng thái mới');
-  if (r.status === 'resolved') throw new ApiError(409, 'Yêu cầu này đã được giải quyết và đóng, không thể xử lý thêm', { code: 'CLOSED', allowed: [] });
+  if (!message && !changing) throw new ApiError(400, 'Enter a response or select a new status');
+  if (r.status === 'resolved') throw new ApiError(409, 'This request has been resolved and closed. Further updates are not allowed', { code: 'CLOSED', allowed: [] });
   if (changing && !TRANSITIONS[r.status].includes(target)) {
-    throw new ApiError(409, `Không thể chuyển từ "${r.status}" sang "${target}"`, { code: 'INVALID_TRANSITION', allowed: TRANSITIONS[r.status] });
+    throw new ApiError(409, `Cannot change status from "${r.status}" to "${target}"`, { code: 'INVALID_TRANSITION', allowed: TRANSITIONS[r.status] });
   }
-  if (target === 'resolved' && !message) throw new ApiError(400, 'Cần nhập phản hồi gửi khách khi đánh dấu đã giải quyết');
+  if (target === 'resolved' && !message) throw new ApiError(400, 'A customer response is required to resolve the request');
 
   const now = new Date();
   const set = { handledBy: req.user.id };
@@ -151,7 +150,7 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
     if (again && key && again.responses.some((x) => x.requestKey === key)) {
       return res.json({ ...(await detailOf(again, req.user.role)), replayed: true, notification: 'not_required' });
     }
-    throw new ApiError(409, 'Yêu cầu vừa được cập nhật bởi người khác. Vui lòng tải lại.', { code: 'STALE_STATUS' });
+    throw new ApiError(409, 'This request was updated by someone else. Please refresh.', { code: 'STALE_STATUS' });
   }
 
   await logActivity(req, { action: 'COMPLAINT_HANDLE', targetType: 'SupportRequest', targetId: r._id, detail: { subject: r.subject, from: r.status, to: changing ? target : r.status, responded: !!message } });
@@ -159,6 +158,38 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   res.json({ ...(await detailOf(plain, req.user.role)), replayed: false, notification: 'not_required' });
 });
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
-exports.submitSupportRequest = notImplemented('UC-12.1 Submit Support Request');
-exports.listMySupportRequests = notImplemented('UC-12.2 View Support Request');
+// Customer support submission and personal request history.
+exports.submitSupportRequest = asyncHandler(async (req, res) => {
+  const { subject, message, type = 'support', orderId } = req.body || {};
+  if (typeof subject !== 'string' || !subject.trim() || subject.trim().length > 200)
+    throw new ApiError(400, 'Subject is required and must not exceed 200 characters');
+  if (typeof message !== 'string' || !message.trim() || message.trim().length > 5000)
+    throw new ApiError(400, 'Message is required and must not exceed 5000 characters');
+  if (!TYPES.includes(type)) throw new ApiError(400, 'Invalid request type');
+  let order;
+  if (orderId !== undefined && orderId !== '') {
+    if (typeof orderId !== 'string' || !isId(orderId)) throw new ApiError(400, 'Invalid order');
+    order = await Order.findOne({ _id: orderId, customerId: req.user.id }).select('_id').lean();
+    if (!order) throw new ApiError(404, 'Your order was not found');
+  }
+  const created = await SupportRequest.create({
+    customerId: req.user.id, subject: subject.trim(), message: message.trim(), type,
+    ...(order ? { orderId: order._id } : {}),
+  });
+  res.status(201).json(created);
+});
+
+exports.listMySupportRequests = asyncHandler(async (req, res) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+  const { status, type } = req.query;
+  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Invalid status');
+  if (type && !TYPES.includes(type)) throw new ApiError(400, 'Invalid request type');
+  const filter = { customerId: req.user.id, ...(status ? { status } : {}), ...(type ? { type } : {}) };
+  const [items, total] = await Promise.all([
+    SupportRequest.find(filter).select('type subject status createdAt updatedAt').sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit).limit(limit).lean(),
+    SupportRequest.countDocuments(filter),
+  ]);
+  res.json({ items, total, page, limit });
+});

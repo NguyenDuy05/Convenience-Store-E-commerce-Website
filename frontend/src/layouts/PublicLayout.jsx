@@ -3,18 +3,18 @@ import NavBar from '../components/common/NavBar';
 import useAuth from '../hooks/useAuth';
 
 const base = [
-  { to: '/', label: 'Trang chủ' },
-  { to: '/products', label: 'Sản phẩm' },
-  { to: '/promotions', label: 'Khuyến mãi' },
+  { to: '/', label: 'Home' },
+  { to: '/products', label: 'Products' },
+  { to: '/promotions', label: 'Promotions' },
 ];
 
 export default function PublicLayout() {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const extra =
-    user?.role === 'customer' ? [{ to: '/cart', label: 'Giỏ hàng' }, { to: '/orders', label: 'Đơn hàng' }, { to: '/profile', label: 'Hồ sơ' }]
-    : user?.role === 'staff' ? [{ to: '/staff', label: 'Khu nhân viên' }]
-    : user?.role === 'admin' ? [{ to: '/admin', label: 'Khu quản trị' }]
+    user?.role === 'customer' ? [{ to: '/cart', label: 'Cart' }, { to: '/orders', label: 'Orders' }, { to: '/profile', label: 'Profile' }]
+    : user?.role === 'staff' ? [{ to: '/staff', label: 'Staff Dashboard' }]
+    : user?.role === 'admin' ? [{ to: '/admin', label: 'Admin Dashboard' }]
     : [];
   if (pathname === '/products' || pathname === '/promotions' || pathname === '/promotion') return <Outlet />;
 
