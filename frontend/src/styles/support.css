@@ -1,0 +1,27 @@
+﻿.support-page { max-width: 960px; margin: 32px auto; padding: 0 20px; color: #0c1842; }
+.support-page > p { color: #424754; }
+.support-panel { background: white; border: 1px solid #e1e5ed; border-radius: 16px; padding: 24px; margin: 24px 0; }
+.support-panel h2 { margin-top: 0; font-size: 22px; }
+.support-panel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 16px; }
+.support-panel label { display: grid; gap: 8px; font-weight: 600; }
+.support-panel input, .support-panel textarea, .support-panel select { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #c2c6d6; border-radius: 8px; font: inherit; color: inherit; background: white; }
+.support-panel textarea { resize: vertical; }
+.support-panel button { padding: 10px 16px; border: 1px solid #c2c6d6; border-radius: 8px; background: white; color: #0058bc; font: inherit; cursor: pointer; }
+.support-panel button[type=submit] { background: #0058bc; color: white; justify-self: start; border-color: #0058bc; }
+.support-panel button:disabled { cursor: default; opacity: .55; }
+.support-panel :focus-visible { outline: 3px solid #1c71e4; outline-offset: 3px; }
+.support-toolbar, .support-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.support-toolbar h2, .support-toolbar h3 { margin: 0; overflow-wrap: anywhere; }
+.support-list { padding: 0; list-style: none; }
+.support-list li { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 18px 0; border-bottom: 1px solid #e1e5ed; }
+.support-list li > div { min-width: 0; }
+.support-panel .support-subject { padding: 0; border: 0; text-align: left; font-weight: 600; overflow-wrap: anywhere; }
+.support-panel small { display: block; color: #424754; margin-top: 6px; }
+.support-status { padding: 6px 10px; border-radius: 20px; white-space: nowrap; font-size: 13px; background: #fff0ce; color: #795000; }
+.support-status-in_progress { color: #004494; background: #d8e2ff; }
+.support-status-resolved { color: #356b0a; background: #e0f3d0; }
+.support-message { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; }
+.support-response { background: #f4f6fa; border-radius: 10px; padding: 16px; margin-top: 12px; }
+.support-error { color: #ba1a1a; }
+.support-success { color: #356b0a; }
+@media (max-width: 600px) { .support-panel { padding: 16px; } .support-list li, .support-detail .support-toolbar { align-items: flex-start; flex-direction: column; } }

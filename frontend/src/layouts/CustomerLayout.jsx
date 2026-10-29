@@ -24,7 +24,7 @@ export default function CustomerLayout() {
   });
   return (
     <>
-      <NavBar links={[{ to: '/products', label: onReviewPage ? 'Products' : 'Sáº£n pháº©m' }, ...links]} />
+      <NavBar links={[{ to: '/products', label: 'Products' }, ...links]} />
       <main className="container"><Outlet /></main>
     </>
   );
