@@ -41,7 +41,7 @@ export default function ProductDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    listPromotions().then((r) => setPromotions(r.data || [])).catch(() => { });
+    listPromotions().then((r) => setPromotions(r.data.items || [])).catch(() => { });
     listStores().then((r) => setStore((r.data || [])[0] || null)).catch(() => { });
   }, []);
 

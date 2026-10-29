@@ -89,8 +89,9 @@ exports.addReview = async (req, res) => {
 
 exports.updateReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
-  const { rating, comment } = req.body;
-  if (rating !== undefined && (!Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5)) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
+  const { rating, comment } = req.body || {};
+  if (rating === undefined && comment === undefined) throw new ApiError(400, 'Provide a rating or comment to update');
+  if (rating !== undefined && (!['number', 'string'].includes(typeof rating) || !Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5)) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
   if (comment !== undefined && (typeof comment !== 'string' || comment.trim().length > 1000)) throw new ApiError(400, 'Review comments must be 1,000 characters or fewer');
   const review = await Review.findOne({ _id: req.params.id, customerId: req.user.id, status: 'visible' });
   if (!review) throw new ApiError(404, 'Editable review not found');
