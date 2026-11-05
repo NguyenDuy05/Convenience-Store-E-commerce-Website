@@ -1,0 +1,64 @@
+/* Trang xử lý khiếu nại của staff (UC-19.3). Class bắt đầu bằng "cmpd-". */
+.cmpd { font-family: var(--qk-font-body); color: var(--qk-text); display: flex; flex-direction: column; gap: 16px; }
+.cmpd-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--qk-text-variant); }
+.cmpd-crumb a { color: inherit; text-decoration: none; }
+.cmpd-crumb a:hover { color: var(--qk-primary); }
+.cmpd-crumb span[aria-current] { color: var(--qk-text); font-weight: 600; }
+.cmpd-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.cmpd-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cmpd-title h1 { margin: 0; font-family: var(--qk-font-display); font-size: 26px; line-height: 34px; letter-spacing: -.01em; }
+.cmpd-head p { margin: 6px 0 0; font-size: 13px; color: var(--qk-text-variant); }
+
+.cmpd-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.cmpd-btn:hover:not(:disabled) { background: var(--qk-primary-dark); color: #fff; }
+.cmpd-btn:disabled { background: var(--qk-outline-variant); cursor: not-allowed; box-shadow: none; }
+.cmpd-btn.ghost { background: var(--qk-surface); color: var(--qk-text); }
+.cmpd-btn.ghost:hover { background: var(--qk-surface-high); color: var(--qk-text); }
+
+.cmpd-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 16px; align-items: start; }
+.cmpd-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 900px) { .cmpd-grid { grid-template-columns: minmax(0, 1fr); } .cmpd-title h1 { font-size: 22px; line-height: 28px; } }
+.cmpd-card { padding: 18px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.cmpd-card h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 16px; line-height: 22px; }
+.cmpd-card h2 .qk-icon { color: var(--qk-primary); }
+.cmpd-muted { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 14px; line-height: 20px; color: var(--qk-text-variant); }
+
+.cmpd-thread { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.cmpd-thread li { padding: 12px 14px; border-radius: 12px; max-width: 92%; }
+.cmpd-thread li.cust { background: var(--qk-surface-low); align-self: flex-start; }
+.cmpd-thread li.staff { background: var(--qk-primary-fixed); align-self: flex-end; }
+.cmpd-who { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; }
+.cmpd-who span { font-size: 12px; color: var(--qk-text-variant); }
+.cmpd-thread p { margin: 6px 0 0; font-size: 14px; line-height: 21px; white-space: pre-wrap; word-break: break-word; }
+
+.cmpd-ok { display: flex; gap: 10px; margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.cmpd-ok > div { display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 18px; }
+
+.cmpd-form { display: flex; flex-direction: column; gap: 8px; }
+.cmpd-form > label { font-size: 12px; font-weight: 700; color: var(--qk-text-variant); }
+.cmpd-form textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; font-family: inherit; font-size: 14px; resize: vertical; background: var(--qk-surface); color: var(--qk-text); }
+.cmpd-form textarea:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.cmpd-form > small { align-self: flex-end; font-size: 11px; color: var(--qk-text-variant); }
+.cmpd-form fieldset { margin: 4px 0 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px; }
+.cmpd-form legend { padding: 0; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--qk-text-variant); }
+.cmpd-radio { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; font-size: 14px; cursor: pointer; }
+.cmpd-radio:has(input:checked) { border-color: var(--qk-primary); background: var(--qk-surface-low); }
+.cmpd-radio span { display: flex; flex-direction: column; gap: 1px; }
+.cmpd-radio small { font-size: 12px; color: var(--qk-text-variant); }
+.cmpd-warn { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; color: var(--qk-tertiary); }
+.cmpd-error { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; line-height: 18px; color: var(--qk-error); }
+.cmpd-form .cmpd-btn { align-self: flex-start; }
+
+.cmpd-kv { display: flex; flex-direction: column; gap: 4px; font-size: 14px; align-items: flex-start; }
+.cmpd-kv span { font-size: 13px; color: var(--qk-text-variant); }
+.cmpd-kv a { margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--qk-primary); text-decoration: none; }
+.cmpd-kv a:hover { text-decoration: underline; }
+
+.cmpd-skeleton { height: 360px; border-radius: 12px; background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%); background-size: 200% 100%; animation: cmpd-shimmer 1.4s linear infinite; }
+@keyframes cmpd-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .cmpd-skeleton { animation: none; } }
+.cmpd-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.cmpd-state > .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.cmpd-state h2 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; color: var(--qk-text); }
+.cmpd-state p { margin: 0; max-width: 380px; font-size: 14px; }
+.cmpd-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }

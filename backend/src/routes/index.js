@@ -19,5 +19,6 @@ router.use('/customers', require('./customer.routes'));
 router.use('/staff', require('./staff.routes'));
 router.use('/stores', require('./store.routes'));
 router.use('/work-shifts', require('./workShift.routes'));
+router.use('/dashboard', require('./dashboard.routes'));
 
 module.exports = router;

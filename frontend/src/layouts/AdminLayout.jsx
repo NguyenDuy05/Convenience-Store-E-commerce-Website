@@ -1,14 +1,9 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import NavBar from '../components/common/NavBar';
-import { adminNav } from '../routes/navConfig';
+import AdminShell from '../components/admin/AdminShell';
 
+// Mọi trang /admin/* dùng chung sidebar + topbar QUICK. Riêng Reviews tự dựng khung của nó.
 export default function AdminLayout() {
   const { pathname } = useLocation();
   if (pathname === '/admin/reviews') return <Outlet />;
-  return (
-    <>
-      <NavBar links={adminNav} brand="Quản trị" />
-      <main className="container"><Outlet /></main>
-    </>
-  );
+  return <AdminShell><Outlet /></AdminShell>;
 }

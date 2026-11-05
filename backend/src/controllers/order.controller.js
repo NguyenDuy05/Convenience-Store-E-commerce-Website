@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const { notImplemented } = require('../utils/notImplemented');
-const { Order, Store } = require('../models');
+const { Order, Store, Transaction } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
+const checkout = require('../services/checkout.service');
+const payment = require('../services/payment.service');
 
 const STATUSES = Order.schema.path('status').enumValues;
 const STORE_FIELDS = 'name address phone openingHours status';
@@ -10,21 +12,7 @@ const NOT_FOUND = 'Không tìm thấy đơn hàng';
 // Đơn đã kết thúc (thuộc lịch sử): đã nhận hàng hoặc thanh toán lỗi
 const HISTORY_STATUSES = ['completed', 'failed'];
 
-// Dòng hàng trả về cho khách: snapshot trong đơn + ảnh/đơn vị lấy từ Product (đơn cũ vẫn đúng giá, tên)
-const toItem = (it) => {
-  const product = it.productId && it.productId._id ? it.productId : null;
-  return {
-    productId: product ? product._id : null,
-    name: it.name,
-    sku: it.sku,
-    unitPrice: it.unitPrice,
-    quantity: it.quantity,
-    discountAmount: it.discountAmount || 0,
-    lineTotal: it.lineTotal,
-    image: product?.images?.[0] || null,
-    unit: product?.unit || null,
-  };
-};
+const { toItem } = require('../utils/orderDto');
 
 // Tóm tắt một đơn cho danh sách (dùng chung cho View Orders và View Order History)
 const toListItem = (o) => ({
@@ -55,10 +43,24 @@ const toHistory = (list) =>
     .map((h) => ({ status: h.status, changedAt: h.changedAt }))
     .sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
 
+// Đơn chờ thanh toán quá hạn thì chuyển failed + hoàn kho ngay khi khách xem (job nền cũng làm việc này mỗi phút).
+// Lỗi ở bước này không được làm hỏng việc xem đơn.
+const expireQuietly = (customerId) => payment.expireStaleOrders({ customerId }).catch((e) => console.error('Hết hạn đơn lỗi:', e));
+
+// Thông tin để giao diện biết còn thanh toán được không: hạn thanh toán + giao dịch gần nhất (không lộ dữ liệu cổng)
+const paymentInfo = async (o) => {
+  const latest = await Transaction.find({ orderId: o._id }).sort({ createdAt: -1 }).limit(1).lean();
+  return {
+    expiresAt: o.status === 'pending_payment' ? payment.expiresAtOf(o) : null,
+    latestPayment: latest[0] ? { method: latest[0].method, status: latest[0].status } : null,
+  };
+};
+
 // UC-09.1 View Orders (catalog tài liệu; code cũ ghi UC-10.1)
 // GET /api/orders/my?status=&page=&limit=
 // Chỉ trả đơn của chính khách đang đăng nhập (BR-21). Mới nhất trước.
 exports.listMyOrders = asyncHandler(async (req, res) => {
+  await expireQuietly(req.user.id);
   const { page, limit } = parsePaging(req.query);
   const { status } = req.query;
   if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái đơn hàng không hợp lệ');
@@ -97,6 +99,7 @@ exports.listMyOrders = asyncHandler(async (req, res) => {
 exports.getMyOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, NOT_FOUND);
+  await expireQuietly(req.user.id);
 
   const [o, store] = await Promise.all([
     Order.findOne({ _id: id, customerId: req.user.id })
@@ -105,8 +108,10 @@ exports.getMyOrder = asyncHandler(async (req, res) => {
     Store.findOne().select(STORE_FIELDS).lean(),
   ]);
   if (!o) throw new ApiError(404, NOT_FOUND);
+  const pay = await paymentInfo(o);
 
   res.json({
+    ...pay,
     _id: o._id,
     orderCode: o.orderCode,
     source: o.source,
@@ -140,6 +145,7 @@ exports.getMyOrder = asyncHandler(async (req, res) => {
 exports.trackMyOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, NOT_FOUND);
+  await expireQuietly(req.user.id);
 
   const [o, store] = await Promise.all([
     Order.findOne({ _id: id, customerId: req.user.id })
@@ -148,8 +154,10 @@ exports.trackMyOrder = asyncHandler(async (req, res) => {
     Store.findOne().select('name address phone').lean(),
   ]);
   if (!o) throw new ApiError(404, NOT_FOUND);
+  const pay = await paymentInfo(o);
 
   res.json({
+    ...pay,
     _id: o._id,
     orderCode: o.orderCode,
     status: o.status,
@@ -221,10 +229,28 @@ exports.listMyOrderHistory = asyncHandler(async (req, res) => {
   });
 });
 
+// ---- Admin (UC-34): code nằm ở adminOrder.controller.js ----
+const admin = require('./adminOrder.controller');
+exports.listOrders = admin.listOrders;
+exports.getOrder = admin.getOrder;
+exports.updateOrderStatus = admin.updateOrderStatus;
+exports.handleOrderIssue = admin.handleOrderIssue;
+exports.resolveOrderIssue = admin.resolveOrderIssue;
+
 // ---- Chưa triển khai: thay từng dòng bằng code thật ----
-exports.createOrder = notImplemented('UC-09.1 Create Order');
+// UC-08.1 Create Order, bước xem trước (hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền hiện tại)
+// POST /api/orders/preview  body: { discountCode? }
+exports.previewCheckout = asyncHandler(async (req, res) => {
+  res.json(await checkout.previewCheckout(req.user.id, { discountCode: req.body.discountCode }));
+});
+
+// UC-08.1 Create Order (catalog tài liệu; code cũ ghi UC-09.1)
+// POST /api/orders  header Idempotency-Key  body: { paymentMethod: cash|vnpay|momo, discountCode?, customerNote?, expectedTotal }
+// Tạo đơn + trừ kho + dọn giỏ trong một khối atomic. Đơn online ở trạng thái pending_payment (giữ hàng), tiếp theo gọi
+// POST /api/payments/online để lấy link thanh toán. Tiền mặt: xác nhận ngay, trả khi nhận hàng.
+exports.createOrder = asyncHandler(async (req, res) => {
+  const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
+  const { order, replayed } = await checkout.createOrder(req.user.id, { ...req.body, idempotencyKey });
+  res.status(replayed ? 200 : 201).json({ order, replayed });
+});
 exports.createStoreOrder = notImplemented('UC-22 Create Store Order');
-exports.listOrders = notImplemented('UC-35.1, 35.2 View / Search Orders');
-exports.getOrder = notImplemented('UC-35.3 View Order Details');
-exports.updateOrderStatus = notImplemented('Chuyển trạng thái đơn: preparing, ready_for_pickup, completed');
-exports.handleOrderIssue = notImplemented('UC-35.4 Handle Order Issue');

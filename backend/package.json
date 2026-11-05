@@ -5,9 +5,17 @@
   "description": "Convenience Store E-commerce Website - REST API (Node.js, Express, MongoDB, MVC)",
   "main": "src/server.js",
   "scripts": {
+    "test": "node --test src/controllers/*.test.js",
+    "test:features": "node test/run-feature-integration.js",
     "start": "node src/server.js",
+    "predev": "npm install --prefer-offline --no-audit --no-fund",
     "dev": "node --watch src/server.js",
     "seed": "node src/scripts/seed.js",
+    "seed:orders": "node src/scripts/seed-orders.js",
+    "seed:checkout": "node src/scripts/seed-checkout.js",
+    "seed:transactions": "node src/scripts/seed-transactions.js",
+    "seed:shifts": "node src/scripts/seed-shifts.js",
+    "seed:complaints": "node src/scripts/seed-complaints.js",
     "init-db": "node src/scripts/init-db.js"
   },
   "dependencies": {

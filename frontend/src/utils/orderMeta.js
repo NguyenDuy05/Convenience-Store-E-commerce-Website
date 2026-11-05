@@ -1,11 +1,11 @@
-// Nhãn tiếng Việt + biểu tượng cho trạng thái đơn và thanh toán (khớp enum trong backend/src/models/Order.js)
+// Order status badges shared by order pages and support request details.
 export const ORDER_STATUS = {
-  pending_payment: { label: 'Chờ thanh toán', icon: 'payments', tone: 'warn' },
-  confirmed: { label: 'Đã xác nhận', icon: 'task_alt', tone: 'info' },
-  preparing: { label: 'Đang chuẩn bị', icon: 'schedule', tone: 'info' },
-  ready_for_pickup: { label: 'Sẵn sàng nhận hàng', icon: 'storefront', tone: 'success' },
-  completed: { label: 'Đã nhận hàng', icon: 'check_circle', tone: 'neutral' },
-  failed: { label: 'Thanh toán lỗi', icon: 'error', tone: 'error' },
+  pending_payment: { label: 'Pending payment', icon: 'payments', tone: 'warn' },
+  confirmed: { label: 'Confirmed', icon: 'task_alt', tone: 'info' },
+  preparing: { label: 'Preparing', icon: 'schedule', tone: 'info' },
+  ready_for_pickup: { label: 'Ready for pickup', icon: 'storefront', tone: 'success' },
+  completed: { label: 'Completed', icon: 'check_circle', tone: 'neutral' },
+  failed: { label: 'Payment failed', icon: 'error', tone: 'error' },
 };
 
 // Thứ tự các tab lọc trên trang danh sách
@@ -61,3 +61,26 @@ export const HISTORY_TABS = [
   { key: 'completed', label: 'Đã nhận hàng' },
   { key: 'failed', label: 'Thanh toán lỗi' },
 ];
+
+// Thông điệp trạng thái có xét thanh toán: đơn chờ thanh toán mà lần thanh toán gần nhất lỗi -> khuyến khích thử lại
+export function statusMessage(order) {
+  if (order.status === 'pending_payment' && order.paymentStatus === 'failed') {
+    return { tone: 'warn', icon: 'payments', title: 'Thanh toán chưa thành công', text: 'Đơn vẫn được giữ hàng đến khi hết hạn. Bạn có thể thanh toán lại hoặc chọn cổng khác.' };
+  }
+  return ORDER_STATUS_MESSAGE[order.status];
+}
+
+// Phương thức khách được chọn khi đặt hàng online
+export const CHECKOUT_METHODS = [
+  { key: 'cash', label: 'Tiền mặt khi nhận hàng', desc: 'Thanh toán trực tiếp tại quầy khi đến lấy hàng', icon: 'payments' },
+  { key: 'vnpay', label: 'VNPay', desc: 'Thẻ ATM / QR ngân hàng / thẻ quốc tế', icon: 'account_balance' },
+  { key: 'momo', label: 'Ví MoMo', desc: 'Thanh toán bằng ví điện tử MoMo', icon: 'account_balance_wallet' },
+];
+
+// ---- Admin (UC-34) ----
+export const ORDER_SOURCE = { online: 'Online', store: 'Tại quầy' };
+export const TRANSITION_LABEL = {
+  preparing: 'Bắt đầu chuẩn bị',
+  ready_for_pickup: 'Báo sẵn sàng nhận hàng',
+  completed: 'Xác nhận đã giao khách',
+};

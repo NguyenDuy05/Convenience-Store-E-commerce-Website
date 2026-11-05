@@ -77,11 +77,13 @@ const orderSchema = new Schema({
   paidAt: Date,
 
   customerNote: String,
+  idempotencyKey: String,                                      // khoá chống đặt trùng khi khách bấm 2 lần / gửi lại do lỗi mạng (UC-08.1)
   readyAt: Date,
   pickedUpAt: Date,
   issues: [issueSchema],
 }, { timestamps: true });
 
+orderSchema.index({ customerId: 1, idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } });
 orderSchema.index({ customerId: 1, createdAt: -1 });         // UC-10.1 / 10.4 lịch sử đơn + giỏ gợi ý cá nhân hóa
 orderSchema.index({ 'items.productId': 1 });                 // gợi ý "Combo hot" / best-seller
 orderSchema.index({ status: 1, createdAt: -1 });             // UC-35.1 / 35.2

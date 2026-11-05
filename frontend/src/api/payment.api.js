@@ -1,6 +1,6 @@
 import api from './axios';
 
-// UC-09.2 Make Payment (tạo link VNPay/Momo)
+// UC-08.2 Make Payment (tạo link VNPay/Momo). data: { orderId, method: 'vnpay'|'momo' } -> { paymentUrl, txnRef, expiresAt }
 export const createOnlinePayment = (data) => api.post(`/payments/online`, data);
 
 // VNPay chuyển hướng trình duyệt về sau khi thanh toán

@@ -1,8 +1,23 @@
 const mongoose = require('mongoose');
 const { Review, Order, Product, Store } = require('../models');
 const ApiError = require('../utils/ApiError');
+const { logActivity } = require('../services/activity.service');
 
 const validId = (id) => mongoose.isValidObjectId(id);
+
+function pagination(query) {
+  const page = query.page === undefined ? 1 : Number(query.page);
+  const limit = query.limit === undefined ? 10 : Number(query.limit);
+  if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(limit) || limit < 1 || limit > 50 || !Number.isSafeInteger((page - 1) * limit)) {
+    throw new ApiError(400, 'Invalid pagination');
+  }
+  return { page, limit };
+}
+
+function moderationReason(value = '') {
+  if (typeof value !== 'string' || value.length > 650) throw new ApiError(400, 'Moderation reason must be a string of 650 characters or fewer');
+  return value.trim();
+}
 
 async function refreshProductRating(productId) {
   if (!productId) return;
@@ -15,8 +30,7 @@ async function refreshProductRating(productId) {
 
 exports.listProductReviews = async (req, res) => {
   if (!validId(req.params.productId)) throw new ApiError(400, 'Invalid product ID');
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+  const { page, limit } = pagination(req.query);
   const filter = { productId: req.params.productId, targetType: 'product', status: 'visible' };
   const [items, total] = await Promise.all([
     Review.find(filter).populate('customerId', 'fullName avatarUrl').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
@@ -26,9 +40,12 @@ exports.listProductReviews = async (req, res) => {
 };
 
 exports.listStoreReviews = async (req, res) => {
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+  const { page, limit } = pagination(req.query);
   const filter = { targetType: 'store', status: 'visible' };
+  if (req.query.storeId !== undefined) {
+    if (!validId(req.query.storeId)) throw new ApiError(400, 'Invalid store ID');
+    filter.storeId = req.query.storeId;
+  }
   const [items, total] = await Promise.all([
     Review.find(filter).populate('customerId', 'fullName avatarUrl').populate('storeId', 'name').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     Review.countDocuments(filter),
@@ -60,9 +77,9 @@ exports.listMyReviews = async (req, res) => {
 };
 
 exports.addReview = async (req, res) => {
-  const { targetType = 'product', productId, storeId, orderId, rating, comment = '' } = req.body;
+  const { targetType = 'product', productId, storeId, orderId, rating, comment = '' } = req.body || {};
   if (!['product', 'store'].includes(targetType)) throw new ApiError(400, 'Invalid review target');
-  if (!Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
+  if (!['number', 'string'].includes(typeof rating) || !Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
   if (typeof comment !== 'string' || comment.trim().length > 1000) throw new ApiError(400, 'Review comments must be 1,000 characters or fewer');
 
   const reviewData = { targetType, customerId: req.user.id, rating: Number(rating), comment: comment.trim() };
@@ -73,7 +90,8 @@ exports.addReview = async (req, res) => {
     reviewData.productId = productId;
     reviewData.orderId = orderId;
   } else {
-    const store = storeId && validId(storeId) ? await Store.findById(storeId).select('_id') : await Store.findOne({ status: 'open' }).select('_id');
+    if (storeId !== undefined && !validId(storeId)) throw new ApiError(400, 'Invalid store ID');
+    const store = storeId !== undefined ? await Store.findById(storeId).select('_id') : await Store.findOne({ status: 'open' }).select('_id');
     if (!store) throw new ApiError(404, 'Store not found');
     reviewData.storeId = store._id;
   }
@@ -89,8 +107,9 @@ exports.addReview = async (req, res) => {
 
 exports.updateReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
-  const { rating, comment } = req.body;
-  if (rating !== undefined && (!Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5)) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
+  const { rating, comment } = req.body || {};
+  if (rating === undefined && comment === undefined) throw new ApiError(400, 'Provide a rating or comment to update');
+  if (rating !== undefined && (!['number', 'string'].includes(typeof rating) || !Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5)) throw new ApiError(400, 'Rating must be between 1 and 5 stars');
   if (comment !== undefined && (typeof comment !== 'string' || comment.trim().length > 1000)) throw new ApiError(400, 'Review comments must be 1,000 characters or fewer');
   const review = await Review.findOne({ _id: req.params.id, customerId: req.user.id, status: 'visible' });
   if (!review) throw new ApiError(404, 'Editable review not found');
@@ -123,30 +142,38 @@ exports.listReviewsAdmin = async (req, res) => {
 
 exports.hideReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
+  const reason = moderationReason(req.body?.reason);
   const review = await Review.findById(req.params.id);
   if (!review || review.status === 'deleted') throw new ApiError(404, 'Review not found');
-  if (review.status !== 'hidden' && !String(req.body.reason || '').trim()) throw new ApiError(400, 'Select a reason before hiding a review');
-  if (String(req.body.reason || '').length > 650) throw new ApiError(400, 'Moderation reason must be 650 characters or fewer');
+  if (review.status !== 'hidden' && !reason) throw new ApiError(400, 'Select a reason before hiding a review');
+  review.moderation ??= {};
   review.status = review.status === 'hidden' ? 'visible' : 'hidden';
   review.moderation.hiddenBy = review.status === 'hidden' ? req.user.id : undefined;
   review.moderation.hiddenAt = review.status === 'hidden' ? new Date() : undefined;
-  review.moderation.reason = review.status === 'hidden' ? String(req.body.reason || '').trim() : undefined;
+  // Preserve a confirmed violation's reason until the flag is explicitly dismissed.
+  if (review.status === 'hidden') review.moderation.reason = reason;
+  else if (!review.moderation.isViolating) review.moderation.reason = undefined;
   await review.save();
   if (review.productId) await refreshProductRating(review.productId);
+  await logActivity(req, {
+    action: review.status === 'hidden' ? 'REVIEW_HIDE' : 'REVIEW_SHOW', targetType: 'Review', targetId: review._id,
+    detail: { status: review.status, reason: review.moderation.reason || '', targetType: review.targetType },
+  });
   res.json(review);
 };
 
 exports.handleViolatingReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
-  const { action, reason = '' } = req.body;
+  const { action } = req.body || {};
+  const reason = moderationReason(req.body?.reason);
   if (!['dismiss', 'hide'].includes(action)) throw new ApiError(400, 'Action must be either dismiss or hide');
-  if (action === 'hide' && !String(reason).trim()) throw new ApiError(400, 'Select a reason before confirming a violation');
-  if (String(reason).length > 650) throw new ApiError(400, 'Moderation reason must be 650 characters or fewer');
+  if (action === 'hide' && !reason) throw new ApiError(400, 'Select a reason before confirming a violation');
   const review = await Review.findById(req.params.id);
   if (!review || review.status === 'deleted') throw new ApiError(404, 'Review not found');
+  review.moderation ??= {};
   review.moderation.isViolating = action === 'hide';
   review.moderation.action = action;
-  if (reason) review.moderation.reason = String(reason).trim();
+  if (reason) review.moderation.reason = reason;
   if (action === 'hide') {
     review.status = 'hidden';
     review.moderation.hiddenBy = req.user.id;
@@ -154,5 +181,9 @@ exports.handleViolatingReview = async (req, res) => {
   }
   await review.save();
   if (review.productId) await refreshProductRating(review.productId);
+  await logActivity(req, {
+    action: action === 'hide' ? 'REVIEW_VIOLATION_CONFIRM' : 'REVIEW_VIOLATION_DISMISS', targetType: 'Review', targetId: review._id,
+    detail: { status: review.status, reason: review.moderation.reason || '', targetType: review.targetType },
+  });
   res.json(review);
 };

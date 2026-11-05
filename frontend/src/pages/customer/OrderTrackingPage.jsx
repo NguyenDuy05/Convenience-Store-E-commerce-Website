@@ -8,7 +8,7 @@ import Icon from '../../components/common/Icon';
 import OrderStatusBadge from '../../components/order/OrderStatusBadge';
 import OrderTimeline from '../../components/order/OrderTimeline';
 import { formatCurrency, formatDateTime } from '../../utils/format';
-import { ACTIVE_STATUSES, ORDER_STATUS_MESSAGE, SHOW_PICKUP_CODE, paymentSummary } from '../../utils/orderMeta';
+import { ACTIVE_STATUSES, SHOW_PICKUP_CODE, paymentSummary, statusMessage } from '../../utils/orderMeta';
 
 const REFRESH_MS = 30000; // tự làm mới mỗi 30 giây khi đơn còn đang xử lý
 
@@ -100,7 +100,7 @@ export default function OrderTrackingPage() {
     );
   }
 
-  const msg = ORDER_STATUS_MESSAGE[order.status];
+  const msg = statusMessage(order);
   const live = ACTIVE_STATUSES.includes(order.status);
 
   return (

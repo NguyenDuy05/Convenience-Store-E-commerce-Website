@@ -9,5 +9,8 @@ if (!process.env.JWT_SECRET) {
 
 const PORT = process.env.PORT || 5000;
 connectDB()
-  .then(() => app.listen(PORT, () => console.log(`Server chạy tại http://localhost:${PORT}`)))
+  .then(() => {
+    require('./services/payment.service').startExpiryJob();   // mỗi phút: đơn quá hạn thanh toán -> failed + hoàn kho
+    return app.listen(PORT, () => console.log(`Server chạy tại http://localhost:${PORT}`));
+  })
   .catch((err) => { console.error(err); process.exit(1); });

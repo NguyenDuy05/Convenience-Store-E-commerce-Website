@@ -1,0 +1,9 @@
+.member-code-lookup { margin: 20px 0; padding: 20px; border: 1px solid #dce3ef; border-radius: 12px; background: white; }
+.member-code-lookup label { display: block; color: #172b4d; font-size: 14px; font-weight: 600; }
+.member-code-lookup small { display: block; margin: 7px 0 14px; color: #64748b; font-size: 12px; font-weight: 400; line-height: 1.6; }
+.member-code-lookup form > div { display: flex; gap: 10px; flex-wrap: wrap; }
+.member-code-lookup input { min-width: 0; flex: 1 1 280px; padding: 12px; border: 1px solid #c2c6d6; border-radius: 8px; font: 13px monospace; }
+.member-code-lookup button { padding: 12px 16px; border: 0; border-radius: 8px; background: #0058bc; color: white; cursor: pointer; }
+.member-code-lookup button:disabled { opacity: .55; cursor: not-allowed; }
+.member-code-lookup p { color: #a32934; font-size: 13px; margin: 12px 0 0; }
+.member-code-lookup :focus-visible { outline: 2px solid #0058bc; outline-offset: 3px; }

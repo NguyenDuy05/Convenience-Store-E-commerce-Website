@@ -1,9 +1,9 @@
 import api from './axios';
 
-// UC-20.1, 29.1, 29.2 View / Search Customers
+// UC-19.1 View Customers (staff, admin). params: q (>= 2 ký tự), status, hasComplaint: '1', sort, page, limit
 export const listCustomers = (params) => api.get(`/customers`, { params });
 
-// UC-20.2, 29.3 View Customer Details
+// UC-19.2 View Customer Details (staff chỉ nhận thông tin đã che bớt)
 export const getCustomer = (id, params) => api.get(`/customers/${id}`, { params });
 
 // UC-29.4 Update Customer

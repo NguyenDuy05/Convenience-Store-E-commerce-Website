@@ -1,0 +1,571 @@
+/* Dashboard admin / staff. Dùng thêm các class ap-* (nút, card, badge) từ admin-products.css */
+.db-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.db-seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #f3f2ff;
+}
+
+.db-seg button {
+    min-height: 34px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #424754;
+    font: 600 13px/18px Inter, sans-serif;
+    cursor: pointer;
+}
+
+.db-seg button:hover {
+    background: #e4e7ff;
+}
+
+.db-seg button.on {
+    background: #fff;
+    color: #0058bc;
+    box-shadow: 0 1px 3px rgba(12, 24, 66, .12);
+}
+
+.db-custom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.db-custom input[type="date"] {
+    height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 9px;
+    background: #f3f2ff;
+    color: #0c1842;
+    font: 400 13px/18px Inter, sans-serif;
+}
+
+.db-sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    color: #424754;
+    font-size: 14px;
+}
+
+.db-sub .db-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #c2c6d6;
+}
+
+.db-spin {
+    animation: db-rot 1s linear infinite;
+}
+
+@keyframes db-rot {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.db-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 16px;
+}
+
+.db-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(12, 24, 66, .06);
+}
+
+.db-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #424754;
+    font: 600 12px/16px Inter, sans-serif;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.db-kpi-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #d8e2ff;
+    color: #0058bc;
+}
+
+.db-kpi-icon .review-material-icon {
+    font-size: 19px;
+}
+
+.db-kpi-icon.green {
+    background: #b4f486;
+    color: #245100;
+}
+
+.db-kpi-icon.yellow {
+    background: #fbe187;
+    color: #554500;
+}
+
+.db-kpi-icon.red {
+    background: #ffdad6;
+    color: #ba1a1a;
+}
+
+.db-kpi-icon.gray {
+    background: #e4e7ff;
+    color: #424754;
+}
+
+.db-kpi strong {
+    font: 600 28px/34px Rubik, Inter, sans-serif;
+    letter-spacing: -.01em;
+}
+
+.db-kpi small {
+    color: #727785;
+    font-size: 12px;
+}
+
+.db-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font: 700 12px/16px Inter, sans-serif;
+}
+
+.db-delta .review-material-icon {
+    font-size: 16px;
+}
+
+.db-delta.up {
+    color: #356b0a;
+}
+
+.db-delta.down {
+    color: #ba1a1a;
+}
+
+.db-delta.none {
+    color: #727785;
+    font-weight: 500;
+}
+
+.db-grid {
+    display: grid;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.db-grid.g21 {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.db-grid.g111 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.db-grid.g11 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.db-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    padding: 20px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(12, 24, 66, .06);
+}
+
+.db-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.db-panel-head h2 {
+    margin: 0;
+    font: 600 17px/24px Inter, sans-serif;
+}
+
+.db-panel-head p {
+    margin: 2px 0 0;
+    color: #727785;
+    font-size: 12px;
+}
+
+.db-empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 140px;
+    padding: 16px;
+    color: #727785;
+    font-size: 13px;
+    text-align: center;
+}
+
+.db-empty .review-material-icon {
+    color: #c2c6d6;
+    font-size: 34px;
+}
+
+.db-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.db-chart .grid {
+    stroke: #e4e7ff;
+    stroke-width: 1;
+}
+
+.db-chart .axis {
+    fill: #727785;
+    font: 500 11px Inter, sans-serif;
+}
+
+.db-chart .bar {
+    fill: #0058bc;
+    transition: fill .15s;
+}
+
+.db-chart .bar:hover {
+    fill: #1c71e4;
+}
+
+.db-chart .bar.zero {
+    fill: #e4e7ff;
+}
+
+.db-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.db-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+}
+
+.db-bar-row>div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.db-bar-row b {
+    font-weight: 600;
+}
+
+.db-bar-row span {
+    color: #424754;
+}
+
+.db-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #e4e7ff;
+}
+
+.db-track>i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: #0058bc;
+}
+
+.db-split {
+    display: flex;
+    height: 14px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #e4e7ff;
+}
+
+.db-split>i {
+    display: block;
+    height: 100%;
+}
+
+.db-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.db-legend>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.db-legend .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.db-legend .sw {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.db-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.db-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #f3f2ff;
+}
+
+.db-list li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.db-list .grow {
+    flex: 1;
+    min-width: 0;
+}
+
+.db-list .grow b {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.db-list .grow small {
+    color: #727785;
+    font-size: 12px;
+}
+
+.db-list .end {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.db-list .end b {
+    display: block;
+    font-size: 14px;
+}
+
+.db-list .end small {
+    color: #727785;
+    font-size: 12px;
+}
+
+.db-rank {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #ecedff;
+    color: #0058bc;
+    font: 700 12px/1 Inter, sans-serif;
+}
+
+.db-thumb {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #f3f2ff;
+    color: #727785;
+}
+
+.db-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.db-thumb .review-material-icon {
+    font-size: 20px;
+}
+
+.db-note {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fbe187;
+    color: #554500;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.db-note.red {
+    background: #ffdad6;
+    color: #93000a;
+}
+
+.db-note .review-material-icon {
+    font-size: 18px;
+}
+
+.db-table-scroll {
+    overflow-x: auto;
+}
+
+.db-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.db-table th {
+    padding: 9px 8px;
+    text-align: left;
+    background: #f3f2ff;
+    color: #727785;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.db-table td {
+    padding: 10px 8px;
+    border-top: 1px solid #f3f2ff;
+    white-space: nowrap;
+}
+
+.db-table .r {
+    text-align: right;
+}
+
+.db-st {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font: 700 11px/14px Inter, sans-serif;
+    white-space: nowrap;
+}
+
+.db-st-pending_payment {
+    background: #e4e7ff;
+    color: #424754;
+}
+
+.db-st-confirmed {
+    background: #d8e2ff;
+    color: #004494;
+}
+
+.db-st-preparing {
+    background: #fbe187;
+    color: #554500;
+}
+
+.db-st-ready_for_pickup {
+    background: #b4f486;
+    color: #245100;
+}
+
+.db-st-completed {
+    background: #356b0a;
+    color: #fff;
+}
+
+.db-st-failed {
+    background: #ffdad6;
+    color: #93000a;
+}
+
+.db-queue {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.db-queue>div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f3f2ff;
+}
+
+.db-queue b {
+    font: 600 26px/32px Rubik, Inter, sans-serif;
+}
+
+.db-queue span {
+    color: #424754;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.db-queue>div.hot {
+    background: #b4f486;
+}
+
+.db-queue>div.hot span {
+    color: #245100;
+}
+
+@media (max-width: 1100px) {
+
+    .db-grid.g21,
+    .db-grid.g111,
+    .db-grid.g11 {
+        grid-template-columns: 1fr;
+    }
+}

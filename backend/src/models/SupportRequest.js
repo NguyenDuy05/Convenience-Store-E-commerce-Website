@@ -1,10 +1,11 @@
-// UC-13 (customer gửi / xem), UC-20.3 Handle Customer Complaint (staff xử lý). Phản hồi embed trong request.
+// UC-12/13 (customer gửi / xem), UC-19.3 Handle Customer Complaint (staff xử lý). Phản hồi embed trong request.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const responseSchema = new Schema({
   responderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   message: { type: String, required: true },
+  requestKey: String,                      // khoá chống ghi trùng phản hồi khi staff gửi lại do lỗi mạng (UC-19.3)
   createdAt: { type: Date, default: Date.now },
 });
 

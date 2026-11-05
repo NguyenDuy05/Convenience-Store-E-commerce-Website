@@ -1,0 +1,15 @@
+.atc { margin: 16px 0; font-family: var(--qk-font-body); }
+.atc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+.atc-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.atc-btn:hover:not(:disabled) { background: var(--qk-primary-dark); color: #fff; }
+.atc-btn:disabled { opacity: .6; cursor: progress; }
+.atc-btn:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 2px; }
+
+.atc-msg { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 13px; font-weight: 600; }
+.atc-msg.ok { color: var(--qk-secondary); }
+.atc-msg.ok a { color: var(--qk-primary); }
+.atc-msg.err { color: var(--qk-error); }
+
+.atc-note { margin: 16px 0; font-family: var(--qk-font-body); font-size: 14px; color: var(--qk-text-variant); }
+.atc-note.out { font-weight: 700; color: var(--qk-error); }

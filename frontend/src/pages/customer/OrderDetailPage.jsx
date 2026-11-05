@@ -7,7 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import Icon from '../../components/common/Icon';
 import OrderStatusBadge from '../../components/order/OrderStatusBadge';
 import { formatCurrency, formatDateTime } from '../../utils/format';
-import { ORDER_STATUS_MESSAGE, PAYMENT_METHOD, PAYMENT_STATUS, SHOW_PICKUP_CODE } from '../../utils/orderMeta';
+import { PAYMENT_METHOD, PAYMENT_STATUS, SHOW_PICKUP_CODE, statusMessage } from '../../utils/orderMeta';
 
 const todayHours = (store) => {
   const h = store?.openingHours?.find((x) => x.day === new Date().getDay());
@@ -94,7 +94,7 @@ export default function OrderDetailPage() {
     );
   }
 
-  const banner = ORDER_STATUS_MESSAGE[order.status];
+  const banner = statusMessage(order);
   // Quay lại đúng nơi khách đến (danh sách hoặc lịch sử)
   const backTo = location.state?.from || '/orders';
   const backLabel = backTo.startsWith('/orders/history') ? 'Quay lại lịch sử' : 'Quay lại danh sách';
@@ -115,6 +115,7 @@ export default function OrderDetailPage() {
           <p>Đặt lúc {formatDateTime(order.createdAt)} • {itemCount} sản phẩm</p>
         </div>
         <div className="odetail-actions">
+          {order.status === 'pending_payment' && <Link className="odetail-btn pay" to={`/orders/${order._id}/pay`}><Icon name="payments" size="md" />Thanh toán</Link>}
           <Link className="odetail-btn" to={`/orders/${order._id}/tracking`}><Icon name="local_shipping" size="md" />Theo dõi đơn</Link>
           <Link className="odetail-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />{backLabel}</Link>
         </div>

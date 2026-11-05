@@ -48,8 +48,10 @@ function Callout({ order }) {
         <div className="ocard-callout warn">
           <span className="ocard-callout-icon"><Icon name="payments" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Đơn đang chờ thanh toán</strong>
-            <span>Cửa hàng chỉ chuẩn bị đơn sau khi thanh toán thành công.</span>
+            <strong>{order.paymentStatus === 'failed' ? 'Thanh toán chưa thành công' : 'Đơn đang chờ thanh toán'}</strong>
+            <span>{order.paymentStatus === 'failed'
+              ? 'Đơn vẫn được giữ hàng đến khi hết hạn. Bạn có thể thanh toán lại.'
+              : 'Cửa hàng chỉ chuẩn bị đơn sau khi thanh toán thành công.'}</span>
           </div>
         </div>
       );
@@ -117,6 +119,11 @@ export default function OrderCard({ order, storeName }) {
           {order.status === 'completed' && <><Icon name="check_circle" size="md" />Hoàn tất</>}
         </span>
         <div className="ocard-actions">
+          {order.status === 'pending_payment' && (
+            <Link className="ocard-btn pay" to={`/orders/${order._id}/pay`}>
+              <Icon name="payments" size="md" />Thanh toán
+            </Link>
+          )}
           {ACTIVE_STATUSES.includes(order.status) && (
             <Link className="ocard-btn ghost" to={`/orders/${order._id}/tracking`}>
               <Icon name="local_shipping" size="md" />Theo dõi

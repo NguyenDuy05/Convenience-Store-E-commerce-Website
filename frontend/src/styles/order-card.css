@@ -171,6 +171,8 @@
 }
 
 .ocard-btn:hover { background: var(--qk-primary-dark); color: #fff; }
+.ocard-btn.pay { background: var(--qk-secondary); }
+.ocard-btn.pay:hover { background: #2a5707; color: #fff; }
 .ocard-btn.ghost { background: var(--qk-surface); color: var(--qk-primary); box-shadow: inset 0 0 0 1px var(--qk-outline-variant); }
 .ocard-btn.ghost:hover { background: var(--qk-surface-low); color: var(--qk-primary-dark); }
 .ocard-btn:active { transform: scale(.97); }

@@ -6,6 +6,7 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 router.get('/me', authenticate, authorize('customer'), c.getMyMembership);
 // UC-12.2 View Point History
 router.get('/me/history', authenticate, authorize('customer'), c.getMyPointHistory);
+router.get('/lookup', authenticate, authorize('staff', 'admin'), c.lookupMemberCode);
 // UC-39.1, 39.2 View / Search Members
 router.get('/members', authenticate, authorize('admin'), c.listMembers);
 // UC-39.3 View Member Details

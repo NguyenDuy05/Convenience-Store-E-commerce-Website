@@ -2,7 +2,7 @@ const router = require('express').Router();
 const c = require('../controllers/payment.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
-// UC-09.2 Make Payment (tạo link VNPay/Momo)
+// UC-08.2 Make Payment (tạo link VNPay/Momo)
 router.post('/online', authenticate, authorize('customer'), c.createOnlinePayment);
 // VNPay chuyển hướng trình duyệt về sau khi thanh toán
 router.get('/vnpay/return', c.vnpayReturn);
@@ -10,6 +10,11 @@ router.get('/vnpay/return', c.vnpayReturn);
 router.get('/vnpay/ipn', c.vnpayIpn);
 // Momo gọi server báo kết quả (IPN)
 router.post('/momo/ipn', c.momoIpn);
+// Momo chuyển hướng trình duyệt về sau khi thanh toán
+router.get('/momo/return', c.momoReturn);
+// Cổng thanh toán giả lập để test (chỉ khi PAYMENT_MOCK=true, controller tự chặn nếu tắt)
+router.get('/mock/pay', c.mockPay);
+router.get('/mock/complete', c.mockComplete);
 // UC-23.1 Process Cash Payment
 router.post('/cash', authenticate, authorize('staff'), c.processCashPayment);
 // UC-23.2 Process Card/E-wallet Payment
