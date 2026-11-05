@@ -1,9 +1,9 @@
-// Tính khuyến mãi từ dữ liệu có thẩm quyền (giá lấy từ Product, không tin số tiền client gửi).
-// Quy ước (Project Report ghi stacking/làm tròn là TBD, nên chọn cách an toàn nhất):
-//  - Mỗi đơn áp dụng tối đa 1 khuyến mãi (không cộng dồn).
-//  - 'percent': giảm value% trên tổng tiền các dòng đủ điều kiện, tối đa maxDiscount (nếu có), làm tròn xuống đồng.
-//  - 'fixed'  : giảm value đồng một lần cho cả đơn, không vượt quá tổng tiền các dòng đủ điều kiện.
-//  - Số tiền giảm được chia cho các dòng đủ điều kiện theo tỷ lệ thành tiền (dòng cuối nhận phần dư).
+// Calculate discounts from authoritative Product prices rather than client-provided amounts.
+// Discount rules (stacking and rounding are unspecified in the project report):
+//  - Apply at most one promotion per order; promotions do not stack.
+//  - 'percent': apply value% to eligible lines, capped by maxDiscount when set, rounded down to whole VND.
+//  - 'fixed'  : apply value VND once per order, capped at the eligible subtotal.
+//  - Allocate the discount proportionally across eligible lines; the last line receives the remainder.
 const { Promotion } = require('../models');
 
 const isEligibleLine = (promo, line) => {
@@ -13,7 +13,7 @@ const isEligibleLine = (promo, line) => {
   return false;
 };
 
-// Trạng thái hiệu lực: active nhưng ngoài khoảng ngày thì coi là không khả dụng
+// Active promotions outside their date range are unavailable
 exports.isRunning = (promo, now = new Date()) =>
   promo.status === 'active' && promo.startDate <= now && promo.endDate >= now;
 
@@ -23,7 +23,7 @@ exports.findRunning = (filter = {}) => {
 };
 
 // lines: [{ productId, categoryId, name, unitPrice, quantity }]
-// Trả { applicable, reason?, eligibleSubtotal, discount, lines:[{...,lineSubtotal,discountAmount,lineTotal,eligible}] }
+// Returns { applicable, reason?, eligibleSubtotal, discount, lines:[{...,lineSubtotal,discountAmount,lineTotal,eligible}] }
 exports.evaluate = (promo, lines) => {
   const out = lines.map((l) => ({
     ...l,
@@ -34,7 +34,7 @@ exports.evaluate = (promo, lines) => {
   const eligible = out.filter((l) => l.eligible);
   const eligibleSubtotal = eligible.reduce((s, l) => s + l.lineSubtotal, 0);
   if (!eligible.length || eligibleSubtotal <= 0) {
-    return { applicable: false, reason: 'Khuyến mãi không áp dụng cho sản phẩm nào trong đơn hàng', eligibleSubtotal: 0, discount: 0, lines: out };
+    return { applicable: false, reason: 'This promotion does not apply to any items in the order', eligibleSubtotal: 0, discount: 0, lines: out };
   }
 
   let discount = promo.type === 'percent'
@@ -50,5 +50,5 @@ exports.evaluate = (promo, lines) => {
     remaining -= share;
   });
   out.forEach((l) => { l.lineTotal = l.lineSubtotal - l.discountAmount; });
-  return { applicable: discount > 0, reason: discount > 0 ? undefined : 'Khuyến mãi không tạo ra mức giảm nào cho đơn này', eligibleSubtotal, discount, lines: out };
+  return { applicable: discount > 0, reason: discount > 0 ? undefined : 'This promotion provides no discount for this order', eligibleSubtotal, discount, lines: out };
 };

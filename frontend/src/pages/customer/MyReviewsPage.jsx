@@ -4,6 +4,7 @@ import { Star, MessageSquare, Clock3, CheckCircle2, Search, Pencil, ShoppingBag,
 import { addReview, deleteReview, listEligibleReviews, listMyReviews, updateReview } from '../../api/review.api';
 import '../../styles/style.css';
 import '../../styles/my-reviews.css';
+import StoreReviewForm from '../../components/product/StoreReviewForm';
 
 const RATING_LABELS = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
 function RatingInput({ name, value, disabled, onChange }) {
@@ -123,6 +124,8 @@ export default function MyReviewsPage() {
           </article>;
         })}</div>}
       </section>
+
+      <StoreReviewForm onSubmitted={load} />
 
       <section className="review-section">
         <div className="review-section-title"><div><h2>Your reviews</h2><p>All your feedback, in one place. Edit published reviews anytime.</p></div></div>

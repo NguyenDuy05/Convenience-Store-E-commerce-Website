@@ -11,7 +11,7 @@ import { newIdempotencyKey } from '../../utils/idempotency';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { COMPLAINT_STATUS, STATUS_ACTION } from '../../utils/complaintMeta';
 
-// UC-19.3 Handle Customer Complaint (Staff): xem khiếu nại, phản hồi khách, chuyển trạng thái theo luồng cho phép
+// UC-19.3 Handle Customer Complaint (Staff): view complaints, respond to customers, and follow allowed status transitions
 export default function StaffComplaintDetailPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -22,12 +22,12 @@ export default function StaffComplaintDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-  const [target, setTarget] = useState('');            // '' = giữ nguyên trạng thái, chỉ gửi phản hồi
+  const [target, setTarget] = useState('');            // '' = keep the current status and send a response only
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [done, setDone] = useState(null);              // { replayed }
   const lock = useRef(false);
-  const keyRef = useRef(newIdempotencyKey());          // giữ nguyên khi gửi lại do lỗi mạng; đổi sau khi lưu xong hoặc lỗi dứt khoát
+  const keyRef = useRef(newIdempotencyKey());          // reuse after network errors; replace after a successful save or a definitive failure
 
   const onAuth = useCallback(async (err) => {
     if (err.response?.status !== 401) return false;
@@ -40,7 +40,7 @@ export default function StaffComplaintDetailPage() {
     catch (err) {
       if (await onAuth(err)) return;
       const code = err.response?.status;
-      setError({ notFound: code === 404, denied: code === 403, message: code === 404 ? 'Không tìm thấy yêu cầu này.' : code === 403 ? 'Bạn không có quyền xử lý khiếu nại.' : (err.response?.data?.message || 'Không tải được yêu cầu. Vui lòng thử lại.') });
+      setError({ notFound: code === 404, denied: code === 403, message: code === 404 ? 'This request was not found.' : code === 403 ? 'You do not have permission to handle complaints.' : (err.response?.data?.message || 'Unable to load the request. Please try again.') });
     } finally { setLoading(false); }
   }, [id, onAuth]);
 
@@ -49,18 +49,18 @@ export default function StaffComplaintDetailPage() {
   const backTo = location.state?.from || '/staff/complaints';
   const crumb = (
     <nav className="cmpd-crumb" aria-label="Breadcrumb">
-      <Link to="/staff">Nhân viên</Link><Icon name="chevron_right" size="sm" />
-      <Link to={backTo}>Khiếu nại</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">{r ? r.subject : 'Chi tiết'}</span>
+      <Link to="/staff">Staff</Link><Icon name="chevron_right" size="sm" />
+      <Link to={backTo}>Complaints</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">{r ? r.subject : 'Details'}</span>
     </nav>
   );
 
-  if (loading && !r) return <div className="cmpd">{crumb}<div className="cmpd-skeleton" aria-busy="true" aria-label="Đang tải yêu cầu" /></div>;
+  if (loading && !r) return <div className="cmpd">{crumb}<div className="cmpd-skeleton" aria-busy="true" aria-label="Loading request" /></div>;
   if (error && !r) {
     return (
       <div className="cmpd">{crumb}
-        <div className="cmpd-state" role="alert"><Icon name={error.denied ? 'lock' : error.notFound ? 'search_off' : 'cloud_off'} size="xl" /><h2>{error.denied ? 'Không có quyền truy cập' : error.notFound ? 'Không tìm thấy yêu cầu' : 'Chưa tải được yêu cầu'}</h2><p>{error.message}</p>
-          <div className="cmpd-actions">{!error.notFound && !error.denied && <button type="button" className="cmpd-btn" onClick={() => load(true)}><Icon name="refresh" size="md" />Thử lại</button>}
-            <Link className="cmpd-btn ghost" to="/staff/complaints"><Icon name="arrow_back" size="md" />Về danh sách</Link></div></div>
+        <div className="cmpd-state" role="alert"><Icon name={error.denied ? 'lock' : error.notFound ? 'search_off' : 'cloud_off'} size="xl" /><h2>{error.denied ? 'Access denied' : error.notFound ? 'Request not found' : 'Unable to load request'}</h2><p>{error.message}</p>
+          <div className="cmpd-actions">{!error.notFound && !error.denied && <button type="button" className="cmpd-btn" onClick={() => load(true)}><Icon name="refresh" size="md" />Try again</button>}
+            <Link className="cmpd-btn ghost" to="/staff/complaints"><Icon name="arrow_back" size="md" />Back to requests</Link></div></div>
       </div>
     );
   }
@@ -81,12 +81,12 @@ export default function StaffComplaintDetailPage() {
       if (await onAuth(err)) return;
       const st = err.response?.status; const data = err.response?.data || {};
       if (!err.response || st >= 500) {
-        // Không biết đã lưu chưa: GIỮ khoá, bấm lại sẽ không ghi trùng phản hồi
-        setFormError('Chưa nhận được phản hồi từ hệ thống nên chưa biết đã lưu hay chưa. Bạn có thể bấm gửi lại, hệ thống sẽ không ghi trùng phản hồi.');
+        // Save status is unknown: retain the key so a retry cannot duplicate the response
+        setFormError('The server response was not received, so the save status is unknown. You can retry without creating a duplicate response.');
       } else {
         keyRef.current = newIdempotencyKey();
-        setFormError(data.message || 'Không lưu được. Vui lòng thử lại.');
-        if (['INVALID_TRANSITION', 'STALE_STATUS', 'CLOSED'].includes(data.code)) { setTarget(''); await load(); }   // hiển thị lại các bước được phép
+        setFormError(data.message || 'Unable to save. Please try again.');
+        if (['INVALID_TRANSITION', 'STALE_STATUS', 'CLOSED'].includes(data.code)) { setTarget(''); await load(); }   // refresh the allowed transitions
       }
     } finally { lock.current = false; setSaving(false); }
   };
@@ -97,44 +97,44 @@ export default function StaffComplaintDetailPage() {
       <header className="cmpd-head">
         <div>
           <div className="cmpd-title"><h1>{r.subject}</h1><ComplaintBadge type={r.type} /><ComplaintBadge status={r.status} /></div>
-          <p>Gửi lúc {formatDateTime(r.createdAt)}{r.handledBy ? ` • Người xử lý: ${r.handledBy}` : ''}{r.resolvedAt ? ` • Đóng lúc ${formatDateTime(r.resolvedAt)}` : ''}</p>
+          <p>Submitted {formatDateTime(r.createdAt)}{r.handledBy ? ` • Handled by: ${r.handledBy}` : ''}{r.resolvedAt ? ` • Closed ${formatDateTime(r.resolvedAt)}` : ''}</p>
         </div>
-        <Link className="cmpd-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />Quay lại</Link>
+        <Link className="cmpd-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />Back</Link>
       </header>
 
       <div className="cmpd-grid">
         <div className="cmpd-col">
           <section className="cmpd-card">
-            <h2><Icon name="forum" />Trao đổi</h2>
+            <h2><Icon name="forum" />Conversation</h2>
             <ol className="cmpd-thread">
-              <li className="cust"><div className="cmpd-who"><b>{r.customer ? r.customer.fullName : 'Khách hàng'}</b><span>{formatDateTime(r.createdAt)}</span></div><p>{r.message}</p></li>
+              <li className="cust"><div className="cmpd-who"><b>{r.customer ? r.customer.fullName : 'Customer'}</b><span>{formatDateTime(r.createdAt)}</span></div><p>{r.message}</p></li>
               {r.responses.map((x) => (
-                <li className="staff" key={x._id}><div className="cmpd-who"><b>{x.responder || 'Nhân viên'}</b><span>{formatDateTime(x.createdAt)}</span></div><p>{x.message}</p></li>
+                <li className="staff" key={x._id}><div className="cmpd-who"><b>{x.responder || 'Staff'}</b><span>{formatDateTime(x.createdAt)}</span></div><p>{x.message}</p></li>
               ))}
             </ol>
-            {r.responses.length === 0 && <p className="cmpd-muted">Chưa có phản hồi nào cho yêu cầu này.</p>}
+            {r.responses.length === 0 && <p className="cmpd-muted">No responses to this request yet.</p>}
           </section>
 
           <section className="cmpd-card">
-            <h2><Icon name="reply" />Xử lý yêu cầu</h2>
-            {done && <div className="cmpd-ok" role="status"><Icon name="check_circle" size="lg" fill /><div><b>{done.replayed ? 'Phản hồi này đã được lưu trước đó, không ghi trùng.' : 'Đã lưu xử lý.'}</b><span>Chưa có chính sách thông báo nào được duyệt nên hệ thống không gửi thông báo cho khách; kết quả đã được lưu vào hồ sơ yêu cầu.</span></div></div>}
+            <h2><Icon name="reply" />Handle request</h2>
+            {done && <div className="cmpd-ok" role="status"><Icon name="check_circle" size="lg" fill /><div><b>{done.replayed ? 'This response was already saved. No duplicate was created.' : 'Request updated.'}</b><span>Your update has been saved. The customer can view it in their support request.</span></div></div>}
             {closed ? (
-              <p className="cmpd-muted"><Icon name="lock" size="md" />Yêu cầu này đã được giải quyết và đóng, không thể xử lý thêm.</p>
+              <p className="cmpd-muted"><Icon name="lock" size="md" />This request is resolved and closed. No further updates are allowed.</p>
             ) : (
               <form className="cmpd-form" onSubmit={submit}>
-                <label htmlFor="cmpd-msg">Phản hồi gửi khách</label>
-                <textarea id="cmpd-msg" rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Nhập nội dung phản hồi cho khách hàng…" />
+                <label htmlFor="cmpd-msg">Response to customer</label>
+                <textarea id="cmpd-msg" rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Enter your response to the customer..." />
                 <small>{message.length}/2000</small>
                 <fieldset>
-                  <legend>Trạng thái sau khi lưu</legend>
-                  <label className="cmpd-radio"><input type="radio" name="st" checked={target === ''} onChange={() => setTarget('')} />Giữ nguyên ({COMPLAINT_STATUS[r.status].label}), chỉ gửi phản hồi</label>
+                  <legend>Status after saving</legend>
+                  <label className="cmpd-radio"><input type="radio" name="st" checked={target === ''} onChange={() => setTarget('')} />Keep current status ({COMPLAINT_STATUS[r.status].label}), send response only</label>
                   {r.allowedStatuses.map((s) => (
                     <label className="cmpd-radio" key={s}><input type="radio" name="st" checked={target === s} onChange={() => setTarget(s)} /><span><b>{STATUS_ACTION[s].label}</b><small>{STATUS_ACTION[s].hint}</small></span></label>
                   ))}
                 </fieldset>
-                {needMsg && message.trim().length === 0 && <p className="cmpd-warn"><Icon name="info" size="md" />Cần nhập phản hồi để đánh dấu đã giải quyết.</p>}
+                {needMsg && message.trim().length === 0 && <p className="cmpd-warn"><Icon name="info" size="md" />A response is required to mark the request as resolved.</p>}
                 {formError && <p className="cmpd-error" role="alert"><Icon name="error" size="md" />{formError}</p>}
-                <button type="submit" className="cmpd-btn" disabled={!canSubmit}>{saving ? 'Đang lưu…' : 'Lưu xử lý'}</button>
+                <button type="submit" className="cmpd-btn" disabled={!canSubmit}>{saving ? 'Saving...' : 'Save update'}</button>
               </form>
             )}
           </section>
@@ -142,14 +142,14 @@ export default function StaffComplaintDetailPage() {
 
         <div className="cmpd-col">
           <section className="cmpd-card">
-            <h2><Icon name="person" />Khách hàng</h2>
+            <h2><Icon name="person" />Customer</h2>
             {r.customer ? (<div className="cmpd-kv"><b>{r.customer.fullName}</b><span>{r.customer.email}</span>
-              <Link to={`/staff/customers/${r.customer._id}`} state={{ from: `/staff/complaints/${r._id}` }}>Xem hồ sơ khách hàng</Link></div>) : <p className="cmpd-muted">Không xác định được khách hàng.</p>}
+              <Link to={`/staff/customers/${r.customer._id}`} state={{ from: `/staff/complaints/${r._id}` }}>View customer profile</Link></div>) : <p className="cmpd-muted">Customer information is unavailable.</p>}
           </section>
           <section className="cmpd-card">
-            <h2><Icon name="receipt_long" />Đơn hàng liên quan</h2>
+            <h2><Icon name="receipt_long" />Related order</h2>
             {r.order ? (<div className="cmpd-kv"><b>#{r.order.orderCode}</b><span><OrderStatusBadge status={r.order.status} /></span><span>{formatCurrency(r.order.totalAmount)} • {formatDateTime(r.order.createdAt)}</span></div>)
-              : <p className="cmpd-muted">{r.type === 'complaint' ? 'Khiếu nại này chưa gắn với đơn hàng nào. Nếu liên quan đến sản phẩm, hãy hỏi khách mã đơn để truy vết.' : 'Yêu cầu này không gắn với đơn hàng.'}</p>}
+              : <p className="cmpd-muted">{r.type === 'complaint' ? 'This complaint is not linked to an order. For product issues, ask the customer for their order code.' : 'This request is not linked to an order.'}</p>}
           </section>
         </div>
       </div>

@@ -16,13 +16,13 @@ export default function MemberCodeLookup() {
       const { data } = await lookupMemberCode(code.trim());
       navigate(`/staff/customers/${data.customerId}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Không tra cứu được thành viên. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'Unable to look up the member. Please try again.');
     } finally { setBusy(false); }
   };
-  return <section className="member-code-lookup" aria-label="Tra cứu mã thành viên">
+  return <section className="member-code-lookup" aria-label="Member code lookup">
     <form onSubmit={submit}>
-      <label htmlFor="counter-member-code">Mã thành viên<small>Chọn ô bên dưới rồi quét QR bằng máy quét, hoặc nhập mã và nhấn Enter.</small></label>
-      <div><input id="counter-member-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="QUICK-…" maxLength={30} autoComplete="off" spellCheck={false} disabled={busy} required /><button disabled={busy || !code.trim()}>{busy ? 'Đang tìm…' : 'Tra cứu thành viên'}</button></div>
+      <label htmlFor="counter-member-code">Member code<small>Select the field below and scan the QR code, or enter the code and press Enter.</small></label>
+      <div><input id="counter-member-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="QUICK-…" maxLength={30} autoComplete="off" spellCheck={false} disabled={busy} required /><button disabled={busy || !code.trim()}>{busy ? 'Searching...' : 'Find member'}</button></div>
     </form>
     {error && <p role="alert">{error}</p>}
   </section>;

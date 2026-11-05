@@ -1,19 +1,19 @@
-// Nhãn tiếng Việt cho yêu cầu hỗ trợ / khiếu nại (khớp enum trong backend/src/models/SupportRequest.js)
+// English support and complaint labels matching the SupportRequest model enums
 export const COMPLAINT_STATUS = {
-  open: { label: 'Mới', tone: 'warn' },
-  in_progress: { label: 'Đang xử lý', tone: 'info' },
-  resolved: { label: 'Đã giải quyết', tone: 'success' },
+  open: { label: 'Open', tone: 'warn' },
+  in_progress: { label: 'In progress', tone: 'info' },
+  resolved: { label: 'Resolved', tone: 'success' },
 };
-export const COMPLAINT_TYPE = { complaint: 'Khiếu nại', support: 'Hỗ trợ' };
+export const COMPLAINT_TYPE = { complaint: 'Complaint', support: 'Support' };
 export const COMPLAINT_TABS = [
-  { key: '', label: 'Tất cả' },
-  { key: 'open', label: 'Mới' },
-  { key: 'in_progress', label: 'Đang xử lý' },
-  { key: 'resolved', label: 'Đã giải quyết' },
+  { key: '', label: 'All' },
+  { key: 'open', label: 'Open' },
+  { key: 'in_progress', label: 'In progress' },
+  { key: 'resolved', label: 'Resolved' },
 ];
-// Nhãn nút/lựa chọn khi chuyển sang từng trạng thái
+// Labels and hints for status transitions
 export const STATUS_ACTION = {
-  in_progress: { label: 'Nhận xử lý', hint: 'Đánh dấu bạn đang xử lý yêu cầu này' },
-  resolved: { label: 'Đã giải quyết', hint: 'Đóng yêu cầu, bắt buộc có phản hồi gửi khách' },
+  in_progress: { label: 'Start handling', hint: 'Mark this request as in progress' },
+  resolved: { label: 'Resolved', hint: 'Close the request; a customer response is required' },
 };
-export const CUSTOMER_STATUS = { active: 'Hoạt động', locked: 'Bị khóa' };
+export const CUSTOMER_STATUS = { active: 'Active', locked: 'Locked' };

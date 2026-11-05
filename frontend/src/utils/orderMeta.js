@@ -1,11 +1,11 @@
-// Nhãn tiếng Việt + biểu tượng cho trạng thái đơn và thanh toán (khớp enum trong backend/src/models/Order.js)
+// Order status badges shared by order pages and support request details.
 export const ORDER_STATUS = {
-  pending_payment: { label: 'Chờ thanh toán', icon: 'payments', tone: 'warn' },
-  confirmed: { label: 'Đã xác nhận', icon: 'task_alt', tone: 'info' },
-  preparing: { label: 'Đang chuẩn bị', icon: 'schedule', tone: 'info' },
-  ready_for_pickup: { label: 'Sẵn sàng nhận hàng', icon: 'storefront', tone: 'success' },
-  completed: { label: 'Đã nhận hàng', icon: 'check_circle', tone: 'neutral' },
-  failed: { label: 'Thanh toán lỗi', icon: 'error', tone: 'error' },
+  pending_payment: { label: 'Pending payment', icon: 'payments', tone: 'warn' },
+  confirmed: { label: 'Confirmed', icon: 'task_alt', tone: 'info' },
+  preparing: { label: 'Preparing', icon: 'schedule', tone: 'info' },
+  ready_for_pickup: { label: 'Ready for pickup', icon: 'storefront', tone: 'success' },
+  completed: { label: 'Completed', icon: 'check_circle', tone: 'neutral' },
+  failed: { label: 'Payment failed', icon: 'error', tone: 'error' },
 };
 
 // Thứ tự các tab lọc trên trang danh sách

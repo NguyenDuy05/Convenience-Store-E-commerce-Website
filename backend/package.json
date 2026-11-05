@@ -5,6 +5,8 @@
   "description": "Convenience Store E-commerce Website - REST API (Node.js, Express, MongoDB, MVC)",
   "main": "src/server.js",
   "scripts": {
+    "test": "node --test src/controllers/*.test.js",
+    "test:features": "node test/run-feature-integration.js",
     "start": "node src/server.js",
     "predev": "npm install --prefer-offline --no-audit --no-fund",
     "dev": "node --watch src/server.js",
