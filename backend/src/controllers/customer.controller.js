@@ -1,4 +1,3 @@
-const { notImplemented } = require('../utils/notImplemented');
 const mongoose = require('mongoose');
 const { User, Order, SupportRequest, MembershipTier } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
@@ -111,7 +110,58 @@ exports.getCustomer = asyncHandler(async (req, res) => {
   });
 });
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
-exports.updateCustomer = notImplemented('UC-29.4 Update Customer');
-exports.unlockCustomer = notImplemented('UC-29.5 Unlock Customer Account');
-exports.deleteCustomer = notImplemented('UC-29.6 Delete Customer Account');
+const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
+const IN_PROGRESS = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
+
+async function loadCustomerOr404(id, { allowLocked = true } = {}) {
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Customer not found');
+  const u = await User.findOne({ _id: id, role: 'customer', status: { $ne: 'deleted' } });
+  if (!u) throw new ApiError(404, 'Customer not found');
+  if (!allowLocked && u.status === 'locked') throw new ApiError(409, 'Customer account is locked');
+  return u;
+}
+
+const adminView = (u) => ({
+  _id: u._id, fullName: u.fullName, email: u.email, phone: u.phone || null, status: u.status,
+  lockedUntil: u.lockedUntil || null, joinedAt: u.createdAt,
+});
+
+// UC-29.4 Update Customer (Admin): họ tên, số điện thoại. Email không đổi được (là tên đăng nhập).
+exports.updateCustomer = asyncHandler(async (req, res) => {
+  const u = await loadCustomerOr404(req.params.id);
+  const { fullName, phone } = req.body || {};
+  const name = typeof fullName === 'string' ? fullName.trim() : '';
+  if (!name) throw new ApiError(400, 'Full name is required');
+  if (name.length > 100) throw new ApiError(400, 'Full name must be 100 characters or fewer');
+  const cleanPhone = typeof phone === 'string' ? phone.trim().replace(/[\s.-]/g, '') : '';
+  if (cleanPhone && !PHONE_RE.test(cleanPhone)) throw new ApiError(400, 'Phone number is invalid');
+  u.fullName = name;
+  u.phone = cleanPhone || undefined;
+  await u.save();
+  await logActivity(req, { action: 'CUSTOMER_UPDATE', targetType: 'User', targetId: u._id, detail: { fullName: name } });
+  res.json(adminView(u));
+});
+
+// UC-29.5 Unlock Customer Account (Admin): mở khóa tài khoản bị khóa (admin khóa hoặc khóa tạm do nhập sai mật khẩu)
+exports.unlockCustomer = asyncHandler(async (req, res) => {
+  const u = await loadCustomerOr404(req.params.id);
+  const tempLocked = u.lockedUntil && u.lockedUntil > new Date();
+  if (u.status !== 'locked' && !tempLocked) throw new ApiError(409, 'This account is not locked');
+  u.status = 'active';
+  u.lockedUntil = undefined;
+  u.failedLoginCount = 0;
+  await u.save();
+  await logActivity(req, { action: 'CUSTOMER_UNLOCK', targetType: 'User', targetId: u._id });
+  res.json(adminView(u));
+});
+
+// UC-29.6 Delete Customer Account (Admin): xóa mềm để đơn hàng cũ vẫn còn tham chiếu. Không xóa khi còn đơn đang xử lý.
+exports.deleteCustomer = asyncHandler(async (req, res) => {
+  const u = await loadCustomerOr404(req.params.id);
+  const open = await Order.countDocuments({ customerId: u._id, status: { $in: IN_PROGRESS } });
+  if (open > 0) throw new ApiError(409, `This customer still has ${open} order(s) in progress. Finish them before deleting the account.`);
+  u.status = 'deleted';
+  await u.save();
+  await logActivity(req, { action: 'CUSTOMER_DELETE', targetType: 'User', targetId: u._id, detail: { fullName: u.fullName } });
+  res.json({ message: 'Customer account deleted' });
+});

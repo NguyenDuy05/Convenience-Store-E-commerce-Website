@@ -105,12 +105,23 @@ function tierBody(body) {
   if (typeof description !== 'string' || description.length > 1000 || !Number.isSafeInteger(sortOrder)) throw new ApiError(400, 'Invalid tier description or sort order');
   return { name: name.trim(), minPoints, discountPercent, description: description.trim(), sortOrder };
 }
+// Hai hạng cùng mức điểm tối thiểu sẽ làm việc xếp hạng không rõ ràng
+const assertUniqueMinPoints = async (minPoints, excludeId) => {
+  if (await MembershipTier.exists({ minPoints, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+    throw new ApiError(409, 'Another tier already uses this minimum points value');
+  }
+};
 exports.createTier = asyncHandler(async (req, res) => {
-  const tier = await MembershipTier.create(tierBody(req.body));
+  const body = tierBody(req.body);
+  await assertUniqueMinPoints(body.minPoints);
+  const tier = await MembershipTier.create(body);
   res.status(201).json(tier);
 });
 exports.updateTier = asyncHandler(async (req, res) => {
-  const tier = await MembershipTier.findByIdAndUpdate(validId(req.params.id), { $set: tierBody(req.body) }, { new: true, runValidators: true });
+  const id = validId(req.params.id);
+  const body = tierBody(req.body);
+  await assertUniqueMinPoints(body.minPoints, id);
+  const tier = await MembershipTier.findByIdAndUpdate(id, { $set: body }, { new: true, runValidators: true });
   if (!tier) throw new ApiError(404, 'Tier not found');
   res.json(tier);
 });
