@@ -25,6 +25,7 @@ test('promotion management', async (t) => {
     model[method] = implementation;
   };
   t.after(() => { for (const [model, method, original] of originals) model[method] = original; });
+  stub(require('../models').User, 'findById', () => ({ select: () => ({ lean: async () => ({ status: 'active' }) }) }));   // auth middleware kiểm tra tài khoản còn hoạt động
   stub(ActivityLog, 'create', async () => ({}));
 
   await t.test('invalid discount, dates, scope and text fail before writing', async () => {

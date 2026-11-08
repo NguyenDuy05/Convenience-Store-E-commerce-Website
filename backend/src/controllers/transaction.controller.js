@@ -64,6 +64,7 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const { q, status, method } = req.query;
+  if (q !== undefined && typeof q !== 'string') throw new ApiError(400, 'Từ khóa tìm kiếm không hợp lệ');
 
   if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái giao dịch không hợp lệ');
   if (method && !METHODS.includes(method)) throw new ApiError(400, 'Phương thức thanh toán không hợp lệ');

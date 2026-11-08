@@ -4,6 +4,8 @@ const notFound = (req, res) => res.status(404).json({ message: 'Route not found'
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') return res.status(400).json({ message: 'Invalid JSON body' });
+  if (err.type === 'entity.too.large') return res.status(413).json({ message: 'Request body is too large' });
   if (err instanceof ApiError) return res.status(err.status).json({ ...(err.data || {}), message: err.message });
   if (err.name === 'ValidationError') {
     return res.status(400).json({ message: 'Invalid data', errors: Object.values(err.errors).map((e) => e.message) });

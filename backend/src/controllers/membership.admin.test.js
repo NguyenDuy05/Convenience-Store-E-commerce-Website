@@ -22,6 +22,7 @@ test('admin membership management boundaries and point accounting', async (t) =>
     if (!originals.some(([m, key]) => m === model && key === method)) originals.push([model, method, model[method]]);
     model[method] = implementation;
   };
+  stub(User, 'findById', () => chain({ status: 'active' }));   // auth middleware kiểm tra tài khoản còn hoạt động
   t.after(() => { for (const [model, method, original] of originals) model[method] = original; });
 
   await t.test('member search escapes regex input, excludes deleted users and selects contact/membership fields only', async () => {

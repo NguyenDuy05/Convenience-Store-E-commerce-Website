@@ -7,13 +7,14 @@ const { User, MembershipTier, PointHistory } = require('../models');
 // Exercise the real customer routes and auth middleware without changing database records.
 test('customer membership points and history API', async (t) => {
   const userId = '507f1f77bcf86cd799439011';
-  const originals = { user: User.findOne, tiers: MembershipTier.find, history: PointHistory.find, count: PointHistory.countDocuments, secret: process.env.JWT_SECRET };
+  const originals = { findById: User.findById, user: User.findOne, tiers: MembershipTier.find, history: PointHistory.find, count: PointHistory.countDocuments, secret: process.env.JWT_SECRET };
   process.env.JWT_SECRET = 'membership-test-only';
   const chain = (value, calls = {}) => Object.fromEntries([
     ...['select', 'populate', 'sort', 'skip', 'limit'].map((key) => [key, (arg) => { calls[key] = arg; return chain(value, calls); }]),
     ['lean', async () => value],
   ]);
   let member = { _id: userId, fullName: 'Test Customer', membership: { points: 125, lifetimePoints: 750, tierId: { name: 'Silver', minPoints: 500 } } };
+  User.findById = () => chain({ status: 'active' });   // auth middleware kiểm tra tài khoản còn hoạt động
   User.findOne = (filter) => {
     assert.deepEqual(filter, { _id: userId, role: 'customer', status: 'active' });
     return chain(member);
@@ -30,7 +31,7 @@ test('customer membership points and history API', async (t) => {
   await new Promise((resolve) => server.once('listening', resolve));
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
-    User.findOne = originals.user; MembershipTier.find = originals.tiers;
+    User.findById = originals.findById; User.findOne = originals.user; MembershipTier.find = originals.tiers;
     PointHistory.find = originals.history; PointHistory.countDocuments = originals.count;
     if (originals.secret === undefined) delete process.env.JWT_SECRET;
     else process.env.JWT_SECRET = originals.secret;
