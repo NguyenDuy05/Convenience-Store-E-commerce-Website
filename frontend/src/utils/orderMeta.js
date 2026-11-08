@@ -6,6 +6,7 @@ export const ORDER_STATUS = {
   ready_for_pickup: { label: 'Ready for pickup', icon: 'storefront', tone: 'success' },
   completed: { label: 'Completed', icon: 'check_circle', tone: 'neutral' },
   failed: { label: 'Payment failed', icon: 'error', tone: 'error' },
+  cancelled: { label: 'Cancelled', icon: 'cancel', tone: 'error' },
 };
 
 // Thứ tự các tab lọc trên trang danh sách
@@ -17,6 +18,7 @@ export const ORDER_TABS = [
   { key: 'ready_for_pickup', label: 'Sẵn sàng nhận' },
   { key: 'completed', label: 'Đã nhận hàng' },
   { key: 'failed', label: 'Thanh toán lỗi' },
+  { key: 'cancelled', label: 'Đã hủy' },
 ];
 
 // Đơn còn đang xử lý (chưa nhận hàng, chưa lỗi)
@@ -27,6 +29,7 @@ export const PAYMENT_STATUS = {
   unpaid: { label: 'Chưa thanh toán', tone: 'warn' },
   paid: { label: 'Đã thanh toán', tone: 'success' },
   failed: { label: 'Thanh toán lỗi', tone: 'error' },
+  refunded: { label: 'Đã hoàn tiền', tone: 'neutral' },
 };
 
 // Một dòng mô tả thanh toán cho thẻ đơn: "Đã thanh toán • VNPay", "Trả tiền mặt khi nhận hàng"...
@@ -50,6 +53,7 @@ export const ORDER_STATUS_MESSAGE = {
   ready_for_pickup: { tone: 'success', icon: 'storefront', title: 'Đơn đã sẵn sàng, mời bạn đến cửa hàng nhận', text: 'Đọc mã đơn cho nhân viên khi nhận hàng.' },
   completed: { tone: 'neutral', icon: 'check_circle', title: 'Bạn đã nhận hàng', text: 'Cảm ơn bạn đã mua sắm tại cửa hàng.' },
   failed: { tone: 'error', icon: 'error', title: 'Thanh toán không thành công', text: 'Đơn chưa được xác nhận. Bạn có thể đặt lại từ giỏ hàng.' },
+  cancelled: { tone: 'error', icon: 'cancel', title: 'Đơn hàng đã bị hủy', text: 'Cửa hàng đã hủy đơn này. Nếu bạn đã thanh toán, khoản tiền sẽ được hoàn lại.' },
 };
 
 // Trạng thái còn hiện mã đơn để nhận hàng
@@ -60,6 +64,7 @@ export const HISTORY_TABS = [
   { key: '', label: 'Tất cả' },
   { key: 'completed', label: 'Đã nhận hàng' },
   { key: 'failed', label: 'Thanh toán lỗi' },
+  { key: 'cancelled', label: 'Đã hủy' },
 ];
 
 // Thông điệp trạng thái có xét thanh toán: đơn chờ thanh toán mà lần thanh toán gần nhất lỗi -> khuyến khích thử lại

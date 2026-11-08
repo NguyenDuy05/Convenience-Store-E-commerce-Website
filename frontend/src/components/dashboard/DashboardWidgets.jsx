@@ -19,6 +19,7 @@ export const STATUS_META = {
     ready_for_pickup: { label: 'Ready for pickup', color: '#5fb02a' },
     completed: { label: 'Completed', color: '#356b0a' },
     failed: { label: 'Failed / expired', color: '#ba1a1a' },
+    cancelled: { label: 'Cancelled', color: '#7a1f1f' },
 };
 
 export function Panel({ title, sub, action, children, className = '' }) {

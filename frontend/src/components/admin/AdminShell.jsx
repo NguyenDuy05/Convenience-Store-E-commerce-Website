@@ -27,7 +27,7 @@ export const ADMIN_GROUPS = [
             { to: '/admin/reviews', label: 'Reviews', icon: 'star' },
         ]
     },
-    { title: 'Finance', items: [{ to: '/admin/payments', label: 'Payments', icon: 'payments' }] },
+    { title: 'Finance', items: [{ to: '/admin/payments', label: 'Payments', icon: 'payments' }, { to: '/admin/refunds', label: 'Refunds', icon: 'currency_exchange' }] },
 ];
 
 export default function AdminShell({ crumbs, children }) {

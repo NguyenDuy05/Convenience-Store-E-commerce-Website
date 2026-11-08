@@ -8,6 +8,7 @@ import { ORDER_STATUS, TRANSITION_LABEL } from '../../utils/orderMeta';
 const WAIT_TEXT = {
   pending_payment: 'Đơn đang chờ khách thanh toán online. Hệ thống tự xác nhận khi cổng thanh toán báo thành công, hoặc tự đóng khi hết hạn.',
   completed: 'Đơn đã hoàn tất, không còn thao tác chuyển trạng thái.',
+  cancelled: 'Đơn đã bị hủy và không thể xử lý tiếp.',
   failed: 'Đơn đã thất bại / hết hạn thanh toán và không thể xử lý tiếp. Nếu có tiền đã trừ, hãy ghi nhận và xử lý ở mục Sự cố.',
 };
 

@@ -1,5 +1,5 @@
 // UC-09, UC-10, UC-22, UC-35. Đơn nhận tại cửa hàng (không giao hàng).
-// Không có trạng thái cancelled/refunded vì catalog đã bỏ Cancel Order và Refund.
+// Admin có thể hủy đơn (cancelled); đơn đã thanh toán sẽ có bản ghi hoàn tiền (refund) và paymentStatus = refunded.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -64,17 +64,27 @@ const orderSchema = new Schema({
   // pending_payment: chờ khách thanh toán online | confirmed: đã xác nhận (đã trả, hoặc chọn trả tiền mặt khi nhận)
   // preparing: cửa hàng đang chuẩn bị | ready_for_pickup: chờ khách đến lấy | completed: đã giao khách
   // failed: thanh toán online lỗi / hết hạn (hệ thống tự chuyển, không phải khách hủy)
+  // cancelled: admin hủy đơn (UC-34 Cancel Order)
   status: {
     type: String,
-    enum: ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'failed'],
+    enum: ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'failed', 'cancelled'],
     default: 'pending_payment',
     index: true,
   },
   statusHistory: [statusHistorySchema],
 
   paymentMethod: { type: String, enum: ['cash', 'card', 'vnpay', 'momo'] },
-  paymentStatus: { type: String, enum: ['unpaid', 'paid', 'failed'], default: 'unpaid' },
+  paymentStatus: { type: String, enum: ['unpaid', 'paid', 'failed', 'refunded'], default: 'unpaid' },
   paidAt: Date,
+  cancelledAt: Date,
+  cancelReason: String,
+  refund: {                                                    // Manage Refunds: hoàn tiền khi hủy đơn đã thanh toán
+    amount: Number,
+    method: String,
+    reason: String,
+    refundedAt: Date,
+    refundedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  },
 
   customerNote: String,
   idempotencyKey: String,                                      // khoá chống đặt trùng khi khách bấm 2 lần / gửi lại do lỗi mạng (UC-08.1)
@@ -86,6 +96,7 @@ const orderSchema = new Schema({
 orderSchema.index({ customerId: 1, idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } });
 orderSchema.index({ customerId: 1, createdAt: -1 });         // UC-10.1 / 10.4 lịch sử đơn + giỏ gợi ý cá nhân hóa
 orderSchema.index({ 'items.productId': 1 });                 // gợi ý "Combo hot" / best-seller
+orderSchema.index({ 'refund.refundedAt': -1 }, { sparse: true });
 orderSchema.index({ status: 1, createdAt: -1 });             // UC-35.1 / 35.2
 
 module.exports = mongoose.model('Order', orderSchema);

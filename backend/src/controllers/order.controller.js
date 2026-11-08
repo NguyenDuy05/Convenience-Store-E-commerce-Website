@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { notImplemented } = require('../utils/notImplemented');
 const { Order, Store, Transaction } = require('../models');
+const storeOrder = require('../services/storeOrder.service');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const checkout = require('../services/checkout.service');
@@ -10,7 +11,7 @@ const STATUSES = Order.schema.path('status').enumValues;
 const STORE_FIELDS = 'name address phone openingHours status';
 const NOT_FOUND = 'Không tìm thấy đơn hàng';
 // Đơn đã kết thúc (thuộc lịch sử): đã nhận hàng hoặc thanh toán lỗi
-const HISTORY_STATUSES = ['completed', 'failed'];
+const HISTORY_STATUSES = ['completed', 'failed', 'cancelled'];
 
 const { toItem } = require('../utils/orderDto');
 
@@ -236,6 +237,8 @@ exports.getOrder = admin.getOrder;
 exports.updateOrderStatus = admin.updateOrderStatus;
 exports.handleOrderIssue = admin.handleOrderIssue;
 exports.resolveOrderIssue = admin.resolveOrderIssue;
+exports.cancelOrder = admin.cancelOrder;
+exports.listRefunds = admin.listRefunds;
 
 // ---- Chưa triển khai: thay từng dòng bằng code thật ----
 // UC-08.1 Create Order, bước xem trước (hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền hiện tại)
@@ -253,4 +256,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
   const { order, replayed } = await checkout.createOrder(req.user.id, { ...req.body, idempotencyKey });
   res.status(replayed ? 200 : 201).json({ order, replayed });
 });
-exports.createStoreOrder = notImplemented('UC-22 Create Store Order');
+
+// ---- Staff: đơn tại quầy (UC-21 / UC-22) ----
+// POST /api/orders/store/quote  body: { items: [{ productId, quantity }], promotionId? } -> báo giá + kiểm tra tồn kho, không tạo gì
+exports.quoteStoreOrder = asyncHandler(async (req, res) => {
+  const items = storeOrder.normalizeItems(req.body?.items);
+  const quote = await storeOrder.buildQuote(items, req.body?.promotionId);
+  res.json({ ...quote, canCreate: quote.issues.length === 0 && quote.lines.length > 0 && quote.totalAmount > 0 });
+});
+
+// POST /api/orders/store  body: { idempotencyKey, items, promotionId?, customerNote?, expectedTotal? } -> { order, idempotent }
+exports.createStoreOrder = asyncHandler(async (req, res) => {
+  const out = await storeOrder.createStoreOrder(req.user.id, req.body || {});
+  res.status(out.idempotent ? 200 : 201).json(out);
+});

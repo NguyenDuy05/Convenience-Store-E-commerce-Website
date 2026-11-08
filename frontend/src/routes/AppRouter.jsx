@@ -55,6 +55,7 @@ import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
 import AdminTransactionsPage from '../pages/admin/AdminTransactionsPage';
 import AdminPaymentsPage from '../pages/admin/AdminPaymentsPage';
+import AdminRefundsPage from '../pages/admin/AdminRefundsPage';
 import AdminProductsPage from '../pages/admin/AdminProductsPage';
 import AdminProductFormPage from '../pages/admin/AdminProductFormPage';
 import AdminProductDetailPage from '../pages/admin/AdminProductDetailPage';
@@ -124,6 +125,9 @@ export default function AppRouter() {
         <Route path="payment" element={<StaffPaymentPage />} />
         <Route path="transactions" element={<StaffTransactionsPage />} />
         <Route path="products" element={<StaffProductsPage />} />
+        <Route path="products/new" element={<AdminProductFormPage />} />
+        <Route path="products/:id" element={<AdminProductDetailPage />} />
+        <Route path="products/:id/edit" element={<AdminProductFormPage />} />
         <Route path="inventory" element={<StaffInventoryPage />} />
         <Route path="customers" element={<StaffCustomersPage />} />
         <Route path="customers/:id" element={<StaffCustomerDetailPage />} />
@@ -148,6 +152,7 @@ export default function AppRouter() {
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="transactions" element={<AdminTransactionsPage />} />
         <Route path="payments" element={<AdminPaymentsPage />} />
+        <Route path="refunds" element={<AdminRefundsPage />} />
         <Route path="products" element={<AdminProductsPage />} />
         <Route path="products/new" element={<AdminProductFormPage />} />
         <Route path="products/:id" element={<AdminProductDetailPage />} />
