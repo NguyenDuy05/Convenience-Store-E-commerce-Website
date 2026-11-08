@@ -16,6 +16,10 @@ router.get('/momo/return', c.momoReturn);
 router.get('/mock/pay', c.mockPay);
 router.get('/mock/complete', c.mockComplete);
 // UC-23.1 Process Cash Payment
+router.get('/orders', authenticate, authorize('staff'), c.listStoreOrdersToPay);
+
+router.get('/receipt/:orderId', authenticate, authorize('staff', 'admin'), c.getReceipt);
+
 router.post('/cash', authenticate, authorize('staff'), c.processCashPayment);
 // UC-23.2 Process Card/E-wallet Payment
 router.post('/card', authenticate, authorize('staff'), c.processCardPayment);

@@ -1,7 +1,10 @@
 // Tính tiền đơn tại quầy (UC-21) từ dữ liệu có thẩm quyền: giá lấy từ Product, khuyến mãi tính bằng promotion.service.
 // Không bao giờ tin số tiền client gửi lên. Dùng chung cho "báo giá" (quote) và "tạo đơn".
 const mongoose = require('mongoose');
-const { Product, Promotion } = require('../models');
+const { Product, Promotion, Order } = require('../models');
+const { runAtomic } = require('../utils/atomic');
+const { generateOrderCode } = require('./orderCode.service');
+const stock = require('./stock.service');
 const ApiError = require('../utils/ApiError');
 const promoService = require('./promotion.service');
 
@@ -27,7 +30,8 @@ exports.normalizeItems = (items) => {
 //  - promoError: lý do khuyến mãi không áp dụng được (chưa trừ gì vào tổng)
 exports.buildQuote = async (items, promotionId) => {
   const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } });
-  const byId = new Map(products.map((p) => [String(p._id), p]));
+  const sellable = await stock.sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const byId = new Map(products.map((p) => [String(p._id), Object.assign(p, { stockQuantity: sellable.get(String(p._id)) ?? 0 })]));
   const issues = [];
   const lines = [];
   for (const it of items) {
@@ -66,4 +70,64 @@ exports.buildQuote = async (items, promotionId) => {
     lines: priced.map(({ categoryId, eligible, ...l }) => l),
     issues, subtotal, promotion, promoError, discount, totalAmount: subtotal - discount,
   };
+};
+
+// UC-22 Tạo đơn tại quầy: giá/khuyến mãi tính lại từ database, trừ kho, đơn ở trạng thái chờ thanh toán (thu tiền ở UC-23).
+// Trả { order, idempotent }. Cùng idempotencyKey gửi lại -> trả đúng đơn cũ, không tạo đơn thứ hai.
+exports.createStoreOrder = async (staffId, body) => {
+  const key = typeof body.idempotencyKey === 'string' && body.idempotencyKey.length <= 100 ? body.idempotencyKey : undefined;
+  const findExisting = () => (key ? Order.findOne({ source: 'store', createdBy: staffId, idempotencyKey: key }).lean() : null);
+  const existing = await findExisting();
+  if (existing) return { order: existing, idempotent: true };
+
+  const items = exports.normalizeItems(body.items);
+  const quote = await exports.buildQuote(items, body.promotionId);
+  if (quote.issues.length || quote.lines.length === 0) {
+    throw new ApiError(409, quote.issues[0]?.message || 'Đơn hàng có sản phẩm không hợp lệ', { code: 'ORDER_ISSUES', quote });
+  }
+  if (quote.promoError) throw new ApiError(409, quote.promoError, { code: 'PROMOTION_INVALID', quote });
+  if (quote.totalAmount <= 0) throw new ApiError(400, 'Tổng thanh toán phải lớn hơn 0');
+  if (body.expectedTotal !== undefined && Number(body.expectedTotal) !== quote.totalAmount) {
+    throw new ApiError(409, 'Giá hoặc khuyến mãi đã thay đổi', { code: 'TOTAL_CHANGED', quote });
+  }
+  const note = typeof body.customerNote === 'string' ? body.customerNote.trim().slice(0, 500) : '';
+  const now = new Date();
+
+  try {
+    const order = await runAtomic(async ({ session, onRollback }) => {
+      const opts = session ? { session } : {};
+      const [doc] = await Order.create([{
+        orderCode: await generateOrderCode(),
+        source: 'store',
+        createdBy: staffId,
+        items: quote.lines.map((l) => ({
+          productId: l.productId, name: l.name, sku: l.sku, unitPrice: l.unitPrice, quantity: l.quantity,
+          discountAmount: l.discountAmount, lineTotal: l.lineTotal,
+        })),
+        subtotal: quote.subtotal,
+        appliedPromotions: quote.promotion ? [{ promotionId: quote.promotion._id, name: quote.promotion.name, amount: quote.discount }] : [],
+        promotionDiscount: quote.discount,
+        totalAmount: quote.totalAmount,
+        status: 'pending_payment',
+        statusHistory: [{ status: 'pending_payment', changedAt: now, changedBy: staffId, note: 'Tạo đơn tại quầy' }],
+        paymentStatus: 'unpaid',
+        ...(note ? { customerNote: note } : {}),
+        ...(key ? { idempotencyKey: key } : {}),
+      }], opts);
+      onRollback(() => Order.deleteOne({ _id: doc._id }));
+      await stock.deductStock(
+        quote.lines.map((l) => ({ productId: l.productId, name: l.name, quantity: l.quantity })),
+        { orderId: doc._id, userId: staffId, session },
+      );
+      onRollback(() => stock.releaseStock(doc._id));
+      return doc;
+    });
+    return { order: order.toObject ? order.toObject() : order, idempotent: false };
+  } catch (err) {
+    if (key && err && err.code === 11000) {
+      const again = await findExisting();
+      if (again) return { order: again, idempotent: true };
+    }
+    throw err;
+  }
 };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listTransactions, getTransaction } from '../../api/transaction.api';
 import { formatCurrency } from '../../utils/format';
+import Receipt from '../staff/Receipt';
 import '../../styles/admin-transactions.css';
 
 const LIMIT = 10;
@@ -22,6 +23,7 @@ export default function TransactionManager({ homePath, homeLabel, subtitle }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [detail, setDetail] = useState(null);
+  const [receiptFor, setReceiptFor] = useState('');
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
 
@@ -142,7 +144,10 @@ export default function TransactionManager({ homePath, homeLabel, subtitle }) {
         <div className="atx-detail">
           <div className="atx-detail-head">
             <h2>Chi tiết giao dịch <Badge status={detail.status} /></h2>
-            <button type="button" className="atx-btn ghost" onClick={() => setDetail(null)}>Đóng</button>
+            <div>
+              {detail.status === 'success' && detail.orderId && <button type="button" className="atx-btn" onClick={() => setReceiptFor(String(detail.orderId))}>In hóa đơn</button>}{' '}
+              <button type="button" className="atx-btn ghost" onClick={() => setDetail(null)}>Đóng</button>
+            </div>
           </div>
           {detail.status === 'failed' && detail.failureReason && (
             <div className="atx-banner error"><div><strong>Thanh toán thất bại</strong><span>{detail.failureReason}</span></div></div>
@@ -207,6 +212,7 @@ export default function TransactionManager({ homePath, homeLabel, subtitle }) {
           </div>
         </div>
       )}
+      {receiptFor && <Receipt orderId={receiptFor} onClose={() => setReceiptFor('')} />}
     </section>
   );
 }

@@ -1,5 +1,4 @@
-const { notImplemented } = require('../utils/notImplemented');
-const { Order, Transaction } = require('../models');
+const { Order, Transaction, Store } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const mongoose = require('mongoose');
@@ -104,10 +103,199 @@ exports.mockComplete = asyncHandler(async (req, res) => {
   res.redirect(resultUrl(r.orderId || String(txn.orderId)));
 });
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
-exports.processCashPayment = notImplemented('UC-23.1 Process Cash Payment');
-exports.processCardPayment = notImplemented('UC-23.2 Process Card/E-wallet Payment');
-exports.listPayments = notImplemented('UC-41.1 View Payment Transactions');
-exports.listFailedPayments = notImplemented('UC-41.2 View Failed Payments');
-exports.listPendingPayments = notImplemented('UC-41.3 View Pending Payments');
-exports.handlePaymentError = notImplemented('UC-41.4 Handle Payment Error');
+// ---------- Staff: thu tiền tại quầy (UC-23) ----------
+const { logActivity } = require('../services/activity.service');
+const escapeRx = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+async function loadPayableStoreOrder(orderId) {
+  if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  await payment.expireStaleOrders();
+  const order = await Order.findById(orderId).lean();
+  if (!order || order.source !== 'store') throw new ApiError(404, 'Không tìm thấy đơn tại quầy');
+  if (order.status === 'failed') throw new ApiError(409, 'Đơn đã hết hạn thanh toán và đã hoàn kho. Vui lòng tạo đơn mới.', { code: 'ORDER_EXPIRED' });
+  if (order.status !== 'pending_payment' || order.paymentStatus === 'paid') throw new ApiError(409, 'Đơn này không còn chờ thanh toán', { code: 'NOT_PAYABLE' });
+  return order;
+}
+
+// Ghi nhận đã thu tiền: đơn tại quầy giao hàng ngay nên chuyển thẳng sang completed. Chỉ một yêu cầu thắng (điều kiện trạng thái).
+async function settleStoreOrder({ order, staffId, method, extra }) {
+  const now = new Date();
+  const claimed = await Order.findOneAndUpdate(
+    { _id: order._id, status: 'pending_payment', paymentStatus: 'unpaid' },
+    {
+      $set: { status: 'completed', paymentStatus: 'paid', paymentMethod: method, paidAt: now, pickedUpAt: now },
+      $push: { statusHistory: { status: 'completed', changedAt: now, changedBy: staffId, note: 'Đã thanh toán tại quầy' } },
+    },
+    { new: true },
+  );
+  if (!claimed) throw new ApiError(409, 'Đơn này vừa được thanh toán hoặc hết hạn. Vui lòng tải lại.', { code: 'NOT_PAYABLE' });
+  try {
+    const txn = await Transaction.create({
+      orderId: order._id, processedBy: staffId, method, amount: order.totalAmount, status: 'success', paidAt: now, ...extra,
+    });
+    return { order: claimed, transaction: txn };
+  } catch (err) {
+    await Order.updateOne({ _id: order._id }, { $set: { status: 'pending_payment', paymentStatus: 'unpaid' }, $unset: { paidAt: '', pickedUpAt: '', paymentMethod: '' }, $pop: { statusHistory: 1 } });
+    throw err;
+  }
+}
+
+// GET /api/payments/orders?q=  Đơn tại quầy đang chờ thanh toán (mới nhất trước), tìm theo mã đơn
+exports.listStoreOrdersToPay = asyncHandler(async (req, res) => {
+  await payment.expireStaleOrders();
+  const filter = { source: 'store', status: 'pending_payment', paymentStatus: 'unpaid' };
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 50) : '';
+  if (q) filter.orderCode = new RegExp(escapeRx(q), 'i');
+  const items = await Order.find(filter).select('orderCode items subtotal promotionDiscount totalAmount customerNote createdAt').sort({ createdAt: -1 }).limit(30).lean();
+  res.json({ items: items.map((o) => ({ ...o, expiresAt: payment.expiresAtOf(o) })), total: items.length });
+});
+
+// UC-23.1 Process Cash Payment. body: { orderId, received }
+exports.processCashPayment = asyncHandler(async (req, res) => {
+  const order = await loadPayableStoreOrder(req.body?.orderId);
+  const received = Number(req.body?.received);
+  if (!Number.isInteger(received) || received < 0 || received > 1000000000) throw new ApiError(400, 'Số tiền khách đưa không hợp lệ');
+  if (received < order.totalAmount) throw new ApiError(400, `Khách đưa chưa đủ. Cần thu ${new Intl.NumberFormat('vi-VN').format(order.totalAmount)}đ.`, { code: 'INSUFFICIENT_CASH' });
+  const out = await settleStoreOrder({ order, staffId: req.user.id, method: 'cash', extra: { cash: { received, change: received - order.totalAmount } } });
+  await logActivity(req, { action: 'PAYMENT_CASH', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, amount: order.totalAmount } });
+  res.status(201).json({ order: out.order, transaction: out.transaction, change: received - order.totalAmount });
+});
+
+// UC-23.2 Process Card/E-wallet Payment. body: { orderId, method: card|momo|vnpay, reference, outcome?: success|failed, reason? }
+// Thanh toán thực hiện trên máy POS / ví của khách; nhân viên nhập mã chuẩn chi hoặc báo thất bại để ghi nhận giao dịch lỗi.
+exports.processCardPayment = asyncHandler(async (req, res) => {
+  const order = await loadPayableStoreOrder(req.body?.orderId);
+  const method = req.body?.method || 'card';
+  if (!['card', 'momo', 'vnpay'].includes(method)) throw new ApiError(400, 'Phương thức thanh toán không hợp lệ');
+  const outcome = req.body?.outcome === 'failed' ? 'failed' : 'success';
+
+  if (outcome === 'failed') {
+    const reason = typeof req.body?.reason === 'string' && req.body.reason.trim() ? req.body.reason.trim().slice(0, 300) : 'Giao dịch không thành công tại quầy';
+    const txn = await Transaction.create({ orderId: order._id, processedBy: req.user.id, method, amount: order.totalAmount, status: 'failed', failureReason: reason });
+    await logActivity(req, { action: 'PAYMENT_FAILED', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, method, reason } });
+    return res.status(201).json({ order, transaction: txn, outcome });
+  }
+  const reference = typeof req.body?.reference === 'string' ? req.body.reference.trim() : '';
+  if (!/^[A-Za-z0-9-]{4,40}$/.test(reference)) throw new ApiError(400, 'Nhập mã giao dịch / mã chuẩn chi (4-40 ký tự chữ và số)');
+  if (await Transaction.exists({ 'gateway.transactionNo': reference, status: 'success' })) throw new ApiError(409, 'Mã giao dịch này đã được dùng cho một đơn khác', { code: 'DUPLICATE_REFERENCE' });
+  const out = await settleStoreOrder({ order, staffId: req.user.id, method, extra: { gateway: { provider: 'pos', transactionNo: reference, payDate: new Date() } } });
+  await logActivity(req, { action: 'PAYMENT_CARD', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, method, amount: order.totalAmount } });
+  res.status(201).json({ order: out.order, transaction: out.transaction, outcome });
+});
+
+// Print Receipt: dữ liệu hóa đơn của đơn đã thanh toán. GET /api/payments/receipt/:orderId (staff, admin)
+exports.getReceipt = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  if (!mongoose.isValidObjectId(orderId)) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  const order = await Order.findById(orderId).populate('createdBy', 'fullName').lean();
+  if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') throw new ApiError(409, 'Đơn chưa thanh toán nên chưa có hóa đơn', { code: 'NOT_PAID' });
+  const [txn, store] = await Promise.all([
+    Transaction.findOne({ orderId: order._id, status: 'success' }).sort({ paidAt: -1 }).populate('processedBy', 'fullName').lean(),
+    Store.findOne().select('name address phone').lean(),
+  ]);
+  res.json({
+    store: store || null,
+    orderCode: order.orderCode, source: order.source, paidAt: order.paidAt || txn?.paidAt, createdAt: order.createdAt,
+    cashier: txn?.processedBy?.fullName || order.createdBy?.fullName || null,
+    items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, discountAmount: i.discountAmount, lineTotal: i.lineTotal })),
+    subtotal: order.subtotal, promotionDiscount: order.promotionDiscount, discountCode: order.discountCode?.code ? { code: order.discountCode.code, amount: order.discountCode.amount } : null,
+    totalAmount: order.totalAmount,
+    payment: { method: order.paymentMethod, cashReceived: txn?.cash?.received ?? null, change: txn?.cash?.change ?? null, reference: txn?.gateway?.transactionNo || txn?.txnRef || null },
+    refunded: order.paymentStatus === 'refunded',
+  });
+});
+
+// ---------- Admin: Manage Payments (UC-41) ----------
+const POP = [{ path: 'orderId', select: 'orderCode source status paymentStatus totalAmount' }, { path: 'customerId', select: 'fullName email' }, { path: 'processedBy', select: 'fullName' }];
+const dateOf = (v, label, end) => {
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} không hợp lệ`);
+  if (end && /^\d{4}-\d{2}-\d{2}$/.test(v)) d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+function paymentView(t) {
+  const g = t.gateway || {};
+  return {
+    _id: t._id, method: t.method, amount: t.amount, status: t.status, txnRef: t.txnRef, createdAt: t.createdAt, paidAt: t.paidAt,
+    failureReason: t.failureReason, errorHandling: t.errorHandling || null,
+    gateway: { provider: g.provider, transactionNo: g.transactionNo, responseCode: g.responseCode },
+    order: t.orderId && t.orderId._id ? t.orderId : null,
+    customer: t.customerId && t.customerId._id ? t.customerId : null,
+    processedBy: t.processedBy && t.processedBy._id ? t.processedBy.fullName : null,
+    needsReview: !t.errorHandling?.handledAt && ((t.status === 'success' && !!t.failureReason) || t.status === 'failed' || t.status === 'pending'),
+  };
+}
+
+async function listByStatus(req, res, forcedStatus) {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+  const filter = {};
+  if (forcedStatus) filter.status = forcedStatus;
+  else if (req.query.status) {
+    if (!['pending', 'success', 'failed'].includes(req.query.status)) throw new ApiError(400, 'Trạng thái không hợp lệ');
+    filter.status = req.query.status;
+  }
+  if (req.query.method) {
+    if (!['cash', 'card', 'vnpay', 'momo'].includes(req.query.method)) throw new ApiError(400, 'Phương thức không hợp lệ');
+    filter.method = req.query.method;
+  }
+  const from = dateOf(req.query.from, 'Từ ngày', false);
+  const to = dateOf(req.query.to, 'Đến ngày', true);
+  if (from || to) filter.createdAt = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
+  if (q) {
+    const rx = new RegExp(escapeRx(q), 'i');
+    const orders = await Order.find({ orderCode: rx }).select('_id').limit(500).lean();
+    filter.$or = [{ txnRef: rx }, { 'gateway.transactionNo': rx }, { orderId: { $in: orders.map((o) => o._id) } }];
+  }
+  const [docs, total, agg] = await Promise.all([
+    Transaction.find(filter).populate(POP).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+    Transaction.countDocuments(filter),
+    Transaction.aggregate([{ $match: filter }, { $group: { _id: null, amount: { $sum: '$amount' } } }]),
+  ]);
+  res.json({ items: docs.map(paymentView), total, page, limit, summary: { totalAmount: agg[0]?.amount || 0 } });
+}
+
+exports.listPayments = asyncHandler((req, res) => listByStatus(req, res, null));          // UC-41.1
+exports.listFailedPayments = asyncHandler((req, res) => listByStatus(req, res, 'failed'));    // UC-41.2
+exports.listPendingPayments = asyncHandler((req, res) => listByStatus(req, res, 'pending'));  // UC-41.3
+
+// UC-41.4 Handle Payment Error. PATCH /api/payments/admin/:id/resolve  body: { action: confirm_paid|mark_failed|dismiss, note }
+exports.handlePaymentError = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Không tìm thấy giao dịch');
+  const action = req.body?.action;
+  if (!['confirm_paid', 'mark_failed', 'dismiss'].includes(action)) throw new ApiError(400, 'Hành động không hợp lệ');
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+  if (note.length < 3 || note.length > 500) throw new ApiError(400, 'Ghi chú xử lý cần từ 3 đến 500 ký tự');
+  const txn = await Transaction.findById(id);
+  if (!txn) throw new ApiError(404, 'Không tìm thấy giao dịch');
+  if (txn.errorHandling?.handledAt) throw new ApiError(409, 'Giao dịch này đã được xử lý', { code: 'ALREADY_HANDLED' });
+  const now = new Date();
+
+  if (action === 'confirm_paid') {
+    if (txn.status === 'success') throw new ApiError(409, 'Giao dịch đã thành công');
+    txn.status = 'success';
+    txn.paidAt = now;
+    txn.failureReason = undefined;
+    const order = await Order.findOneAndUpdate(
+      { _id: txn.orderId, status: 'pending_payment' },
+      { $set: { status: 'confirmed', paymentStatus: 'paid', paidAt: now, paymentMethod: txn.method }, $push: { statusHistory: { status: 'confirmed', changedAt: now, changedBy: req.user.id, note: 'Admin xác nhận đã thanh toán' } } },
+      { new: true },
+    );
+    if (!order) txn.failureReason = 'Admin xác nhận đã nhận tiền nhưng đơn không còn chờ thanh toán, cần xử lý đơn thủ công';
+  } else if (action === 'mark_failed') {
+    if (txn.status === 'success') throw new ApiError(409, 'Không thể đánh dấu thất bại một giao dịch đã thành công');
+    txn.status = 'failed';
+    txn.failureReason = txn.failureReason || note;
+  } else if (txn.status === 'pending') {
+    throw new ApiError(400, 'Giao dịch đang chờ cần được xác nhận hoặc đánh dấu thất bại, không thể bỏ qua');
+  }
+  txn.errorHandling = { handledBy: req.user.id, handledAt: now, resolution: `${action}: ${note}` };
+  await txn.save();
+  await logActivity(req, { action: 'PAYMENT_ERROR_HANDLE', targetType: 'Transaction', targetId: txn._id, detail: { action, note } });
+  res.json(paymentView(await txn.populate(POP)));
+});

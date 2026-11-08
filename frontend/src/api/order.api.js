@@ -39,3 +39,9 @@ export const updateOrderStatus = (id, data) => api.patch(`/orders/${id}/status`,
 export const handleOrderIssue = (id, data) => api.post(`/orders/${id}/issues`, data);
 export const resolveOrderIssue = (id, issueId, data) => api.patch(`/orders/${id}/issues/${issueId}`, data);
 
+
+// Admin hủy đơn chưa hoàn tất. data: { reason }. Đơn đã thanh toán sẽ được ghi hoàn tiền.
+export const cancelOrder = (id, data) => api.post(`/orders/${id}/cancel`, data);
+
+// Admin xem lịch sử hoàn tiền. params: { q, from, to, page, limit } -> { items, total, page, limit, summary }
+export const listRefunds = (params) => api.get(`/orders/refunds`, { params });
