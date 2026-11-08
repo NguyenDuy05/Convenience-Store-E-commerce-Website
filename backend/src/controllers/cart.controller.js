@@ -3,6 +3,7 @@ const { Cart, Product } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { buildCartView, MAX_PER_ITEM } = require('../services/cart.service');
+const { sellableMap } = require('../services/stock.service');
 
 const parseQty = (v, label = 'Số lượng') => {
   const n = Number(v);
@@ -17,8 +18,9 @@ const saveItems = (userId, items) => Cart.updateOne({ userId }, { $set: { items 
 const assertSellable = async (productId, quantity) => {
   const p = await Product.findOne({ _id: productId, status: 'active' }).lean();
   if (!p) throw new ApiError(404, 'Sản phẩm không tồn tại hoặc đã ngừng bán');
-  if (p.stockQuantity <= 0) throw new ApiError(409, `"${p.name}" đã hết hàng`);
-  if (quantity > p.stockQuantity) throw new ApiError(409, `"${p.name}" chỉ còn ${p.stockQuantity} sản phẩm`);
+  const available = (await sellableMap([p._id])).get(String(p._id)) ?? 0;   // không tính hàng đã quá hạn
+  if (available <= 0) throw new ApiError(409, `"${p.name}" đã hết hàng`);
+  if (quantity > available) throw new ApiError(409, `"${p.name}" chỉ còn ${available} sản phẩm`);
 };
 
 // UC-07.1 View Cart (catalog tài liệu; code cũ ghi UC-08.1)

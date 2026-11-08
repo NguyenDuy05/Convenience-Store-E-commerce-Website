@@ -15,6 +15,7 @@ router.post('/stocktakes', authenticate, authorize('staff', 'admin'), c.createSt
 // UC-19.4, 34.3 Stocktake (hoàn tất, cập nhật tồn kho)
 router.patch('/stocktakes/:id/complete', authenticate, authorize('staff', 'admin'), c.completeStocktake);
 // UC-19.5, 34.4 View Low Stock Products
+router.get('/product/:productId', authenticate, authorize('staff', 'admin'), c.getProductStock);
 router.get('/low-stock', authenticate, authorize('staff', 'admin'), c.listLowStock);
 // UC-19.6 View Expired Products
 router.get('/expired', authenticate, authorize('staff', 'admin'), c.listExpired);

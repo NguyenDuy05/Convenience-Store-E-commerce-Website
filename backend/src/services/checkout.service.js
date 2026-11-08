@@ -15,7 +15,8 @@ async function loadCartLines(userId) {
   const items = cart?.items || [];
   if (!items.length) return { lines: [], issues: [] };
   const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } }).lean();
-  const pMap = new Map(products.map((p) => [String(p._id), p]));
+  const sellable = await stock.sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const pMap = new Map(products.map((p) => [String(p._id), { ...p, stockQuantity: sellable.get(String(p._id)) ?? 0 }]));
   const lines = [];
   const issues = [];
   items.forEach((it) => {
@@ -83,8 +84,11 @@ async function buildSummary(userId, codeInput, { throwOnCodeError }) {
 // Xem trước đơn (UC-08.1 bước 2-3): hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền THỜI ĐIỂM HIỆN TẠI
 exports.previewCheckout = async (userId, { discountCode } = {}) => {
   const { pricing, issues, discountError } = await buildSummary(userId, discountCode, { throwOnCodeError: false });
-  const store = await Store.findOne().select('name address phone openingHours').lean();
-  return { ...toSummary(pricing, issues, discountError), store };
+  const store = await Store.findOne({ status: 'open' }).select('name address phone openingHours status').lean()
+    || await Store.findOne().select('name address phone openingHours status closedReason').lean();
+  const storeClosed = !!store && store.status === 'closed';
+  const summary = toSummary(pricing, issues, discountError);
+  return { ...summary, canCheckout: summary.canCheckout && !storeClosed, storeClosed, store };
 };
 
 const orderView = (o) => ({
@@ -97,6 +101,11 @@ const orderView = (o) => ({
 exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote, expectedTotal, idempotencyKey }) => {
   if (!METHODS.includes(paymentMethod)) throw new ApiError(400, 'Vui lòng chọn phương thức thanh toán hợp lệ (tiền mặt, VNPay hoặc MoMo)');
   const key = typeof idempotencyKey === 'string' && idempotencyKey.trim() ? idempotencyKey.trim().slice(0, 100) : null;
+
+  // Mô hình nhận hàng tại cửa hàng: cửa hàng đang đóng cửa thì không nhận đơn mới
+  if ((await Store.countDocuments()) > 0 && !(await Store.exists({ status: 'open' }))) {
+    throw new ApiError(409, 'Cửa hàng hiện đang tạm đóng cửa nên chưa nhận đơn mới. Vui lòng quay lại sau.', { code: 'STORE_CLOSED' });
+  }
 
   if (key) {
     const existing = await Order.findOne({ customerId: userId, idempotencyKey: key }).lean();

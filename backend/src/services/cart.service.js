@@ -1,5 +1,6 @@
 // Giỏ hàng (UC-07): dựng dữ liệu hiển thị từ Cart + giá/tồn kho HIỆN TẠI của Product.
 const { Cart, Product } = require('../models');
+const { sellableMap } = require('./stock.service');
 
 const MAX_PER_ITEM = 99;
 
@@ -8,7 +9,8 @@ async function buildCartView(userId) {
   const cart = await Cart.findOne({ userId }).lean();
   const raw = cart?.items || [];
   const products = raw.length ? await Product.find({ _id: { $in: raw.map((i) => i.productId) } }).lean() : [];
-  const pMap = new Map(products.map((p) => [String(p._id), p]));
+  const sellable = await sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const pMap = new Map(products.map((p) => [String(p._id), { ...p, stockQuantity: sellable.get(String(p._id)) ?? 0 }]));
 
   const issues = [];
   const items = raw.map((it) => {

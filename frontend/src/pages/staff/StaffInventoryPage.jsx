@@ -1,10 +1,6 @@
-import PagePlaceholder from '../../components/common/PagePlaceholder';
+import InventoryManager from '../../components/inventory/InventoryManager';
 
+// UC-19.1–19.7: View / Check Stock, Receive, Adjust, Stocktake, Low Stock, Expired, Damaged
 export default function StaffInventoryPage() {
-  return (
-    <PagePlaceholder
-      title="Kho hàng"
-      ucs={["UC-19.1 View Inventory","UC-19.2 Receive Stock","UC-19.3 Adjust Inventory","UC-19.4 Stocktake","UC-19.5 View Low Stock Products","UC-19.6 View Expired Products","UC-19.7 Manage Damaged Products"]}
-    />
-  );
+  return <InventoryManager role="staff" />;
 }
