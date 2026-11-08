@@ -65,6 +65,16 @@ function Callout({ order }) {
           </div>
         </div>
       );
+    case 'cancelled':
+      return (
+        <div className="ocard-callout error">
+          <span className="ocard-callout-icon"><Icon name="cancel" size="lg" /></span>
+          <div className="ocard-callout-text">
+            <strong>Đơn hàng đã bị hủy</strong>
+            <span>Nếu bạn đã thanh toán, khoản tiền sẽ được hoàn lại.</span>
+          </div>
+        </div>
+      );
     default:
       return null;
   }

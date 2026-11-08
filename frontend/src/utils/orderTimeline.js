@@ -9,6 +9,7 @@ const STEP_TEXT = {
   ready_for_pickup: { title: 'Sẵn sàng nhận hàng', desc: 'Mời bạn đến cửa hàng và đọc mã đơn cho nhân viên.' },
   completed: { title: 'Đã nhận hàng', desc: 'Đơn đã được giao cho bạn tại cửa hàng.' },
   failed: { title: 'Thanh toán không thành công', desc: 'Đơn chưa được xác nhận.' },
+  cancelled: { title: 'Đơn đã bị hủy', desc: 'Cửa hàng đã hủy đơn này. Nếu đã thanh toán, khoản tiền sẽ được hoàn lại.' },
 };
 
 // state: done | current | upcoming | error
@@ -22,6 +23,12 @@ export function buildTimeline({ status, statusHistory = [], paymentMethod }) {
 
   if (status === 'failed') {
     return [make('pending_payment', 'done'), make('failed', 'error')];
+  }
+
+  if (status === 'cancelled') {
+    // Các mốc đơn đã đi qua trước khi bị hủy + mốc hủy
+    const reached = FLOW.filter((key) => times[key]).map((key) => make(key, 'done'));
+    return [...reached, make('cancelled', 'error')];
   }
 
   const cur = FLOW.indexOf(status);

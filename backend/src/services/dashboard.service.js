@@ -1,5 +1,5 @@
 // Dashboard admin / staff: số liệu tổng hợp từ dữ liệu thật (Order, Product, StockBatch, User, Store, Promotion).
-// Doanh thu / số đơn chỉ tính đơn "hợp lệ" = đã xác nhận trở đi (không tính pending_payment, failed).
+// Doanh thu / số đơn chỉ tính đơn "hợp lệ" = đã xác nhận trở đi (không tính pending_payment, failed, cancelled).
 // Múi giờ cố định Việt Nam (UTC+7) để "hôm nay" khớp ngày của cửa hàng.
 const { Order, Product, StockBatch, User, Store, Promotion } = require('../models');
 const ApiError = require('../utils/ApiError');
@@ -7,7 +7,7 @@ const ApiError = require('../utils/ApiError');
 const DAY = 86400000;
 const VN_OFFSET = 7 * 3600000;
 const SALE_STATUSES = ['confirmed', 'preparing', 'ready_for_pickup', 'completed'];
-const ALL_STATUSES = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'failed'];
+const ALL_STATUSES = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'failed', 'cancelled'];
 const PRESETS = { today: 1, '7d': 7, '30d': 30, '90d': 90 };
 const MAX_CUSTOM_DAYS = 366;
 

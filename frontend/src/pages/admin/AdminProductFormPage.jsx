@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import useProductBase from '../../components/admin/products/useProductBase';
 import AdminShell from '../../components/admin/AdminShell';
 import { MEAL_TYPES, errMsg, vnd } from '../../components/admin/products/productUtils';
 import { createProduct, getProduct, updateProduct } from '../../api/product.api';
@@ -30,6 +31,7 @@ function validate(f) {
 }
 
 export default function AdminProductFormPage() {
+    const { base } = useProductBase();
     const { id } = useParams();
     const editing = Boolean(id);
     const navigate = useNavigate();
@@ -71,7 +73,7 @@ export default function AdminProductFormPage() {
     };
     const price = Number(form.price) || 0;
 
-    const discard = () => { if (!dirty || window.confirm('Discard your changes?')) navigate(editing ? `/admin/products/${id}` : '/admin/products'); };
+    const discard = () => { if (!dirty || window.confirm('Discard your changes?')) navigate(editing ? `${base}/${id}` : base); };
 
     const submit = async (ev) => {
         ev?.preventDefault();
@@ -86,7 +88,7 @@ export default function AdminProductFormPage() {
         setSaving(true);
         try {
             const { data } = editing ? await updateProduct(id, body) : await createProduct(body);
-            navigate(`/admin/products/${data._id}`, { state: { flash: editing ? 'Product updated.' : 'Product created.' } });
+            navigate(`${base}/${data._id}`, { state: { flash: editing ? 'Product updated.' : 'Product created.' } });
         } catch (err) {
             const fields = err.response?.data?.fields || [];
             if (err.response?.status === 409 && fields.length) setErrors((e) => ({ ...e, ...Object.fromEntries(fields.map((k) => [k, err.response.data.message])) }));

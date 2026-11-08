@@ -1,0 +1,48 @@
+/* Trang khách hàng của staff (UC-19.1). Class bắt đầu bằng "scus-". */
+.scus { font-family: var(--qk-font-body); color: var(--qk-text); }
+.scus-head { margin-bottom: 16px; }
+.scus-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; letter-spacing: -.01em; }
+.scus-head p { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 13px; color: var(--qk-text-variant); }
+.scus-head p .qk-icon { color: var(--qk-primary); }
+
+.scus-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; padding: 14px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.scus-search { flex: 1 1 280px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; color: var(--qk-outline); }
+.scus-search:focus-within { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.scus-search input { flex: 1; min-width: 0; padding: 10px 0; border: 0; outline: 0; background: transparent; font-family: inherit; font-size: 14px; color: var(--qk-text); }
+.scus-filters label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.scus-filters select { padding: 8px 10px; border: 1px solid var(--qk-outline-variant); border-radius: 8px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 13px; }
+.scus-filters select:focus-visible { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.scus-filters label.scus-check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 9px; font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--qk-text); }
+.scus-clear { padding: 9px 14px; border: 0; background: transparent; color: var(--qk-primary); font-family: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.scus-hint { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 13px; color: var(--qk-text-variant); }
+.scus-count { margin: 14px 0 8px; font-size: 13px; color: var(--qk-text-variant); }
+
+.scus-table-wrap { overflow-x: auto; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.scus-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; }
+.scus-table th { padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); background: var(--qk-surface-low); white-space: nowrap; }
+.scus-table td { padding: 12px 14px; border-top: 1px solid var(--qk-surface-container); vertical-align: top; }
+.scus-table tbody tr:hover { background: rgba(243, 242, 255, .5); }
+.scus-table .num { text-align: right; }
+.scus-table small { display: block; margin-top: 2px; font-size: 12px; color: var(--qk-text-variant); }
+.scus-name { font-weight: 700; color: var(--qk-primary); text-decoration: none; }
+.scus-name:hover { text-decoration: underline; }
+.scus-muted { color: var(--qk-text-variant); }
+.scus-open { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border-radius: 999px; background: var(--qk-error-container); color: var(--qk-on-error-container); font-size: 12px; font-weight: 700; }
+.scus-status { padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.scus-status.active { background: var(--qk-secondary-container); color: var(--qk-on-secondary-container); }
+.scus-status.locked { background: var(--qk-error-container); color: var(--qk-on-error-container); }
+
+.scus-pager { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 0 4px; font-size: 14px; color: var(--qk-text-variant); }
+.scus-pager button { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border: 0; border-radius: 10px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.scus-pager button:hover:not(:disabled) { background: var(--qk-surface-high); }
+.scus-pager button:disabled { opacity: .45; cursor: not-allowed; }
+
+.scus-skeleton { height: 320px; margin-top: 14px; border-radius: 12px; background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%); background-size: 200% 100%; animation: scus-shimmer 1.4s linear infinite; }
+@keyframes scus-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .scus-skeleton { animation: none; } }
+.scus-state { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 14px; padding: 48px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.scus-state .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.scus-state h3 { margin: 14px 0 4px; font-family: var(--qk-font-display); font-size: 20px; color: var(--qk-text); }
+.scus-state p { margin: 0; max-width: 380px; font-size: 14px; }
+.scus-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 11px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.scus-btn:hover { background: var(--qk-primary-dark); }

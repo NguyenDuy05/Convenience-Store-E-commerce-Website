@@ -119,7 +119,10 @@ async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) 
     await raiseSystemIssue(txn.orderId, `Cổng thanh toán báo số tiền ${amount}đ khác số tiền giao dịch ${txn.amount}đ (mã ${txnRef}). Cần đối soát với cổng thanh toán.`);
     return { result: 'amount_mismatch', txn };
   }
-  if (txn.status !== 'pending') return { result: 'duplicate', txn };                       // callback gửi lặp
+  // Callback gửi lặp -> bỏ qua. NGOẠI LỆ: giao dịch đã bị đóng là 'failed' (hết hạn / admin hủy đơn / khách thoát cổng) nhưng cổng báo
+  // THÀNH CÔNG -> tiền thật đã bị trừ, phải ghi nhận để admin xử lý (UC-41.4), tuyệt đối không được bỏ qua.
+  const lateSuccess = txn.status === 'failed' && outcome === 'success';
+  if (txn.status !== 'pending' && !lateSuccess) return { result: 'duplicate', txn };
 
   const gw = { ...(txn.gateway || {}), ...(gateway || {}) };
   const toSet = Object.fromEntries(Object.entries(gw).filter(([, v]) => v !== undefined).map(([k, v]) => [`gateway.${k}`, v]));
@@ -132,7 +135,7 @@ async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) 
   const now = new Date();
   if (outcome === 'success') {
     const claimed = await Transaction.findOneAndUpdate(
-      { _id: txn._id, status: 'pending' }, { $set: { ...toSet, status: 'success', paidAt: now } }, { new: true },
+      { _id: txn._id, status: txn.status }, { $set: { ...toSet, status: 'success', paidAt: now }, ...(lateSuccess ? { $unset: { failureReason: '' } } : {}) }, { new: true },
     );
     if (!claimed) return { result: 'duplicate', txn };
     const order = await Order.findOneAndUpdate(

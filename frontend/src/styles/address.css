@@ -1,0 +1,28 @@
+.address-page { max-width: 860px; margin: 32px auto; padding: 0 20px; color: #0c1842; }
+.address-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.address-head h1 { margin: 0; font-size: 28px; }
+.address-head p { margin: 4px 0 0; color: #424754; }
+.address-page button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border: 1px solid #c2c6d6; border-radius: 8px; background: #fff; color: #0058bc; font: inherit; cursor: pointer; }
+.address-page button:disabled { opacity: .55; cursor: default; }
+.address-page button.address-primary { background: #0058bc; border-color: #0058bc; color: #fff; }
+.address-page button.address-danger { color: #ba1a1a; }
+.address-page :focus-visible { outline: 3px solid #1c71e4; outline-offset: 2px; }
+.address-banner { padding: 12px 16px; border-radius: 8px; margin: 0 0 16px; }
+.address-banner-error { background: #ffdad6; color: #93000a; }
+.address-banner-ok { background: #e0f3d0; color: #356b0a; }
+.address-form { background: #fff; border: 1px solid #e1e5ed; border-radius: 16px; padding: 24px; margin-bottom: 24px; display: grid; gap: 16px; }
+.address-form h2 { margin: 0; font-size: 20px; }
+.address-form label { display: grid; gap: 6px; font-weight: 600; }
+.address-form input:not([type=checkbox]), .address-form textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #c2c6d6; border-radius: 8px; font: inherit; font-weight: 400; color: inherit; }
+.address-form [aria-invalid=true] { border-color: #ba1a1a; }
+.address-form label.address-check { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+.address-error { color: #ba1a1a; font-size: 13px; font-weight: 400; }
+.address-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.address-card { background: #fff; border: 1px solid #e1e5ed; border-radius: 14px; padding: 18px; }
+.address-card.is-default { border-color: #0058bc; box-shadow: 0 0 0 1px #0058bc inset; }
+.address-card p { margin: 6px 0; display: flex; gap: 6px; align-items: flex-start; overflow-wrap: anywhere; color: #424754; }
+.address-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.address-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; background: #d8e2ff; color: #004494; font-size: 12px; }
+.address-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.address-empty { text-align: center; padding: 48px 16px; color: #424754; background: #f3f2ff; border-radius: 14px; }
+@media (max-width: 600px) { .address-head { flex-direction: column; align-items: flex-start; } .address-list { grid-template-columns: 1fr; } }

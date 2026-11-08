@@ -29,3 +29,9 @@ export const listPendingPayments = (params) => api.get(`/payments/admin/pending`
 
 // UC-41.4 Handle Payment Error
 export const handlePaymentError = (id, data) => api.patch(`/payments/admin/${id}/resolve`, data);
+
+// Staff: đơn tại quầy đang chờ thu tiền. params: { q } -> { items, total }
+export const listStoreOrdersToPay = (params) => api.get(`/payments/orders`, { params });
+
+// Print Receipt: dữ liệu hóa đơn của đơn đã thanh toán
+export const getReceipt = (orderId) => api.get(`/payments/receipt/${orderId}`);

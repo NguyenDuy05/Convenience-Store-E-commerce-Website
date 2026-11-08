@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import useProductBase from '../../components/admin/products/useProductBase';
 import AdminShell from '../../components/admin/AdminShell';
 import { ConfirmDialog, PriceDialog } from '../../components/admin/products/ProductDialogs';
 import { categoryName, errMsg, mealLabel, shortDate, stockState, vnd } from '../../components/admin/products/productUtils';
@@ -15,6 +16,7 @@ function batchState(b) {
 }
 
 export default function AdminProductDetailPage() {
+    const { base, isStaff } = useProductBase();
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -40,7 +42,7 @@ export default function AdminProductDetailPage() {
         finally { setBusy(false); }
     };
 
-    if (error) return <AdminShell crumbs={['Products', 'Details']}><div className="ap-page"><p className="ap-alert error">{error}</p><Link className="ap-btn ghost" to="/admin/products">Back to products</Link></div></AdminShell>;
+    if (error) return <AdminShell crumbs={['Products', 'Details']}><div className="ap-page"><p className="ap-alert error">{error}</p><Link className="ap-btn ghost" to={base}>Back to products</Link></div></AdminShell>;
     if (!p) return <AdminShell crumbs={['Products', 'Details']}><p className="ap-empty-note">Loading product…</p></AdminShell>;
 
     const st = stockState(p);
@@ -54,15 +56,16 @@ export default function AdminProductDetailPage() {
             <div className="ap-page">
                 <div className="ap-head">
                     <div>
-                        <Link className="ap-link-btn" to="/admin/products"><span className="review-material-icon">arrow_back</span>Back to products</Link>
+                        <Link className="ap-link-btn" to={base}><span className="review-material-icon">arrow_back</span>Back to products</Link>
                         <p style={{ margin: '8px 0 0' }}>Catalog record · System ID <span className="ap-mono">{p._id}</span></p>
                     </div>
                     <div className="ap-actions">
-                        <button className="ap-btn ghost" onClick={() => setDialog('price')}><span className="review-material-icon">payments</span>Update Price</button>
+                        {!isStaff && <><button className="ap-btn ghost" onClick={() => setDialog('price')}><span className="review-material-icon">payments</span>Update Price</button>
                         {p.status === 'active'
                             ? <button className="ap-btn warn" onClick={() => setDialog('deactivate')}><span className="review-material-icon">block</span>Deactivate</button>
                             : <button className="ap-btn soft" onClick={() => setDialog('activate')}><span className="review-material-icon">check_circle</span>Activate</button>}
-                        <button className="ap-btn primary" onClick={() => navigate(`/admin/products/${p._id}/edit`)}><span className="review-material-icon">edit</span>Edit Product</button>
+                        </>}
+                        <button className="ap-btn primary" onClick={() => navigate(`${base}/${p._id}/edit`)}><span className="review-material-icon">edit</span>Edit Product</button>
                         <button className="ap-btn ghost" onClick={() => setDialog('delete')} title="Delete product"><span className="review-material-icon">delete</span></button>
                     </div>
                 </div>
@@ -135,7 +138,7 @@ export default function AdminProductDetailPage() {
             {dialog === 'activate' && <ConfirmDialog product={p} busy={busy} error={dialogError} title="Activate product?" icon="toggle_on" confirmLabel="Activate" onClose={close} onConfirm={() => run(() => activateProduct(p._id), 'Product activated.')}>
                 <p>The product becomes visible and purchasable again.</p></ConfirmDialog>}
             {dialog === 'delete' && <ConfirmDialog product={p} busy={busy} error={dialogError} tone="danger" title="Delete product?" icon="delete" confirmLabel="Delete product" onClose={close}
-                onConfirm={() => run(() => deleteProduct(p._id), 'Product deleted.', () => navigate('/admin/products', { replace: true }))}>
+                onConfirm={() => run(() => deleteProduct(p._id), 'Product deleted.', () => navigate(base, { replace: true }))}>
                 <p>The product is removed from the catalog and storefront. Past orders keep their product snapshot.</p></ConfirmDialog>}
         </AdminShell>
     );

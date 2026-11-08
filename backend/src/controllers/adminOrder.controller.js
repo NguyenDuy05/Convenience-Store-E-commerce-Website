@@ -1,6 +1,8 @@
 // UC-34 Manage Orders (Admin). Catalog tài liệu ghi UC-34.x; code cũ ghi UC-35.x.
 const mongoose = require('mongoose');
-const { Order, User, Transaction, Store } = require('../models');
+const { Order, User, Transaction, Store, DiscountCode } = require('../models');
+const stockService = require('../services/stock.service');
+const { awardPointsForOrder } = require('../services/points.service');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { runAtomic } = require('../utils/atomic');
@@ -9,7 +11,7 @@ const { logActivity } = require('../services/activity.service');
 
 const STATUSES = Order.schema.path('status').enumValues;
 const SOURCES = ['online', 'store'];
-const PAY_STATUSES = ['unpaid', 'paid', 'failed'];
+const PAY_STATUSES = ['unpaid', 'paid', 'failed', 'refunded'];
 const PAY_METHODS = ['cash', 'card', 'vnpay', 'momo'];
 const SORTS = {
   newest: { createdAt: -1, _id: -1 },
@@ -161,6 +163,9 @@ exports.getOrder = asyncHandler(async (req, res) => {
     paymentMethod: o.paymentMethod,
     paymentStatus: o.paymentStatus,
     paidAt: o.paidAt,
+    cancelledAt: o.cancelledAt || null,
+    cancelReason: o.cancelReason || null,
+    refund: o.refund?.refundedAt ? { amount: o.refund.amount, method: o.refund.method, reason: o.refund.reason, refundedAt: o.refund.refundedAt } : null,
     customerNote: o.customerNote,
     readyAt: o.readyAt,
     pickedUpAt: o.pickedUpAt,
@@ -243,6 +248,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     return upd;
   });
 
+  if (target === 'completed') await awardPointsForOrder(o._id);
   await logActivity(req, { action: 'ORDER_STATUS_CHANGE', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, from: o.status, to: target, note, cashCollected: needsCash || undefined } });
   res.json({ _id: updated._id, status: updated.status, paymentStatus: updated.paymentStatus, readyAt: updated.readyAt, pickedUpAt: updated.pickedUpAt });
 });
@@ -284,4 +290,69 @@ exports.resolveOrderIssue = asyncHandler(async (req, res) => {
   }
   await logActivity(req, { action: 'ORDER_ISSUE_RESOLVE', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, issueId, resolution } });
   res.json({ issue: { _id: issueId, status: 'resolved', resolution, resolvedAt: now } });
+});
+
+// Admin hủy đơn. POST /api/orders/:id/cancel  body: { reason }
+// Chỉ hủy được đơn chưa hoàn tất. Hoàn kho, đóng giao dịch đang chờ, trả lại lượt dùng mã giảm giá.
+// Đơn đã thanh toán -> ghi bản ghi hoàn tiền (xem ở Manage Refunds).
+exports.cancelOrder = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!isId(id)) throw new ApiError(404, NOT_FOUND);
+  const reason = text(req.body?.reason, 'Lý do hủy', 3, 500);
+  const o = await Order.findById(id);
+  if (!o) throw new ApiError(404, NOT_FOUND);
+  if (!['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'].includes(o.status)) {
+    throw new ApiError(409, 'Chỉ có thể hủy đơn chưa hoàn tất, chưa bị hủy và chưa thất bại', { code: 'NOT_CANCELLABLE' });
+  }
+  const now = new Date();
+  const wasPaid = o.paymentStatus === 'paid';
+  const set = { status: 'cancelled', cancelledAt: now, cancelReason: reason };
+  if (wasPaid) {
+    set.paymentStatus = 'refunded';
+    set.refund = { amount: o.totalAmount, method: o.paymentMethod, reason, refundedAt: now, refundedBy: req.user.id };
+  }
+  // Điều kiện status hiện tại: hai admin bấm cùng lúc thì chỉ một người hủy được (và chỉ một lần hoàn kho)
+  const upd = await Order.findOneAndUpdate(
+    { _id: id, status: o.status },
+    { $set: set, $push: { statusHistory: { status: 'cancelled', changedAt: now, changedBy: req.user.id, note: reason } } },
+    { new: true },
+  );
+  if (!upd) throw new ApiError(409, 'Trạng thái đơn vừa được thay đổi bởi người khác. Vui lòng tải lại.', { code: 'STALE_STATUS' });
+
+  await Transaction.updateMany({ orderId: o._id, status: 'pending' }, { $set: { status: 'failed', failureReason: 'Đơn hàng đã bị hủy' } });
+  try { await stockService.releaseStock(o._id, { reason: `Hoàn kho: hủy đơn ${o.orderCode}` }); }
+  catch (e) { console.error('Hoàn kho khi hủy đơn lỗi:', String(o._id), e); }
+  if (o.discountCode?.codeId) await DiscountCode.updateOne({ _id: o.discountCode.codeId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
+
+  await logActivity(req, { action: 'ORDER_CANCEL', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, reason, refunded: wasPaid ? o.totalAmount : 0 } });
+  res.json({ _id: upd._id, status: upd.status, paymentStatus: upd.paymentStatus, refund: upd.refund?.refundedAt ? upd.refund : null });
+});
+
+// View Refund History. GET /api/orders/refunds?q=&from=&to=&page=&limit=
+exports.listRefunds = asyncHandler(async (req, res) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+  const filter = { 'refund.refundedAt': { $exists: true } };
+  const from = parseDate(req.query.from, 'Từ ngày');
+  const to = parseDate(req.query.to, 'Đến ngày');
+  if (to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)) to.setHours(23, 59, 59, 999);
+  if (from || to) filter['refund.refundedAt'] = { $exists: true, ...(from && { $gte: from }), ...(to && { $lte: to }) };
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
+  if (q) filter.orderCode = new RegExp(escapeRegex(q), 'i');
+
+  const [docs, total, agg] = await Promise.all([
+    Order.find(filter).populate('customerId', 'fullName email').populate('refund.refundedBy', 'fullName')
+      .select('orderCode source customerId totalAmount paymentMethod refund cancelledAt').sort({ 'refund.refundedAt': -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Order.countDocuments(filter),
+    Order.aggregate([{ $match: filter }, { $group: { _id: null, amount: { $sum: '$refund.amount' } } }]),
+  ]);
+  res.json({
+    items: docs.map((o) => ({
+      _id: o._id, orderCode: o.orderCode, source: o.source,
+      customer: o.customerId ? { _id: o.customerId._id, fullName: o.customerId.fullName, email: o.customerId.email } : null,
+      amount: o.refund.amount, method: o.refund.method, reason: o.refund.reason, refundedAt: o.refund.refundedAt,
+      refundedBy: o.refund.refundedBy ? o.refund.refundedBy.fullName : null,
+    })),
+    total, page, limit, summary: { totalAmount: agg[0]?.amount || 0 },
+  });
 });

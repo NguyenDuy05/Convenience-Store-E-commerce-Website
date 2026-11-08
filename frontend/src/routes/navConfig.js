@@ -2,140 +2,140 @@
 export const customerNav = [
   {
     "to": "/profile",
-    "label": "Hồ sơ cá nhân"
+    "label": "Profile"
   },
   {
     "to": "/addresses",
-    "label": "Địa chỉ"
+    "label": "Addresses"
   },
   {
     "to": "/cart",
-    "label": "Giỏ hàng"
+    "label": "Cart"
   },
   {
     "to": "/orders",
-    "label": "Đơn hàng của tôi"
+    "label": "My Orders"
   },
   {
     "to": "/reviews",
-    "label": "Đánh giá của tôi"
+    "label": "My Reviews"
   },
   {
     "to": "/membership",
-    "label": "Thành viên"
+    "label": "Membership"
   },
   {
     "to": "/support",
-    "label": "Hỗ trợ"
+    "label": "Support"
   }
 ];
 
 export const staffNav = [
   {
     "to": "/staff",
-    "label": "Tổng quan"
+    "label": "Overview"
   },
   {
     "to": "/staff/store-order",
-    "label": "Tạo đơn tại quầy"
+    "label": "Create Store Order"
   },
   {
     "to": "/staff/payment",
-    "label": "Thanh toán"
+    "label": "Payments"
   },
   {
     "to": "/staff/transactions",
-    "label": "Giao dịch"
+    "label": "Transactions"
   },
   {
     "to": "/staff/products",
-    "label": "Sản phẩm"
+    "label": "Products"
   },
   {
     "to": "/staff/inventory",
-    "label": "Kho hàng"
+    "label": "Inventory"
   },
   {
     "to": "/staff/customers",
-    "label": "Khách hàng"
+    "label": "Customers"
   },
   {
     "to": "/staff/complaints",
-    "label": "Khiếu nại"
+    "label": "Complaints"
   },
   {
     "to": "/staff/promotions",
-    "label": "Khuyến mãi"
+    "label": "Promotions"
   },
   {
     "to": "/staff/shifts",
-    "label": "Ca làm việc"
+    "label": "Work Shifts"
   },
   {
     "to": "/staff/profile",
-    "label": "Hồ sơ"
+    "label": "Profile"
   }
 ];
 
 export const adminNav = [
   {
     "to": "/admin",
-    "label": "Tổng quan"
+    "label": "Overview"
   },
   {
     "to": "/admin/orders",
-    "label": "Đơn hàng"
+    "label": "Orders"
   },
   {
     "to": "/admin/transactions",
-    "label": "Giao dịch"
+    "label": "Transactions"
   },
   {
     "to": "/admin/payments",
-    "label": "Thanh toán"
+    "label": "Payments"
   },
   {
     "to": "/admin/products",
-    "label": "Sản phẩm"
+    "label": "Products"
   },
   {
     "to": "/admin/categories",
-    "label": "Danh mục"
+    "label": "Categories"
   },
   {
     "to": "/admin/inventory",
-    "label": "Kho hàng"
+    "label": "Inventory"
   },
   {
     "to": "/admin/customers",
-    "label": "Khách hàng"
+    "label": "Customers"
   },
   {
     "to": "/admin/staff",
-    "label": "Nhân viên"
+    "label": "Staff"
   },
   {
     "to": "/admin/stores",
-    "label": "Cửa hàng"
+    "label": "Stores"
   },
   {
     "to": "/admin/promotions",
-    "label": "Khuyến mãi"
+    "label": "Promotions"
   },
   {
     "to": "/admin/discount-codes",
-    "label": "Mã giảm giá"
+    "label": "Discount Codes"
   },
   {
     "to": "/admin/membership",
-    "label": "Thành viên"
+    "label": "Membership"
   },
   {
     "to": "/admin/reviews",
-    "label": "Đánh giá"
+    "label": "Reviews"
   },
   {
     "to": "/admin/profile",
-    "label": "Hồ sơ"
+    "label": "Profile"
   }
 ];

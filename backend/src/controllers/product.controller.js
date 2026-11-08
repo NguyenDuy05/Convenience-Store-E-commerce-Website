@@ -190,6 +190,7 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     if (req.user.role !== 'admin') throw new ApiError(403, 'Chỉ quản trị viên được đổi giá sản phẩm');
     product.priceHistory.push({ oldPrice: product.price, newPrice: f.price, changedBy: req.user.id });
   }
+  if (f.status !== undefined && f.status !== product.status && req.user.role !== 'admin') throw new ApiError(403, 'Chỉ quản trị viên được bật / tắt bán sản phẩm');
   const before = { name: product.name, sku: product.sku, price: product.price, status: product.status };
   Object.entries(f).forEach(([k, v]) => { product.set(k, v); });
   if (f.barcode === undefined && 'barcode' in req.body) product.set('barcode', undefined);   // xóa mã vạch

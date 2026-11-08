@@ -67,9 +67,9 @@ export default function ProductSearchInput({
           onClick={() => choose(product)}
         >
           <span className="product-search-thumb">{product.images?.[0] ? <img src={product.images[0]} alt="" /> : <i>▧</i>}</span>
-          <span className="product-search-copy"><b>{product.name}</b><small>{product.categoryId?.name || product.sku || 'Sản phẩm'}</small></span>
+          <span className="product-search-copy"><b>{product.name}</b><small>{product.categoryId?.name || product.sku || 'Product'}</small></span>
           <strong>{formatCurrency(product.price)}</strong>
-        </button>) : products.length > 0 ? <div className="product-search-empty">Không tìm thấy sản phẩm phù hợp</div> : null}
+        </button>) : products.length > 0 ? <div className="product-search-empty">No matching products found</div> : null}
       </div>}
     </div>
   );

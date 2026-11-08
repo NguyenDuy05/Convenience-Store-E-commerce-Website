@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import useProductBase from '../../components/admin/products/useProductBase';
 import AdminShell from '../../components/admin/AdminShell';
 import { ConfirmDialog, PriceDialog } from '../../components/admin/products/ProductDialogs';
 import { categoryName, errMsg, shortDate, stockState, vnd } from '../../components/admin/products/productUtils';
@@ -22,6 +23,7 @@ const SORTS = [
 ];
 
 export default function AdminProductsPage() {
+    const { base, isStaff } = useProductBase();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -82,7 +84,7 @@ export default function AdminProductsPage() {
             <p>Manage the product catalog: pricing, categories, selling status and stock levels.</p>
           </div>
           <div className="ap-actions">
-            <button className="ap-btn primary" onClick={() => navigate('/admin/products/new')}><span className="review-material-icon">add</span>Add Product</button>
+            <button className="ap-btn primary" onClick={() => navigate(`${base}/new`)}><span className="review-material-icon">add</span>Add Product</button>
           </div>
         </div>
 
@@ -115,7 +117,7 @@ export default function AdminProductsPage() {
           </div>
           <div className="ap-filters">
             <div className="ap-search"><span className="review-material-icon">search</span>
-              <ProductSearchInput products={items} value={q} onChange={setQ} placeholder="Search name, SKU or barcode…" ariaLabel="Search products" toForProduct={(product) => `/admin/products/${product._id}`} />
+              <ProductSearchInput products={items} value={q} onChange={setQ} placeholder="Search name, SKU or barcode…" ariaLabel="Search products" toForProduct={(product) => `${base}/${product._id}`} />
             </div>
             <label className="ap-select"><select aria-label="Category" value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}>
               <option value="">All Categories</option>{categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
@@ -139,7 +141,7 @@ export default function AdminProductsPage() {
                         <tr key={it._id}>
                           <td><div className="ap-prod">
                             <span className="ap-thumb">{it.images?.[0] ? <img src={it.images[0]} alt="" /> : <span className="review-material-icon">inventory_2</span>}</span>
-                            <div><Link to={`/admin/products/${it._id}`}>{it.name}</Link><small>per {it.unit}</small></div>
+                            <div><Link to={`${base}/${it._id}`}>{it.name}</Link><small>per {it.unit}</small></div>
                           </div></td>
                           <td><div className="ap-sku"><span className="ap-mono">{it.sku}</span><span className="ap-mono">{it.barcode || '—'}</span></div></td>
                           <td><span className="ap-chip">{categoryName(it)}</span></td>
@@ -148,12 +150,13 @@ export default function AdminProductsPage() {
                           <td className="c"><span className={`ap-badge ${st.key}`}>{st.label}</span></td>
                           <td>{shortDate(it.updatedAt)}</td>
                           <td><div className="ap-row-actions">
-                            <Link className="ap-icon-btn" to={`/admin/products/${it._id}`} title="View details"><span className="review-material-icon">visibility</span></Link>
-                            <Link className="ap-icon-btn" to={`/admin/products/${it._id}/edit`} title="Edit product"><span className="review-material-icon">edit</span></Link>
-                            <button className="ap-icon-btn" title="Update price" onClick={() => setDialog({ type: 'price', product: it })}><span className="review-material-icon">payments</span></button>
+                            <Link className="ap-icon-btn" to={`${base}/${it._id}`} title="View details"><span className="review-material-icon">visibility</span></Link>
+                            <Link className="ap-icon-btn" to={`${base}/${it._id}/edit`} title="Edit product"><span className="review-material-icon">edit</span></Link>
+                            {!isStaff && <><button className="ap-icon-btn" title="Update price" onClick={() => setDialog({ type: 'price', product: it })}><span className="review-material-icon">payments</span></button>
                             {it.status === 'active'
                               ? <button className="ap-icon-btn" title="Deactivate" onClick={() => setDialog({ type: 'deactivate', product: it })}><span className="review-material-icon">toggle_on</span></button>
                               : <button className="ap-icon-btn" title="Activate" onClick={() => setDialog({ type: 'activate', product: it })}><span className="review-material-icon">toggle_off</span></button>}
+                            </>}
                             <button className="ap-icon-btn danger" title="Delete" onClick={() => setDialog({ type: 'delete', product: it })}><span className="review-material-icon">delete</span></button>
                           </div></td>
                         </tr>

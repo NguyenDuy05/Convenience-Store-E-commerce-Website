@@ -80,6 +80,7 @@ export default function CheckoutPage() {
         keyRef.current = newIdempotencyKey();
         if (data.code === 'PRICE_CHANGED' && data.summary) { setSummary(data.summary); setNotice(data.message); }
         else if (data.code === 'CART_ISSUES' || data.code === 'INSUFFICIENT_STOCK') { if (data.summary) setSummary(data.summary); else loadPreview(appliedCode); setNotice(data.message); }
+        else if (data.code === 'STORE_CLOSED') { setSubmitError(data.message); loadPreview(appliedCode); }
         else if (data.code === 'INVALID_DISCOUNT_CODE') { setAppliedCode(''); setNotice(data.message); loadPreview(''); }
         else setSubmitError(data.message || 'Không đặt được hàng. Vui lòng thử lại.');
       }
@@ -135,6 +136,12 @@ export default function CheckoutPage() {
 
       {notice && (
         <div className="co-alert warn" role="alert"><Icon name="warning" size="lg" /><div><strong>{notice}</strong><span>Thông tin bên dưới là giá và tồn kho mới nhất. Vui lòng xem lại rồi bấm "Đặt hàng" nếu đồng ý.</span></div></div>
+      )}
+      {summary.storeClosed && (
+        <div className="co-alert error" role="alert">
+          <Icon name="storefront" size="lg" />
+          <div><strong>Cửa hàng đang tạm đóng cửa</strong><span>Hiện chưa nhận đơn mới. Giỏ hàng của bạn vẫn được giữ, hãy quay lại khi cửa hàng mở cửa.</span></div>
+        </div>
       )}
       {summary.issues.length > 0 && (
         <div className="co-alert error" role="alert">

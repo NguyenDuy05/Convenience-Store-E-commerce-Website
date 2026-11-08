@@ -17,7 +17,8 @@ const userSchema = new Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   phone: { type: String, trim: true },
   passwordHash: { type: String, required: true, select: false },   // bcrypt
-  avatarUrl: String,
+  avatarUrl: String,                                                 // URL ảnh hoặc data URL (ảnh đã thu nhỏ)
+  dateOfBirth: Date,
   googleId: String,                                                  // đăng nhập bằng Google (Google user id)
 
   // active | locked (staff bị admin khóa / customer bị khóa do nhập sai) | deleted (xóa mềm)

@@ -1,0 +1,45 @@
+/* Trang danh sách khiếu nại của staff (UC-19.3). Class bắt đầu bằng "scmp-". */
+.scmp { font-family: var(--qk-font-body); color: var(--qk-text); }
+.scmp-head { margin-bottom: 16px; }
+.scmp-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; letter-spacing: -.01em; }
+.scmp-head p { margin: 4px 0 0; font-size: 14px; color: var(--qk-text-variant); }
+.scmp-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); overflow-x: auto; }
+.scmp-tabs button { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 0; border-radius: 8px; background: transparent; color: var(--qk-text-variant); font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.scmp-tabs button:hover { background: var(--qk-surface-low); color: var(--qk-text); }
+.scmp-tabs button.active { background: var(--qk-primary); color: #fff; }
+.scmp-tabs button span { min-width: 20px; padding: 1px 7px; border-radius: 999px; background: var(--qk-surface-container); color: var(--qk-text); font-size: 10px; line-height: 14px; font-weight: 700; text-align: center; }
+.scmp-tabs button.active span { background: var(--qk-primary-container); color: #fff; }
+
+.scmp-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; padding: 14px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.scmp-search { flex: 1 1 280px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--qk-outline-variant); border-radius: 10px; color: var(--qk-outline); }
+.scmp-search:focus-within { outline: 2px solid var(--qk-primary); outline-offset: 1px; }
+.scmp-search input { flex: 1; min-width: 0; padding: 10px 0; border: 0; outline: 0; background: transparent; font-family: inherit; font-size: 14px; color: var(--qk-text); }
+.scmp-filters label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); }
+.scmp-filters select { padding: 8px 10px; border: 1px solid var(--qk-outline-variant); border-radius: 8px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 13px; }
+.scmp-clear { padding: 9px 14px; border: 0; background: transparent; color: var(--qk-primary); font-family: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.scmp-count { margin: 14px 0 8px; font-size: 13px; color: var(--qk-text-variant); }
+
+.scmp-table-wrap { overflow-x: auto; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); }
+.scmp-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px; }
+.scmp-table th { padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--qk-text-variant); background: var(--qk-surface-low); white-space: nowrap; }
+.scmp-table td { padding: 12px 14px; border-top: 1px solid var(--qk-surface-container); vertical-align: top; }
+.scmp-table tbody tr:hover { background: rgba(243, 242, 255, .5); }
+.scmp-table .num { text-align: right; }
+.scmp-subject { display: block; margin-bottom: 4px; font-weight: 700; color: var(--qk-primary); text-decoration: none; }
+.scmp-subject:hover { text-decoration: underline; }
+.scmp-muted { color: var(--qk-text-variant); }
+
+.scmp-pager { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 0 4px; font-size: 14px; color: var(--qk-text-variant); }
+.scmp-pager button { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border: 0; border-radius: 10px; background: var(--qk-surface); color: var(--qk-text); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
+.scmp-pager button:hover:not(:disabled) { background: var(--qk-surface-high); }
+.scmp-pager button:disabled { opacity: .45; cursor: not-allowed; }
+
+.scmp-skeleton { height: 320px; margin-top: 14px; border-radius: 12px; background: linear-gradient(90deg, var(--qk-surface) 25%, var(--qk-surface-low) 50%, var(--qk-surface) 75%); background-size: 200% 100%; animation: scmp-shimmer 1.4s linear infinite; }
+@keyframes scmp-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .scmp-skeleton { animation: none; } }
+.scmp-state { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 14px; padding: 48px 24px; border-radius: 12px; background: var(--qk-surface); box-shadow: var(--qk-shadow-sm); color: var(--qk-text-variant); }
+.scmp-state .qk-icon { padding: 16px; border-radius: 16px; background: var(--qk-surface-low); }
+.scmp-state h3 { margin: 14px 0 4px; font-family: var(--qk-font-display); font-size: 20px; color: var(--qk-text); }
+.scmp-state p { margin: 0; max-width: 380px; font-size: 14px; }
+.scmp-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 11px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.scmp-btn:hover { background: var(--qk-primary-dark); }

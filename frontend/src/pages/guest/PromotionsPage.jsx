@@ -14,10 +14,10 @@ import '../../styles/promo-list.css';
 const Icon = ({ children }) => <span className="deals-icon" aria-hidden="true">{children}</span>;
 const promoValue = (promotion) => promotion.type === 'percent'
   ? `${promotion.value}% OFF`
-  : `Giảm ${formatCurrency(promotion.value)}`;
+  : `Save ${formatCurrency(promotion.value)}`;
 const promoScore = (promotion) => promotion.type === 'percent' ? Number(promotion.value) : Number(promotion.value) / 1000;
 const endsInDays = (endDate) => Math.max(0, Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000));
-const dateLabel = (value) => new Date(value).toLocaleDateString('vi-VN', { day: 'numeric', month: 'short' });
+const dateLabel = (value) => new Date(value).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
 function DealProductCard({ deal }) {
   const { product, offer } = deal;
@@ -28,10 +28,10 @@ function DealProductCard({ deal }) {
         <span className="deal-discount-badge">{offer.promo.type === 'percent' ? `-${offer.percent}%` : `-${formatCurrency(offer.amount)}`}</span>
       </Link>
       <div className="deal-product-body">
-        <span className="deal-product-meta">{product.categoryId?.name || 'Ưu đãi cửa hàng'}</span>
+        <span className="deal-product-meta">{product.categoryId?.name || 'Store offers'}</span>
         <Link className="deal-product-name" to={`/products/${product._id}`}>{product.name}</Link>
         <div className="deal-price-row"><strong>{formatCurrency(offer.finalPrice)}</strong><del>{formatCurrency(product.price)}</del></div>
-        <div className="deal-product-foot"><span><i />{Number(product.stockQuantity) > 0 ? 'Còn hàng' : 'Hết hàng'}</span><Link to={`/products/${product._id}`} aria-label={`Chi tiết ${product.name}`}><Icon>arrow_forward</Icon></Link></div>
+        <div className="deal-product-foot"><span><i />{Number(product.stockQuantity) > 0 ? 'In stock' : 'Out of stock'}</span><Link to={`/products/${product._id}`} aria-label={`View ${product.name}`}><Icon>arrow_forward</Icon></Link></div>
       </div>
     </article>
   );
@@ -42,14 +42,14 @@ function CampaignCard({ promotion, index }) {
   return (
     <article className={`campaign-card campaign-${index % 2}`}>
       <div className="campaign-copy">
-        <span className="campaign-label"><Icon>{index % 2 ? 'sell' : 'local_fire_department'}</Icon>{index % 2 ? 'Ưu đãi nổi bật' : 'Đang diễn ra'}</span>
+        <span className="campaign-label"><Icon>{index % 2 ? 'sell' : 'local_fire_department'}</Icon>{index % 2 ? 'Featured offers' : 'Running now'}</span>
         <h2>{promoValue(promotion)}</h2>
         <h3>{promotion.name}</h3>
-        <p>{promotion.description || `Ưu đãi ${scopeText(promotion)}. Đặt trước và nhận hàng nhanh tại cửa hàng.`}</p>
-        <div className="campaign-bottom"><span><Icon>event_available</Icon>Đến {dateLabel(promotion.endDate)}</span><Link to="#best-deals">Khám phá ưu đãi <Icon>arrow_forward</Icon></Link></div>
+        <p>{promotion.description || `Offers for ${scopeText(promotion)}. Order ahead for quick in-store pickup.`}</p>
+        <div className="campaign-bottom"><span><Icon>event_available</Icon>Until {dateLabel(promotion.endDate)}</span><Link to="#best-deals">Explore offers <Icon>arrow_forward</Icon></Link></div>
       </div>
       <div className="campaign-art" aria-hidden="true"><span className="campaign-orbit orbit-one" /><span className="campaign-orbit orbit-two" /><span className="campaign-art-icon"><Icon>{index % 2 ? 'shopping_basket' : 'bolt'}</Icon></span><b>{promotion.type === 'percent' ? `${promotion.value}%` : 'DEAL'}</b></div>
-      {remaining <= 3 && <span className="campaign-limited"><Icon>schedule</Icon>{remaining === 0 ? 'Kết thúc hôm nay' : `Còn ${remaining} ngày`}</span>}
+      {remaining <= 3 && <span className="campaign-limited"><Icon>schedule</Icon>{remaining === 0 ? 'Ends today' : `${remaining} days left`}</span>}
     </article>
   );
 }
@@ -70,8 +70,8 @@ export default function PromotionsPage() {
     let current = true;
     Promise.allSettled([listPromotions(), listProducts({ limit: 100 }), listStores()]).then(([promoResult, productResult, storeResult]) => {
       if (!current) return;
-      if (promoResult.status === 'fulfilled') setPromotions(promoResult.value.data || []);
-      else setError('Không tải được khuyến mãi. Vui lòng thử lại.');
+      if (promoResult.status === 'fulfilled') setPromotions(promoResult.value.data.items || []);
+      else setError('Unable to load promotions. Please try again.');
       if (productResult.status === 'fulfilled') {
         const rows = productResult.value.data.items || [];
         setProducts(rows);
@@ -108,11 +108,11 @@ export default function PromotionsPage() {
   const bestFixed = promotions.reduce((best, promotion) => Math.max(best, promotion.type === 'fixed' ? Number(promotion.value) : 0), 0);
   const bestDiscount = bestPercent ? `-${bestPercent}%` : bestFixed ? `-${formatCurrency(bestFixed)}` : '—';
   const filters = [
-    ['all', 'Tất cả ưu đãi', promotions.length],
-    ['storewide', 'Toàn cửa hàng', promotions.filter((p) => p.scope === 'all').length],
-    ['category', 'Theo danh mục', promotions.filter((p) => p.scope === 'category').length],
-    ['product', 'Sản phẩm chọn lọc', promotions.filter((p) => p.scope === 'product').length],
-    ['ending', 'Sắp kết thúc', promotions.filter((p) => endsInDays(p.endDate) <= 3).length],
+    ['all', 'All offers', promotions.length],
+    ['storewide', 'Storewide', promotions.filter((p) => p.scope === 'all').length],
+    ['category', 'By category', promotions.filter((p) => p.scope === 'category').length],
+    ['product', 'Selected products', promotions.filter((p) => p.scope === 'product').length],
+    ['ending', 'Ending soon', promotions.filter((p) => endsInDays(p.endDate) <= 3).length],
   ];
 
   const submitSearch = (event) => {
@@ -131,42 +131,42 @@ export default function PromotionsPage() {
 
       <main className="deals-page">
         <div className="deals-context-row">
-          <nav className="deals-breadcrumb" aria-label="Breadcrumb"><Link to="/"><Icon>home</Icon>Trang chủ</Link><Icon>chevron_right</Icon><span>Khuyến mãi</span></nav>
-          <span className="deals-live"><i />Ưu đãi đang áp dụng</span>
+          <nav className="deals-breadcrumb" aria-label="Breadcrumb"><Link to="/"><Icon>home</Icon>Home</Link><Icon>chevron_right</Icon><span>Promotions</span></nav>
+          <span className="deals-live"><i />Live offers</span>
         </div>
 
         <section className="deals-intro">
-          <div><span className="deals-eyebrow">Ưu đãi tại cửa hàng</span><h1>Khuyến mãi mỗi ngày</h1><p>Chọn ưu đãi yêu thích và nhận hàng nhanh tại cửa hàng.</p></div>
+          <div><span className="deals-eyebrow">In-store offers</span><h1>Everyday promotions</h1><p>Find your favorite offers and collect your order in store.</p></div>
           <div className="deals-stats">
-            <div><span className="deals-stat-icon"><Icon>campaign</Icon></span><div><small>Ưu đãi hiện có</small><strong>{promotions.length}</strong></div></div>
-            <div><span className="deals-stat-icon green"><Icon>sell</Icon></span><div><small>Sản phẩm có ưu đãi</small><strong>{deals.length}</strong></div></div>
-            <div><span className="deals-stat-icon yellow"><Icon>savings</Icon></span><div><small>Mức giảm cao nhất</small><strong>{bestDiscount}</strong></div></div>
+            <div><span className="deals-stat-icon"><Icon>campaign</Icon></span><div><small>Available offers</small><strong>{promotions.length}</strong></div></div>
+            <div><span className="deals-stat-icon green"><Icon>sell</Icon></span><div><small>Products on offer</small><strong>{deals.length}</strong></div></div>
+            <div><span className="deals-stat-icon yellow"><Icon>savings</Icon></span><div><small>Biggest discount</small><strong>{bestDiscount}</strong></div></div>
           </div>
         </section>
 
-        <nav className="deals-filter-bar" aria-label="Lọc ưu đãi">
+        <nav className="deals-filter-bar" aria-label="Filter offers">
           <div className="deals-filter-tabs">{filters.map(([key, label, count]) => <button type="button" key={key} className={filter === key ? 'active' : ''} onClick={() => setFilter(key)}>{label}<span>{count}</span></button>)}</div>
-          <span className="deals-inventory"><i />Cập nhật theo cửa hàng</span>
+          <span className="deals-inventory"><i />Updated for your store</span>
         </nav>
 
-        {loading ? <div className="deals-state"><span className="deals-spinner" /><strong>Đang tải ưu đãi</strong><span>Vui lòng chờ trong giây lát.</span></div>
-          : error ? <div className="deals-state error"><Icon>cloud_off</Icon><strong>Chưa tải được khuyến mãi</strong><span>{error}</span></div>
+        {loading ? <div className="deals-state"><span className="deals-spinner" /><strong>Loading offers</strong><span>Please wait a moment.</span></div>
+          : error ? <div className="deals-state error"><Icon>cloud_off</Icon><strong>Unable to load promotions</strong><span>{error}</span></div>
             : <div className="deals-content">
-              {featuredPromotions.length > 0 && <section className="deals-campaigns" aria-label="Ưu đãi nổi bật">{featuredPromotions.map((promotion, index) => <CampaignCard promotion={promotion} index={index} key={promotion._id} />)}</section>}
+              {featuredPromotions.length > 0 && <section className="deals-campaigns" aria-label="Featured offers">{featuredPromotions.map((promotion, index) => <CampaignCard promotion={promotion} index={index} key={promotion._id} />)}</section>}
 
               <section className="deals-section" id="best-deals">
-                <div className="deals-section-head"><div><span className="deals-section-mark"><Icon>verified_user</Icon></span><div><h2>Ưu đãi nổi bật</h2><p>Khuyến mãi đang áp dụng cho sản phẩm trong cửa hàng.</p></div></div>
-                  <div className="deals-sort"><label htmlFor="deals-sort">Sắp xếp</label><select id="deals-sort" value={sort} onChange={(event) => setSort(event.target.value)}><option value="discount">Mức giảm cao nhất</option><option value="price-asc">Giá thấp đến cao</option><option value="price-desc">Giá cao đến thấp</option><option value="ending">Sắp kết thúc</option></select></div>
+                <div className="deals-section-head"><div><span className="deals-section-mark"><Icon>verified_user</Icon></span><div><h2>Featured offers</h2><p>Current promotions on products in store.</p></div></div>
+                  <div className="deals-sort"><label htmlFor="deals-sort">Sort by</label><select id="deals-sort" value={sort} onChange={(event) => setSort(event.target.value)}><option value="discount">Biggest discount</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="ending">Ending soon</option></select></div>
                 </div>
-                <div className="deals-result-line"><span>{visibleDeals.length} sản phẩm ưu đãi</span><form className="deals-inline-search" onSubmit={(event) => event.preventDefault()}><Icon>search</Icon><ProductSearchInput products={dealProducts} value={query} onChange={setQuery} placeholder="Tìm trong ưu đãi..." ariaLabel="Tìm sản phẩm khuyến mãi" /></form></div>
+                <div className="deals-result-line"><span>{visibleDeals.length} products on offer</span><form className="deals-inline-search" onSubmit={(event) => event.preventDefault()}><Icon>search</Icon><ProductSearchInput products={dealProducts} value={query} onChange={setQuery} placeholder="Search offers..." ariaLabel="Search promoted products" /></form></div>
                 {visibleDeals.length ? <div className="deals-product-grid">{visibleDeals.map((deal) => <DealProductCard key={deal.product._id} deal={deal} />)}</div>
-                  : <div className="deals-empty"><Icon>{promotions.length ? 'search_off' : 'local_offer'}</Icon><strong>{promotions.length ? 'Chưa có sản phẩm trong mục này' : 'Hiện chưa có chương trình khuyến mãi'}</strong><span>{promotions.length ? 'Hãy chọn bộ lọc khác hoặc xem tất cả ưu đãi.' : 'Quay lại sau để xem những ưu đãi mới nhất.'}</span>{promotions.length ? <button type="button" onClick={() => { setFilter('all'); setQuery(''); }}>Xem tất cả ưu đãi</button> : <Link to="/products">Khám phá sản phẩm</Link>}</div>}
+                  : <div className="deals-empty"><Icon>{promotions.length ? 'search_off' : 'local_offer'}</Icon><strong>{promotions.length ? 'No products in this section' : 'No promotions available'}</strong><span>{promotions.length ? 'Try a different filter or view all offers.' : 'Check back later for the latest offers.'}</span>{promotions.length ? <button type="button" onClick={() => { setFilter('all'); setQuery(''); }}>View all offers</button> : <Link to="/products">Explore products</Link>}</div>}
               </section>
 
-              {endingDeals.length > 0 && <section className="deals-ending"><div className="deals-ending-head"><div><Icon>timer</Icon><h2>Sắp kết thúc</h2><span>Ưu đãi chỉ còn vài ngày</span></div><Link to="#best-deals">Xem tất cả <Icon>arrow_forward</Icon></Link></div>
+              {endingDeals.length > 0 && <section className="deals-ending"><div className="deals-ending-head"><div><Icon>timer</Icon><h2>Ending soon</h2><span>Only a few days left</span></div><Link to="#best-deals">View all <Icon>arrow_forward</Icon></Link></div>
                 <div className="deals-ending-grid">{endingDeals.map(({ product, offer }) => <Link className="deals-ending-item" to={`/products/${product._id}`} key={product._id}>
                   <span className="deals-ending-image">{product.images?.[0] ? <img src={product.images[0]} alt="" loading="lazy" /> : <Icon>local_offer</Icon>}</span>
-                  <span className="deals-ending-copy"><strong>{product.name}</strong><span><b>{formatCurrency(offer.finalPrice)}</b><del>{formatCurrency(product.price)}</del></span><small><Icon>schedule</Icon>{endsInDays(offer.promo.endDate) === 0 ? 'Kết thúc hôm nay' : `Còn ${endsInDays(offer.promo.endDate)} ngày`}</small></span>
+                  <span className="deals-ending-copy"><strong>{product.name}</strong><span><b>{formatCurrency(offer.finalPrice)}</b><del>{formatCurrency(product.price)}</del></span><small><Icon>schedule</Icon>{endsInDays(offer.promo.endDate) === 0 ? 'Ends today' : `${endsInDays(offer.promo.endDate)} days left`}</small></span>
                   <Icon>chevron_right</Icon>
                 </Link>)}</div>
               </section>}

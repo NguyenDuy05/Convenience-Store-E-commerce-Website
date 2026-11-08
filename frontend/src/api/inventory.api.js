@@ -35,3 +35,6 @@ export const recordDamaged = (data) => api.post(`/inventory/damaged`, data);
 
 // UC-34.6 View Inventory History
 export const getInventoryHistory = (params) => api.get(`/inventory/history`, { params });
+
+// Check Stock: các lô còn hàng của một sản phẩm -> { product, batches }
+export const getProductStock = (productId) => api.get(`/inventory/product/${productId}`);

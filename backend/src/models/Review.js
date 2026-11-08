@@ -22,6 +22,10 @@ const reviewSchema = new Schema({
   },
 }, { timestamps: true });
 
+
+
+
+
 reviewSchema.index({ productId: 1, status: 1, createdAt: -1 });
 reviewSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 // Allow one review per customer, product, and order.

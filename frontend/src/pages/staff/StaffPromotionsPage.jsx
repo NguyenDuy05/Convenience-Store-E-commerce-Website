@@ -5,9 +5,9 @@ import { listProducts } from '../../api/product.api';
 import { formatCurrency } from '../../utils/format';
 import '../../styles/staff-promotions.css';
 
-const SCOPE_LABEL = { all: 'Toàn bộ sản phẩm', category: 'Theo danh mục', product: 'Theo sản phẩm' };
-const fmtDate = (d) => new Date(d).toLocaleDateString('vi-VN');
-const valueText = (p) => (p.type === 'percent' ? `Giảm ${p.value}%` : `Giảm ${formatCurrency(p.value)}`);
+const SCOPE_LABEL = { all: 'All products', category: 'By category', product: 'By product' };
+const fmtDate = (d) => new Date(d).toLocaleDateString('en-US');
+const valueText = (p) => (p.type === 'percent' ? `Save ${p.value}%` : `Save ${formatCurrency(p.value)}`);
 const scopeDetail = (p) => {
   if (p.scope === 'category') return p.categories.map((c) => c.name).filter(Boolean).join(', ');
   if (p.scope === 'product') return p.products.map((x) => x.name).filter(Boolean).join(', ');
@@ -28,7 +28,7 @@ export default function StaffPromotionsPage() {
   const [found, setFound] = useState([]);
   const [finding, setFinding] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [result, setResult] = useState(null);       // kết quả áp dụng thành công
+  const [result, setResult] = useState(null);       // successful application result
   const [applyError, setApplyError] = useState('');
 
   const load = () => {
@@ -36,7 +36,7 @@ export default function StaffPromotionsPage() {
     setError('');
     listPromotions({ q: search || undefined })
       .then((res) => setPromos(res.data.items))
-      .catch((err) => setError(err.response?.data?.message || 'Không tải được danh sách khuyến mãi.'))
+      .catch((err) => setError(err.response?.data?.message || 'Unable to load promotions.'))
       .finally(() => setLoading(false));
   };
   useEffect(load, [search]);   // eslint-disable-line react-hooks/exhaustive-deps
@@ -79,35 +79,35 @@ export default function StaffPromotionsPage() {
     setResult(null);
     applyPromotion({ promotionId: selectedId, items: lines.map((l) => ({ productId: l.product._id, quantity: l.quantity })) })
       .then((res) => setResult(res.data))
-      .catch((err) => setApplyError(err.response?.data?.message || 'Không áp dụng được khuyến mãi. Vui lòng thử lại.'))
+      .catch((err) => setApplyError(err.response?.data?.message || 'Unable to apply the promotion. Please try again.'))
       .finally(() => setApplying(false));
   };
 
   return (
     <section className="spt">
       <nav className="spt-crumb" aria-label="Breadcrumb">
-        <Link to="/staff">Nhân viên</Link><span>›</span><span aria-current="page">Khuyến mãi</span>
+        <Link to="/staff">Staff</Link><span>›</span><span aria-current="page">Promotions</span>
       </nav>
       <div className="spt-head">
-        <h1>Khuyến mãi</h1>
-        <p>Xem các khuyến mãi đang hoạt động và áp dụng cho đơn tại quầy. Mức giảm luôn được hệ thống tính lại từ giá hiện tại.</p>
+        <h1>Promotions</h1>
+        <p>View active promotions and apply them to counter orders. Discounts are calculated using current prices.</p>
       </div>
 
       <div className="spt-section-title">
-        <h2>Đang hoạt động</h2>
+        <h2>Active</h2>
         <form className="spt-search" onSubmit={(e) => { e.preventDefault(); setSearch(q.trim()); }}>
-          <input className="spt-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm khuyến mãi..." maxLength={100} />
-          <button type="submit" className="spt-btn">Tìm</button>
+          <input className="spt-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search promotions..." maxLength={100} />
+          <button type="submit" className="spt-btn">Search</button>
         </form>
       </div>
 
       {loading ? <div className="spt-skeleton" /> : error ? (
         <div className="spt-card spt-state">
-          <h3>Không tải được khuyến mãi</h3><p>{error}</p>
-          <button type="button" className="spt-btn" onClick={load}>Thử lại</button>
+          <h3>Unable to load promotions</h3><p>{error}</p>
+          <button type="button" className="spt-btn" onClick={load}>Try again</button>
         </div>
       ) : promos.length === 0 ? (
-        <div className="spt-card spt-state"><h3>Hiện chưa có khuyến mãi nào</h3><p>{search ? 'Không có khuyến mãi phù hợp với từ khóa.' : 'Chưa có khuyến mãi đang hoạt động.'}</p></div>
+        <div className="spt-card spt-state"><h3>No promotions available</h3><p>{search ? 'No promotions match your search.' : 'No active promotions.'}</p></div>
       ) : (
         <div className="spt-promos">
           {promos.map((p) => (
@@ -116,40 +116,40 @@ export default function StaffPromotionsPage() {
               <h3>{p.name}</h3>
               {p.description && <p>{p.description}</p>}
               <div className="spt-meta">
-                <span className="spt-chip success">Đang hoạt động</span>
+                <span className="spt-chip success">Active</span>
                 <span className="spt-chip">{SCOPE_LABEL[p.scope]}</span>
-                {p.type === 'percent' && p.maxDiscount != null && <span className="spt-chip warn">Tối đa {formatCurrency(p.maxDiscount)}</span>}
+                {p.type === 'percent' && p.maxDiscount != null && <span className="spt-chip warn">Up to {formatCurrency(p.maxDiscount)}</span>}
               </div>
-              {scopeDetail(p) && <p>Áp dụng: {scopeDetail(p)}</p>}
-              <p>Hiệu lực: {fmtDate(p.startDate)} – {fmtDate(p.endDate)}</p>
+              {scopeDetail(p) && <p>Applies to: {scopeDetail(p)}</p>}
+              <p>Valid: {fmtDate(p.startDate)} – {fmtDate(p.endDate)}</p>
               <button type="button" className={`spt-btn${p._id === selectedId ? '' : ' ghost'}`} onClick={() => selectPromo(p._id)}>
-                {p._id === selectedId ? 'Đã chọn cho đơn' : 'Chọn cho đơn'}
+                {p._id === selectedId ? 'Selected for order' : 'Select for order'}
               </button>
             </article>
           ))}
         </div>
       )}
 
-      <div className="spt-section-title"><h2>Áp dụng vào đơn tại quầy</h2></div>
+      <div className="spt-section-title"><h2>Apply to a counter order</h2></div>
       <div className="spt-grid">
         <div className="spt-card">
-          <h2>Sản phẩm trong đơn</h2>
+          <h2>Order items</h2>
           <form className="spt-search" style={{ maxWidth: 'none' }} onSubmit={onFind}>
-            <input className="spt-input" value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Tìm sản phẩm để thêm..." maxLength={100} />
-            <button type="submit" className="spt-btn" disabled={finding}>{finding ? 'Đang tìm...' : 'Tìm'}</button>
+            <input className="spt-input" value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Search products to add..." maxLength={100} />
+            <button type="submit" className="spt-btn" disabled={finding}>{finding ? 'Searching...' : 'Search'}</button>
           </form>
           {found.length > 0 && (
             <ul className="spt-results">
               {found.map((p) => (
                 <li key={p._id}>
                   <span>{p.name} <span className="spt-sub">· {formatCurrency(p.price)} / {p.unit}</span></span>
-                  <button type="button" className="spt-btn sm" onClick={() => addProduct(p)}>Thêm</button>
+                  <button type="button" className="spt-btn sm" onClick={() => addProduct(p)}>Add</button>
                 </li>
               ))}
             </ul>
           )}
           {lines.length === 0 ? (
-            <div className="spt-state">Chưa có sản phẩm nào. Hãy tìm và thêm sản phẩm vào đơn.</div>
+            <div className="spt-state">No items yet. Search for products and add them to the order.</div>
           ) : (
             <ul className="spt-lines">
               {lines.map((l) => {
@@ -159,12 +159,12 @@ export default function StaffPromotionsPage() {
                     <div className="spt-line-info">
                       <span className="spt-line-name">{l.product.name}</span>
                       <span className="spt-sub">{formatCurrency(l.product.price)} / {l.product.unit}</span>
-                      {r && r.discountAmount > 0 && <span className="spt-line-disc">Giảm {formatCurrency(r.discountAmount)}</span>}
+                      {r && r.discountAmount > 0 && <span className="spt-line-disc">Save {formatCurrency(r.discountAmount)}</span>}
                     </div>
-                    <input className="spt-input" type="number" min="1" max="999" value={l.quantity} aria-label={`Số lượng ${l.product.name}`}
+                    <input className="spt-input" type="number" min="1" max="999" value={l.quantity} aria-label={`Quantity for ${l.product.name}`}
                       onChange={(e) => setQty(l.product._id, e.target.value)} />
                     <span className="spt-line-total">{formatCurrency(r ? r.lineTotal : l.product.price * l.quantity)}</span>
-                    <button type="button" className="spt-btn spt-remove sm" onClick={() => removeLine(l.product._id)}>Xóa</button>
+                    <button type="button" className="spt-btn spt-remove sm" onClick={() => removeLine(l.product._id)}>Remove</button>
                   </li>
                 );
               })}
@@ -174,9 +174,9 @@ export default function StaffPromotionsPage() {
 
         <div className="spt-side">
           <div className="spt-card">
-            <h2>Chọn khuyến mãi</h2>
-            {promos.length === 0 ? <p className="spt-sub">Không có khuyến mãi khả dụng.</p> : (
-              <div className="spt-radio" role="radiogroup" aria-label="Khuyến mãi">
+            <h2>Select a promotion</h2>
+            {promos.length === 0 ? <p className="spt-sub">No promotions available.</p> : (
+              <div className="spt-radio" role="radiogroup" aria-label="Promotions">
                 {promos.map((p) => (
                   <label key={p._id} className={p._id === selectedId ? 'on' : ''}>
                     <input type="radio" name="promo" checked={p._id === selectedId} onChange={() => selectPromo(p._id)} />
@@ -187,24 +187,24 @@ export default function StaffPromotionsPage() {
             )}
 
             <div className="spt-rows">
-              <div className="spt-row"><span>Tạm tính</span><span>{formatCurrency(subtotal)}</span></div>
+              <div className="spt-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
               {result && <>
-                <div className="spt-row discount"><span>Khuyến mãi: {result.promotion.name}</span><span>- {formatCurrency(result.discount)}</span></div>
+                <div className="spt-row discount"><span>Promotions: {result.promotion.name}</span><span>- {formatCurrency(result.discount)}</span></div>
                 <div className="spt-sep" />
-                <div className="spt-row strong"><span>Tổng thanh toán</span><span>{formatCurrency(result.totalAmount)}</span></div>
+                <div className="spt-row strong"><span>Total</span><span>{formatCurrency(result.totalAmount)}</span></div>
               </>}
             </div>
 
             <button type="button" className="spt-btn" style={{ width: '100%', marginTop: 16 }}
               disabled={!selected || lines.length === 0 || applying} onClick={onApply}>
-              {applying ? 'Đang kiểm tra...' : 'Áp dụng khuyến mãi'}
+              {applying ? 'Checking...' : 'Apply promotion'}
             </button>
 
             {result && (
-              <div className="spt-banner success"><strong>Đã áp dụng khuyến mãi</strong><span>Mức giảm {formatCurrency(result.discount)} đã được hệ thống tính lại từ giá hiện tại.</span></div>
+              <div className="spt-banner success"><strong>Promotion applied</strong><span>The discount of {formatCurrency(result.discount)} was calculated using current prices.</span></div>
             )}
             {applyError && (
-              <div className="spt-banner error" role="alert"><strong>Không thể áp dụng</strong><span>{applyError}. Tổng tiền đơn không thay đổi, bạn có thể chọn khuyến mãi khác hoặc tiếp tục không dùng khuyến mãi.</span></div>
+              <div className="spt-banner error" role="alert"><strong>Unable to apply</strong><span>{applyError}. The order total is unchanged. Select another promotion or continue without one.</span></div>
             )}
           </div>
         </div>

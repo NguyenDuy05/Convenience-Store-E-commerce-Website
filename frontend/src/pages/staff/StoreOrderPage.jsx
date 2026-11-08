@@ -123,7 +123,7 @@ export default function StoreOrderPage() {
           </div>
           <div className="sop-banner"><strong>Bước tiếp theo: thanh toán</strong><span>Đơn đang ở trạng thái chờ thanh toán và chưa được ghi nhận là đã trả tiền.</span></div>
           <div className="sop-actions">
-            <Link className="sop-btn" to="/staff/payment">Đến bước thanh toán</Link>
+            <Link className="sop-btn" to={`/staff/payment?order=${o._id}`}>Đến bước thanh toán</Link>
             <button type="button" className="sop-btn ghost" onClick={reset}>Tạo đơn mới</button>
           </div>
         </div>

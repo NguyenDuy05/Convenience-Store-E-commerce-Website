@@ -8,6 +8,7 @@ import Icon from '../../components/common/Icon';
 import OrderStatusBadge from '../../components/order/OrderStatusBadge';
 import PriceSummary from '../../components/checkout/PriceSummary';
 import AdminOrderStatusActions from '../../components/admin/AdminOrderStatusActions';
+import AdminCancelOrder from '../../components/admin/AdminCancelOrder';
 import OrderIssues from '../../components/admin/OrderIssues';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { ORDER_SOURCE, ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS } from '../../utils/orderMeta';
@@ -99,6 +100,7 @@ export default function AdminOrderDetailPage() {
       )}
 
       <AdminOrderStatusActions key={`${order.status}-${order.updatedAt}`} order={order} onChanged={() => load()} onAuthError={onAuthError} />
+      <AdminCancelOrder order={order} onChanged={() => load()} onAuthError={onAuthError} />
 
       <div className="aod-grid">
         <div className="aod-col">

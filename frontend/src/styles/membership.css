@@ -176,3 +176,16 @@ body:has(.membership-page) { background: #fbf8ff; }
 @media(min-width: 951px) and (max-width: 1150px) { .membership-site-header-inner { gap: 16px; } .membership-site-header nav { gap: 16px; } .membership-search-link { max-width: 180px; } }
 @media(max-width: 950px) { .membership-store-pill { display: none; } .membership-reward-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .membership-card-bottom { flex-wrap: wrap; } .membership-card-bottom > a { margin: 4px 0; } .membership-service-strip > div { gap: 18px; } }
 @media(max-width: 700px) { .membership-main { padding: 20px 12px 0; } .membership-site-header-inner { gap: 14px; padding: 14px 12px; flex-wrap: wrap; } .membership-site-header nav { order: 4; width: 100%; justify-content: space-around; gap: 16px; } .membership-search-link { display: none; } .membership-header-actions { margin-left: auto; } .membership-counter-pass { display: none; } .membership-service-strip > div { grid-template-columns: 1fr; padding: 24px 16px; } .membership-footer-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; } .membership-footer-bottom { flex-wrap: wrap; line-height: 1.6; } .membership-rewards .membership-section-title { flex-wrap: wrap; } }
+.membership-page-size { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
+.membership-page-size select { width: auto; padding: 6px 9px; border: 1px solid #c2c6d6; border-radius: 7px; background: #fff; color: #0c1842; }
+.membership-pagination { flex-wrap: wrap; gap: 12px; }
+.membership-digital-pass { scroll-margin-top: 24px; text-align: center; }
+.membership-digital-pass h2 { font-size: 12px; letter-spacing: .08em; }
+.membership-digital-pass .membership-real-qr { display: flex; justify-content: center; margin: 16px 0; background: #fff; border-radius: 10px; }
+.membership-real-qr svg { max-width: 100%; height: auto; }
+.membership-digital-pass > strong { display: block; font-size: 14px; }
+.membership-digital-pass code { display: block; margin: 10px 0 16px; color: #0058bc; font-size: 11px; overflow-wrap: anywhere; user-select: all; }
+.membership-digital-pass > p { font-size: 11px; line-height: 1.6; color: #64748b; }
+.membership-digital-pass:target { outline: 3px solid #0058bc; outline-offset: 4px; }
+.membership-pass-actions .membership-show-qr { display: inline-flex; align-items: center; gap: 5px; padding: 9px 12px; border-radius: 8px; background: #fff; color: #0058bc; font-size: 11px; }
+@media(max-width: 700px) { .membership-sidebar .membership-digital-pass { display: block; margin: 16px 0; } }

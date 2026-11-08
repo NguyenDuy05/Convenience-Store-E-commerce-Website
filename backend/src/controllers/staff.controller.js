@@ -1,9 +1,140 @@
-const { notImplemented } = require('../utils/notImplemented');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const { User, ActivityLog } = require('../models');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const { logActivity } = require('../services/activity.service');
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
-exports.listStaff = notImplemented('UC-30.1 View Staff');
-exports.addStaff = notImplemented('UC-30.2 Add Staff');
-exports.updateStaff = notImplemented('UC-30.3 Update Staff');
-exports.lockStaff = notImplemented('UC-30.4 Lock Staff Account');
-exports.unlockStaff = notImplemented('UC-30.5 Unlock Staff Account');
-exports.getStaffActivity = notImplemented('UC-30.6 View Staff Activity History');
+const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const view = (u) => ({
+  _id: u._id, fullName: u.fullName, email: u.email, phone: u.phone || null, status: u.status,
+  employeeCode: u.staffInfo?.employeeCode || null, position: u.staffInfo?.position || null, hiredAt: u.staffInfo?.hiredAt || null,
+  lastLoginAt: u.lastLoginAt || null, createdAt: u.createdAt,
+});
+
+async function loadStaff(id) {
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Staff not found');
+  const u = await User.findOne({ _id: id, role: 'staff', status: { $ne: 'deleted' } });
+  if (!u) throw new ApiError(404, 'Staff not found');
+  return u;
+}
+
+function parseHiredAt(v) {
+  if (v === undefined || v === null || v === '') return undefined;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, 'Hire date is invalid');
+  if (d > new Date()) throw new ApiError(400, 'Hire date cannot be in the future');
+  return d;
+}
+
+function parseCommon(body = {}) {
+  const str = (v) => (typeof v === 'string' ? v.trim() : '');
+  const fullName = str(body.fullName);
+  if (!fullName) throw new ApiError(400, 'Full name is required');
+  if (fullName.length > 100) throw new ApiError(400, 'Full name must be 100 characters or fewer');
+  const phone = str(body.phone).replace(/[\s.-]/g, '');
+  if (phone && !PHONE_RE.test(phone)) throw new ApiError(400, 'Phone number is invalid');
+  const position = str(body.position);
+  if (position.length > 80) throw new ApiError(400, 'Position must be 80 characters or fewer');
+  return { fullName, phone: phone || undefined, position: position || undefined, hiredAt: parseHiredAt(body.hiredAt) };
+}
+
+async function nextEmployeeCode() {
+  const last = await User.find({ role: 'staff', 'staffInfo.employeeCode': /^ST\d+$/ }).select('staffInfo.employeeCode').lean();
+  const max = last.reduce((m, u) => Math.max(m, parseInt(u.staffInfo.employeeCode.slice(2), 10) || 0), 0);
+  return `ST${String(max + 1).padStart(4, '0')}`;
+}
+
+// UC-30.1 View Staff. GET /api/staff?q=&status=active|locked&page=&limit=
+exports.listStaff = asyncHandler(async (req, res) => {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+  const { status } = req.query;
+  if (status && !['active', 'locked'].includes(status)) throw new ApiError(400, 'Invalid status');
+  const filter = { role: 'staff', status: status || { $ne: 'deleted' } };
+  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
+  if (q) {
+    const rx = new RegExp(escapeRegex(q), 'i');
+    filter.$or = [{ fullName: rx }, { email: rx }, { phone: rx }, { 'staffInfo.employeeCode': rx }];
+  }
+  const [docs, total] = await Promise.all([
+    User.find(filter).sort({ createdAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    User.countDocuments(filter),
+  ]);
+  res.json({ items: docs.map(view), total, page, limit });
+});
+
+// UC-30.2 Add Staff
+exports.addStaff = asyncHandler(async (req, res) => {
+  const data = parseCommon(req.body);
+  const email = typeof req.body?.email === 'string' ? req.body.email.toLowerCase().trim() : '';
+  if (!EMAIL_RE.test(email)) throw new ApiError(400, 'A valid email is required');
+  const password = req.body?.password;
+  if (typeof password !== 'string' || password.length < 8) throw new ApiError(400, 'Password must be at least 8 characters');
+  if (password.length > 72) throw new ApiError(400, 'Password must be 72 characters or fewer');
+  if (await User.exists({ email })) throw new ApiError(409, 'This email is already in use');
+
+  let employeeCode = typeof req.body?.employeeCode === 'string' ? req.body.employeeCode.trim().toUpperCase() : '';
+  if (employeeCode) {
+    if (!/^[A-Z0-9-]{2,20}$/.test(employeeCode)) throw new ApiError(400, 'Employee code may only contain letters, digits and dashes (2-20 characters)');
+    if (await User.exists({ role: 'staff', 'staffInfo.employeeCode': employeeCode })) throw new ApiError(409, 'This employee code is already in use');
+  } else employeeCode = await nextEmployeeCode();
+
+  const u = await User.create({
+    role: 'staff', fullName: data.fullName, email, phone: data.phone, passwordHash: await bcrypt.hash(password, 10),
+    staffInfo: { employeeCode, position: data.position, hiredAt: data.hiredAt || new Date() },
+  });
+  await logActivity(req, { action: 'STAFF_ADD', targetType: 'User', targetId: u._id, detail: { email, employeeCode } });
+  res.status(201).json(view(u));
+});
+
+// UC-30.3 Update Staff (email và mật khẩu không đổi ở đây)
+exports.updateStaff = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  const data = parseCommon(req.body);
+  u.fullName = data.fullName;
+  u.phone = data.phone;
+  u.staffInfo = { ...(u.staffInfo?.toObject?.() || {}), position: data.position, hiredAt: data.hiredAt || u.staffInfo?.hiredAt };
+  await u.save();
+  await logActivity(req, { action: 'STAFF_UPDATE', targetType: 'User', targetId: u._id });
+  res.json(view(u));
+});
+
+// UC-30.4 Lock Staff Account
+exports.lockStaff = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  if (u.status === 'locked') throw new ApiError(409, 'This account is already locked');
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 300) : '';
+  u.status = 'locked';
+  await u.save();
+  await logActivity(req, { action: 'STAFF_LOCK', targetType: 'User', targetId: u._id, detail: { reason } });
+  res.json(view(u));
+});
+
+// UC-30.5 Unlock Staff Account
+exports.unlockStaff = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  if (u.status !== 'locked') throw new ApiError(409, 'This account is not locked');
+  u.status = 'active';
+  u.lockedUntil = undefined;
+  u.failedLoginCount = 0;
+  await u.save();
+  await logActivity(req, { action: 'STAFF_UNLOCK', targetType: 'User', targetId: u._id });
+  res.json(view(u));
+});
+
+// UC-30.6 View Staff Activity History. GET /api/staff/:id/activity?page=&limit=
+exports.getStaffActivity = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+  const filter = { actorId: u._id };
+  const [items, total] = await Promise.all([
+    ActivityLog.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    ActivityLog.countDocuments(filter),
+  ]);
+  res.json({ staff: { _id: u._id, fullName: u.fullName }, items, total, page, limit });
+});

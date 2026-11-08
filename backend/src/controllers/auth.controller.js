@@ -28,20 +28,27 @@ async function createCustomer({ fullName, email, phone, passwordHash, avatarUrl,
 // UC-01 Register (chỉ tạo tài khoản customer)
 exports.register = asyncHandler(async (req, res) => {
   const { fullName, email, password, phone } = req.body;
-  if (!fullName || !email || !password) throw new ApiError(400, 'Please enter your full name, email and password');
+  if (typeof fullName !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !fullName.trim() || !email.trim() || !password) {
+    throw new ApiError(400, 'Please enter your full name, email and password');
+  }
+  if (fullName.trim().length > 100) throw new ApiError(400, 'Full name must be 100 characters or fewer');
+  if (!/^\S+@\S+\.\S+$/.test(email.trim())) throw new ApiError(400, 'Please enter a valid email address');
   if (password.length < 8) throw new ApiError(400, 'Password must be at least 8 characters');
+  if (password.length > 72) throw new ApiError(400, 'Password must be 72 characters or fewer');
+  const cleanPhone = typeof phone === 'string' ? phone.trim().replace(/[\s.-]/g, '') : '';
+  if (cleanPhone && !/^(\+?84|0)\d{9,10}$/.test(cleanPhone)) throw new ApiError(400, 'Phone number is invalid');
 
   const exists = await User.findOne({ email: email.toLowerCase().trim() });
   if (exists) throw new ApiError(409, 'This email is already in use');
 
-  const user = await createCustomer({ fullName, email, phone, passwordHash: await bcrypt.hash(password, 10) });
+  const user = await createCustomer({ fullName: fullName.trim(), email: email.toLowerCase().trim(), phone: cleanPhone || undefined, passwordHash: await bcrypt.hash(password, 10) });
   res.status(201).json({ token: signToken(user), user: publicUser(user) });
 });
 
 // UC-03 / UC-14 / UC-26 Login (Customer, Staff, Admin dùng chung)
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) throw new ApiError(400, 'Please enter your email and password');
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) throw new ApiError(400, 'Please enter your email and password');
 
   const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
   if (!user || user.status === 'deleted') throw new ApiError(401, 'Incorrect email or password');
@@ -155,7 +162,8 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 // UC-05 / UC-16 Forgot Password (đặt lại mật khẩu bằng token trong link)
 exports.resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body;
-  if (!token || !password) throw new ApiError(400, 'Missing reset token or new password');
+  if (typeof token !== 'string' || typeof password !== 'string' || !token || !password) throw new ApiError(400, 'Missing reset token or new password');
+  if (password.length > 72) throw new ApiError(400, 'Password must be 72 characters or fewer');
   if (password.length < 8) throw new ApiError(400, 'Password must be at least 8 characters');
 
   const user = await User.findOne({
