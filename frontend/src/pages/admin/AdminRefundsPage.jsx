@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { listRefunds } from '../../api/order.api';
 import { Pager, Stat, dt, money, useFetch } from '../../components/admin/kit';
 
-const METHOD = { cash: 'Cash', card: 'Card', vnpay: 'VNPay', momo: 'MoMo' };
+const METHOD = { cash: 'Cash', card: 'Card', vnpay: 'VNPay', wallet: 'Wallet' };
 
 export default function AdminRefundsPage() {
   const [search, setSearch] = useState('');
@@ -15,7 +15,7 @@ export default function AdminRefundsPage() {
   const dateError = from && to && from > to ? 'The start date must be before the end date.' : '';
 
   return <div className="pm-page">
-    <header className="pm-heading"><div><span className="pm-eyebrow">FINANCE</span><h1>Refund History</h1><p>Refunds are created when a paid order is cancelled. Cancel an order from its details page.</p></div></header>
+    <header className="pm-heading"><div><span className="pm-eyebrow">FINANCE</span><h1>Refund History</h1><p>Payments received for cancelled or expired orders are credited to the customer wallet.</p></div></header>
     <section className="pm-card">
       <div className="pm-search-row">
         <form onSubmit={(e) => { e.preventDefault(); setQ(search.trim()); setPage(1); }} style={{ display: 'contents' }}>

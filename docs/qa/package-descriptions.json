@@ -1,0 +1,288 @@
+[
+    {
+        "sheet":  "Package Descriptions",
+        "rows":  [
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "QUICK — Package Descriptions",
+                                           "cell":  "A1"
+                                       }
+                                   ],
+                         "row":  1
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "No",
+                                           "cell":  "A3"
+                                       },
+                                       {
+                                           "value":  "Package",
+                                           "cell":  "B3"
+                                       },
+                                       {
+                                           "value":  "Description",
+                                           "cell":  "C3"
+                                       }
+                                   ],
+                         "row":  3
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "01",
+                                           "cell":  "A4"
+                                       },
+                                       {
+                                           "value":  "pages",
+                                           "cell":  "B4"
+                                       },
+                                       {
+                                           "value":  "Contains user interface pages for Guest, Customer, Staff, and Admin, allowing users to access system functionalities according to their roles.",
+                                           "cell":  "C4"
+                                       }
+                                   ],
+                         "row":  4
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "02",
+                                           "cell":  "A5"
+                                       },
+                                       {
+                                           "value":  "layouts",
+                                           "cell":  "B5"
+                                       },
+                                       {
+                                           "value":  "Defines reusable page layouts for Public, Customer, Staff, and Admin interfaces.",
+                                           "cell":  "C5"
+                                       }
+                                   ],
+                         "row":  5
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "03",
+                                           "cell":  "A6"
+                                       },
+                                       {
+                                           "value":  "components",
+                                           "cell":  "B6"
+                                       },
+                                       {
+                                           "value":  "Contains reusable React UI components used across pages, such as product cards, forms, navigation, cart, checkout, and dashboard components.",
+                                           "cell":  "C6"
+                                       }
+                                   ],
+                         "row":  6
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "04",
+                                           "cell":  "A7"
+                                       },
+                                       {
+                                           "value":  "routes (Frontend)",
+                                           "cell":  "B7"
+                                       },
+                                       {
+                                           "value":  "Defines application navigation, route configuration, and protected routes based on user authentication and roles.",
+                                           "cell":  "C7"
+                                       }
+                                   ],
+                         "row":  7
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "05",
+                                           "cell":  "A8"
+                                       },
+                                       {
+                                           "value":  "hooks",
+                                           "cell":  "B8"
+                                       },
+                                       {
+                                           "value":  "Contains reusable React hooks for authentication, dashboard data, and user interface behavior.",
+                                           "cell":  "C8"
+                                       }
+                                   ],
+                         "row":  8
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "06",
+                                           "cell":  "A9"
+                                       },
+                                       {
+                                           "value":  "context",
+                                           "cell":  "B9"
+                                       },
+                                       {
+                                           "value":  "Manages shared application state, particularly user authentication through AuthContext.",
+                                           "cell":  "C9"
+                                       }
+                                   ],
+                         "row":  9
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "07",
+                                           "cell":  "A10"
+                                       },
+                                       {
+                                           "value":  "api",
+                                           "cell":  "B10"
+                                       },
+                                       {
+                                           "value":  "Handles HTTP requests and responses between the React frontend and Express backend using Axios.",
+                                           "cell":  "C10"
+                                       }
+                                   ],
+                         "row":  10
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "08",
+                                           "cell":  "A11"
+                                       },
+                                       {
+                                           "value":  "utils (Frontend)",
+                                           "cell":  "B11"
+                                       },
+                                       {
+                                           "value":  "Provides reusable utility functions for formatting, product searching, order information, and other frontend operations.",
+                                           "cell":  "C11"
+                                       }
+                                   ],
+                         "row":  11
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "09",
+                                           "cell":  "A12"
+                                       },
+                                       {
+                                           "value":  "routes (Backend)",
+                                           "cell":  "B12"
+                                       },
+                                       {
+                                           "value":  "Defines REST API endpoints and maps incoming HTTP requests to the appropriate controllers.",
+                                           "cell":  "C12"
+                                       }
+                                   ],
+                         "row":  12
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "10",
+                                           "cell":  "A13"
+                                       },
+                                       {
+                                           "value":  "middlewares",
+                                           "cell":  "B13"
+                                       },
+                                       {
+                                           "value":  "Handles authentication, authorization, and centralized error processing for backend requests.",
+                                           "cell":  "C13"
+                                       }
+                                   ],
+                         "row":  13
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "11",
+                                           "cell":  "A14"
+                                       },
+                                       {
+                                           "value":  "controllers",
+                                           "cell":  "B14"
+                                       },
+                                       {
+                                           "value":  "Processes HTTP requests, coordinates business operations, and returns API responses to clients.",
+                                           "cell":  "C14"
+                                       }
+                                   ],
+                         "row":  14
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "12",
+                                           "cell":  "A15"
+                                       },
+                                       {
+                                           "value":  "services",
+                                           "cell":  "B15"
+                                       },
+                                       {
+                                           "value":  "Implements business logic for cart management, checkout, pricing, inventory, payment, VNPay integration, promotions, and other supported operations.",
+                                           "cell":  "C15"
+                                       }
+                                   ],
+                         "row":  15
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "13",
+                                           "cell":  "A16"
+                                       },
+                                       {
+                                           "value":  "models",
+                                           "cell":  "B16"
+                                       },
+                                       {
+                                           "value":  "Defines Mongoose data models for entities such as User, Product, Order, Cart, Store, Transaction, Inventory, Review, and Membership.",
+                                           "cell":  "C16"
+                                       }
+                                   ],
+                         "row":  16
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "14",
+                                           "cell":  "A17"
+                                       },
+                                       {
+                                           "value":  "utils (Backend)",
+                                           "cell":  "B17"
+                                       },
+                                       {
+                                           "value":  "Provides reusable backend utilities for error handling, asynchronous operations, order data transformation, and related processing.",
+                                           "cell":  "C17"
+                                       }
+                                   ],
+                         "row":  17
+                     },
+                     {
+                         "cells":  [
+                                       {
+                                           "value":  "15",
+                                           "cell":  "A18"
+                                       },
+                                       {
+                                           "value":  "config",
+                                           "cell":  "B18"
+                                       },
+                                       {
+                                           "value":  "Manages backend configuration, including the MongoDB database connection.",
+                                           "cell":  "C18"
+                                       }
+                                   ],
+                         "row":  18
+                     }
+                 ]
+    }
+]

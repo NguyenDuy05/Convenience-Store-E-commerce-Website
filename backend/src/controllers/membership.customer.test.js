@@ -7,6 +7,7 @@ const { User, MembershipTier, PointHistory } = require('../models');
 // Exercise the real customer routes and auth middleware without changing database records.
 test('customer membership points and history API', async (t) => {
   const userId = '507f1f77bcf86cd799439011';
+  const actorIds = { customer: userId, staff: '507f1f77bcf86cd799439012', admin: '507f1f77bcf86cd799439013' };
   const originals = { findById: User.findById, user: User.findOne, tiers: MembershipTier.find, history: PointHistory.find, count: PointHistory.countDocuments, secret: process.env.JWT_SECRET };
   process.env.JWT_SECRET = 'membership-test-only';
   const chain = (value, calls = {}) => Object.fromEntries([
@@ -14,7 +15,7 @@ test('customer membership points and history API', async (t) => {
     ['lean', async () => value],
   ]);
   let member = { _id: userId, fullName: 'Test Customer', membership: { points: 125, lifetimePoints: 750, tierId: { name: 'Silver', minPoints: 500 } } };
-  User.findById = () => chain({ status: 'active' });   // auth middleware kiểm tra tài khoản còn hoạt động
+  User.findById = id => chain({ status: 'active', role: Object.keys(actorIds).find(role => actorIds[role] === id) });
   User.findOne = (filter) => {
     assert.deepEqual(filter, { _id: userId, role: 'customer', status: 'active' });
     return chain(member);
@@ -37,7 +38,7 @@ test('customer membership points and history API', async (t) => {
     else process.env.JWT_SECRET = originals.secret;
   });
   const call = (path, role = 'customer') => fetch(`http://127.0.0.1:${server.address().port}/membership${path}`, {
-    headers: role ? { Authorization: `Bearer ${jwt.sign({ id: userId, role }, process.env.JWT_SECRET)}` } : {},
+    headers: role ? { Authorization: `Bearer ${jwt.sign({ id: actorIds[role], role }, process.env.JWT_SECRET)}` } : {},
   });
   await t.test('requires sign-in and customer role on both endpoints', async () => {
     for (const path of ['/me', '/me/history']) {

@@ -5,8 +5,8 @@ export default function StaffTransactionsPage() {
   return (
     <TransactionManager
       homePath="/staff"
-      homeLabel="Nhân viên"
-      subtitle="Xem và tìm kiếm giao dịch của cửa hàng để đối soát thanh toán (chỉ xem; thông tin nhạy cảm được che)."
+      homeLabel="Staff"
+      subtitle="Search store transactions for payment reconciliation (read-only; sensitive information is masked)."
     />
   );
 }

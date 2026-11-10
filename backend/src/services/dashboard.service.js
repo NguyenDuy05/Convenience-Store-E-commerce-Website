@@ -26,10 +26,10 @@ function resolveRange({ range = '7d', from, to } = {}, now = new Date()) {
     let start; let end; let key = range;
     if (range === 'custom') {
         const f = parseDayVN(from); const t = parseDayVN(to);
-        if (!f || !t) throw new ApiError(400, 'Khoảng ngày không hợp lệ (định dạng YYYY-MM-DD)');
-        if (f > t) throw new ApiError(400, 'Ngày bắt đầu phải trước ngày kết thúc');
+        if (!f || !t) throw new ApiError(400, "Invalid date range (use YYYY-MM-DD)");
+        if (f > t) throw new ApiError(400, "Start date must be before end date");
         start = f; end = new Date(t.getTime() + DAY);
-        if ((end - start) / DAY > MAX_CUSTOM_DAYS) throw new ApiError(400, `Khoảng ngày tối đa ${MAX_CUSTOM_DAYS} ngày`);
+        if ((end - start) / DAY > MAX_CUSTOM_DAYS) throw new ApiError(400, `Maximum date range: ${MAX_CUSTOM_DAYS} days`);
     } else {
         if (!PRESETS[range]) { key = '7d'; }
         const days = PRESETS[key];

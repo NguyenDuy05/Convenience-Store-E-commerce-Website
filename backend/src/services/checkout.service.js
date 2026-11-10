@@ -5,8 +5,11 @@ const { runAtomic } = require('../utils/atomic');
 const stock = require('./stock.service');
 const { generateOrderCode } = require('./orderCode.service');
 const { computePricing, DiscountCodeError } = require('./pricing.service');
+const { notifyOrder } = require('./notification.service');
 
-const METHODS = ['cash', 'vnpay', 'momo'];          // khách tự đặt online chỉ dùng 3 cách này ('card' là của nhân viên tại quầy)
+const wallet = require('./wallet.service');
+const { pickupSchedule } = require('./pickupSchedule.service');
+const METHODS = ['vnpay']; // Store credit is applied internally before VNPay.
 const ttlMs = () => (parseInt(process.env.PAYMENT_TTL_MINUTES, 10) || 15) * 60 * 1000;
 
 // Đọc giỏ -> danh sách dòng hợp lệ + các vấn đề (ngừng bán, thiếu hàng)
@@ -22,7 +25,7 @@ async function loadCartLines(userId) {
   items.forEach((it) => {
     const p = pMap.get(String(it.productId));
     if (!p || p.status !== 'active') {
-      issues.push({ type: 'unavailable', productId: it.productId, name: p?.name || 'Sản phẩm không còn bán' });
+      issues.push({ type: 'unavailable', productId: it.productId, name: p?.name || "Product is no longer available" });
       return;
     }
     if (p.stockQuantity < it.quantity) {
@@ -40,8 +43,8 @@ async function loadDiscount(userId, input) {
   const text = typeof input === 'string' ? input.trim().toUpperCase() : '';
   if (!text) return { discountCode: null, userUsedCount: 0 };
   const discountCode = await DiscountCode.findOne({ code: text, status: 'active' }).lean();
-  if (!discountCode) throw new DiscountCodeError('Mã giảm giá không tồn tại hoặc không còn hiệu lực');
-  const userUsedCount = await Order.countDocuments({ customerId: userId, 'discountCode.codeId': discountCode._id, status: { $ne: 'failed' } });
+  if (!discountCode) throw new DiscountCodeError("This discount code does not exist or is unavailable");
+  const userUsedCount = await Order.countDocuments({ customerId: userId, 'discountCode.codeId': discountCode._id, status: { $nin: ['failed', 'cancelled'] } });
   return { discountCode, userUsedCount };
 }
 
@@ -86,49 +89,56 @@ exports.previewCheckout = async (userId, { discountCode } = {}) => {
   const { pricing, issues, discountError } = await buildSummary(userId, discountCode, { throwOnCodeError: false });
   const store = await Store.findOne({ status: 'open' }).select('name address phone openingHours status').lean()
     || await Store.findOne().select('name address phone openingHours status closedReason').lean();
-  const storeClosed = !!store && store.status === 'closed';
+  const schedule = pickupSchedule(store);
+  const storeClosed = !schedule.acceptingOrders;
   const summary = toSummary(pricing, issues, discountError);
-  return { ...summary, canCheckout: summary.canCheckout && !storeClosed, storeClosed, store };
+  return { ...summary, pickupSchedule: schedule, walletBalance: await wallet.balance(userId), estimatedPoints: Math.floor(pricing.totalAmount / 10000), canCheckout: summary.canCheckout && !storeClosed, storeClosed, store };
 };
 
 const orderView = (o) => ({
   _id: o._id, orderCode: o.orderCode, status: o.status, paymentMethod: o.paymentMethod, paymentStatus: o.paymentStatus,
-  totalAmount: o.totalAmount, createdAt: o.createdAt,
+  preparationStartsAt: o.preparationStartsAt || null,
+  walletAmount: o.walletAmount || 0, payableAmount: o.payableAmount ?? o.totalAmount, totalAmount: o.totalAmount, createdAt: o.createdAt,
   expiresAt: o.status === 'pending_payment' ? new Date(new Date(o.createdAt).getTime() + ttlMs()) : null,
 });
 
 // Tạo đơn. Trả { order, replayed }. replayed=true nếu cùng idempotencyKey đã tạo đơn trước đó (không tạo đơn thứ hai).
-exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote, expectedTotal, idempotencyKey }) => {
-  if (!METHODS.includes(paymentMethod)) throw new ApiError(400, 'Vui lòng chọn phương thức thanh toán hợp lệ (tiền mặt, VNPay hoặc MoMo)');
+exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote, expectedTotal, idempotencyKey, expectedWalletAmount }) => {
+  if (!METHODS.includes(paymentMethod)) throw new ApiError(400, "Website orders use VNPay only");
   const key = typeof idempotencyKey === 'string' && idempotencyKey.trim() ? idempotencyKey.trim().slice(0, 100) : null;
 
   // Mô hình nhận hàng tại cửa hàng: cửa hàng đang đóng cửa thì không nhận đơn mới
-  if ((await Store.countDocuments()) > 0 && !(await Store.exists({ status: 'open' }))) {
-    throw new ApiError(409, 'Cửa hàng hiện đang tạm đóng cửa nên chưa nhận đơn mới. Vui lòng quay lại sau.', { code: 'STORE_CLOSED' });
-  }
+  const store = await Store.findOne().lean();
+  const schedule = pickupSchedule(store);
+  if (!schedule.acceptingOrders) throw new ApiError(409, schedule.notice || 'The store is temporarily closed.', { code: 'STORE_CLOSED' });
 
   if (key) {
     const existing = await Order.findOne({ customerId: userId, idempotencyKey: key }).lean();
+    if (existing?.checkoutReady === false) throw new ApiError(409, 'Order creation is still processing. Please retry shortly.', { code: 'CHECKOUT_PROCESSING' });
     if (existing) return { order: orderView(existing), replayed: true };
   }
 
   const { pricing, issues } = await buildSummary(userId, discountCode, { throwOnCodeError: true });
-  if (pricing.lines.length === 0 && issues.length === 0) throw new ApiError(400, 'Giỏ hàng trống', { code: 'EMPTY_CART' });
+  if (pricing.lines.length === 0 && issues.length === 0) throw new ApiError(400, "Your cart is empty", { code: 'EMPTY_CART' });
   if (issues.length) {
-    throw new ApiError(409, 'Một số sản phẩm trong giỏ không còn đủ để đặt hàng', {
+    throw new ApiError(409, "Some items in your cart have insufficient stock", {
       code: 'CART_ISSUES', issues, summary: toSummary(pricing, issues, null),
     });
   }
-  if (pricing.totalAmount <= 0) throw new ApiError(400, 'Tổng tiền đơn hàng phải lớn hơn 0');
+  if (pricing.totalAmount <= 0) throw new ApiError(400, "Order total must be greater than zero");
   // E1: giá/khuyến mãi đã đổi so với lúc khách xem -> dừng, hiển thị lại để khách xác nhận
   if (expectedTotal !== undefined && Number(expectedTotal) !== pricing.totalAmount) {
-    throw new ApiError(409, 'Giá hoặc khuyến mãi đã thay đổi so với lúc bạn xem. Vui lòng kiểm tra lại đơn hàng.', {
+    throw new ApiError(409, "Prices or promotions have changed. Please review your order.", {
       code: 'PRICE_CHANGED', summary: toSummary(pricing, issues, null),
     });
   }
 
-  const online = paymentMethod !== 'cash';
-  const status = online ? 'pending_payment' : 'confirmed';   // tiền mặt: xác nhận ngay, trả khi nhận hàng
+  await wallet.ensure(userId);
+  const walletAmount = Math.min(await wallet.balance(userId), pricing.totalAmount);
+  if (expectedWalletAmount !== undefined && Number(expectedWalletAmount) !== walletAmount) throw new ApiError(409, 'Your wallet balance changed. Please review checkout.', { code: 'WALLET_BALANCE_CHANGED' });
+  const payableAmount = pricing.totalAmount - walletAmount;
+  const online = payableAmount > 0;
+  const status = online ? 'pending_payment' : 'confirmed';
   const note = typeof customerNote === 'string' ? customerNote.trim().slice(0, 500) : '';
   const now = new Date();
 
@@ -139,6 +149,7 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
       const [doc] = await Order.create([{
         orderCode,
         source: 'online',
+        preparationStartsAt: schedule.isOpen ? undefined : schedule.nextOpenAt,
         customerId: userId,
         items: pricing.lines.map((l) => ({
           productId: l.productId, name: l.name, sku: l.sku, unitPrice: l.unitPrice,
@@ -148,11 +159,14 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
         appliedPromotions: pricing.appliedPromotions,
         promotionDiscount: pricing.promotionDiscount,
         ...(pricing.discountCode ? { discountCode: pricing.discountCode } : {}),
+        discountReservationVersion: pricing.discountCode ? 1 : undefined,
         totalAmount: pricing.totalAmount,
         status,
         statusHistory: [{ status, changedAt: now }],
-        paymentMethod,
-        paymentStatus: 'unpaid',
+        walletPolicy: true, walletAmount, payableAmount, checkoutReady: false,
+        paymentMethod: online ? 'vnpay' : 'wallet',
+        paymentStatus: online ? 'unpaid' : 'paid',
+        ...(!online ? { paidAt: now } : {}),
         ...(note ? { customerNote: note } : {}),
         ...(key ? { idempotencyKey: key } : {}),
       }], opts);
@@ -166,25 +180,35 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
       onRollback(() => stock.releaseStock(doc._id));
 
       if (pricing.discountCode) {
-        const cond = { _id: pricing.discountCode.codeId, status: 'active' };
-        const limited = await DiscountCode.findOne({ _id: pricing.discountCode.codeId }, null, opts).lean();
-        if (limited && typeof limited.usageLimit === 'number') cond.usedCount = { $lt: limited.usageLimit };
-        const used = await DiscountCode.findOneAndUpdate(cond, { $inc: { usedCount: 1 } }, { new: true, ...opts });
-        if (!used) throw new ApiError(409, 'Mã giảm giá vừa hết lượt sử dụng. Vui lòng bỏ mã hoặc chọn mã khác.', { code: 'INVALID_DISCOUNT_CODE' });
-        onRollback(() => DiscountCode.updateOne({ _id: used._id }, { $inc: { usedCount: -1 } }));
+        const reservations = require('./discountReservation.service');
+        await reservations.reserve(pricing.discountCode.codeId, userId, doc._id, { session });
+        onRollback(() => reservations.release(doc));
       }
 
       // Bước cuối: dọn giỏ (chỉ bỏ các sản phẩm đã đặt, sản phẩm khách mới thêm trong lúc này vẫn giữ)
-      await Cart.updateOne(
-        { userId }, { $pull: { items: { productId: { $in: pricing.lines.map((l) => l.productId) } } } }, opts,
-      );
+      if (walletAmount > 0) {
+        await wallet.move(userId, { key: 'pay:' + doc._id, amount: -walletAmount, orderId: doc._id, orderCode, description: 'Order payment' }, { session });
+        onRollback(() => wallet.move(userId, { key: 'return:' + doc._id, amount: walletAmount, orderId: doc._id, orderCode, description: 'Checkout reversed' }));
+      }
+      if (walletAmount > 0) {
+        const { Transaction } = require('../models');
+        const [txn] = await Transaction.create([{ orderId: doc._id, customerId: userId, method: 'wallet', amount: walletAmount, status: 'success', paidAt: now }], opts);
+        onRollback(() => Transaction.deleteOne({ _id: txn._id }));
+      }
+      const cartService = require('./cart.service');
+      const removed = await cartService.removePurchasedItems(userId, pricing.lines, { session });
+      onRollback(() => cartService.restorePurchasedItems(userId, removed));
+      doc.checkoutReady = true;
+      await doc.save(opts);
       return doc;
     });
+    void notifyOrder(order, 'order_created');
     return { order: orderView(order.toObject ? order.toObject() : order), replayed: false };
   } catch (err) {
     // Hai yêu cầu cùng idempotencyKey chạy song song: yêu cầu thua trả lại đơn của yêu cầu thắng
     if (key && err && err.code === 11000) {
       const existing = await Order.findOne({ customerId: userId, idempotencyKey: key }).lean();
+      if (existing?.checkoutReady === false) throw new ApiError(409, 'Order creation is still processing. Please retry shortly.', { code: 'CHECKOUT_PROCESSING' });
       if (existing) return { order: orderView(existing), replayed: true };
     }
     throw err;

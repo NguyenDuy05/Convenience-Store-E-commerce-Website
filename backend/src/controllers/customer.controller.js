@@ -27,10 +27,10 @@ exports.listCustomers = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
   const { status } = req.query;
-  if (status && !['active', 'locked'].includes(status)) throw new ApiError(400, 'Trạng thái không hợp lệ');
+  if (status && !['active', 'locked'].includes(status)) throw new ApiError(400, "Invalid status");
   const sort = req.query.sort === 'name' ? { fullName: 1, _id: 1 } : { createdAt: -1, _id: -1 };
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
-  if (q && q.length < 2) throw new ApiError(400, 'Từ khóa tìm kiếm cần tối thiểu 2 ký tự');
+  if (q && q.length < 2) throw new ApiError(400, "Enter at least 2 characters to search");
 
   const filter = { role: 'customer', status: status || { $ne: 'deleted' } };
   if (q) {
@@ -76,9 +76,9 @@ exports.listCustomers = asyncHandler(async (req, res) => {
 // Khách không tồn tại, đã xóa hoặc không phải khách hàng đều trả 404 giống nhau (không lộ bản ghi - E4).
 exports.getCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Không tìm thấy khách hàng');
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, "Customer not found");
   const u = await User.findOne({ _id: id, role: 'customer', status: { $ne: 'deleted' } }).select('fullName email phone status createdAt membership').lean();
-  if (!u) throw new ApiError(404, 'Không tìm thấy khách hàng');
+  if (!u) throw new ApiError(404, "Customer not found");
 
   const [byStatus, recentOrders, complaints, tiers] = await Promise.all([
     Order.aggregate([{ $match: { customerId: u._id } }, { $group: { _id: '$status', n: { $sum: 1 }, spent: { $sum: '$totalAmount' } } }]),

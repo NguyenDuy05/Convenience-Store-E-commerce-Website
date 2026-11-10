@@ -76,7 +76,7 @@ export default function RegisterPage() {
         <div className="auth-head-icon green"><Icon name="person_add" size="lg" /></div>
         <div>
           <h1 className="auth-title">Create your account</h1>
-          <p className="auth-sub">Shop faster. Pick up in just 15 minutes.</p>
+          <p className="auth-sub">Order online. Collect when your order is ready.</p>
         </div>
       </div>
 

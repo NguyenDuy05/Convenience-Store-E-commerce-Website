@@ -19,7 +19,7 @@ const ymd = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0'
 // [số ngày trước, giờ, phút, trạng thái, phương thức, [[số thứ tự sản phẩm (0-based), số lượng], ...]]
 const DEMO = [
   [0, 9, 5, 'pending_payment', 'vnpay', [[4, 2], [10, 1]]],
-  [0, 8, 30, 'preparing', 'momo', [[5, 1], [11, 2]]],
+  [0, 8, 30, 'preparing', 'vnpay', [[5, 1], [11, 2]]],
   [1, 18, 15, 'ready_for_pickup', 'vnpay', [[0, 2], [11, 1], [13, 1]]],
   [3, 12, 0, 'completed', 'cash', [[8, 1], [12, 1]]],
   [6, 9, 12, 'completed', 'vnpay', [[2, 1], [0, 1], [1, 1], [13, 2], [7, 1], [3, 1]]],

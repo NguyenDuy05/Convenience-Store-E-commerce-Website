@@ -7,22 +7,87 @@ const { generateOrderCode } = require('./orderCode.service');
 const stock = require('./stock.service');
 const ApiError = require('../utils/ApiError');
 const promoService = require('./promotion.service');
+const { Transaction } = require('../models');
+const crypto = require('node:crypto');
 
 const MAX_LINES = 100;
 const MAX_QTY = 999;
 
 // items: [{ productId, quantity }] -> gộp dòng trùng, kiểm tra định dạng (ném ApiError 400 nếu sai)
 exports.normalizeItems = (items) => {
-  if (!Array.isArray(items) || items.length === 0) throw new ApiError(400, 'Đơn hàng chưa có sản phẩm nào');
-  if (items.length > MAX_LINES) throw new ApiError(400, `Đơn hàng tối đa ${MAX_LINES} dòng sản phẩm`);
+  if (!Array.isArray(items) || items.length === 0) throw new ApiError(400, "The order has no items");
+  if (items.length > MAX_LINES) throw new ApiError(400, `An order can have at most ${MAX_LINES} product lines`);
   const map = new Map();
   for (const it of items) {
     const qty = Number(it?.quantity);
-    if (!mongoose.isValidObjectId(it?.productId)) throw new ApiError(400, 'Sản phẩm trong đơn không hợp lệ');
-    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) throw new ApiError(400, `Số lượng phải là số nguyên từ 1 đến ${MAX_QTY}`);
+    if (typeof it?.productId !== 'string' || !/^[a-f\d]{24}$/i.test(it.productId)) throw new ApiError(400, "Invalid product in the order");
+    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) throw new ApiError(400, `Quantity must be an integer from 1 to ${MAX_QTY}`);
     map.set(String(it.productId), (map.get(String(it.productId)) || 0) + qty);
   }
   return [...map].map(([productId, quantity]) => ({ productId, quantity }));
+};
+
+// POS confirmation records a completed sale, its payment and stock movement together.
+exports.checkoutSale = async (staffId, body = {}) => {
+  if (typeof body.idempotencyKey !== 'string' || !/^[A-Za-z0-9_-]{8,100}$/.test(body.idempotencyKey)) throw new ApiError(400, 'A valid checkout key is required');
+  const items = exports.normalizeItems(body.items).sort((a, b) => a.productId.localeCompare(b.productId));
+  if (items.some((item) => item.quantity > MAX_QTY)) throw new ApiError(400, `Maximum quantity per item is ${MAX_QTY}`);
+  const method = body.method;
+  if (!['cash', 'card', 'vnpay'].includes(method)) throw new ApiError(400, 'Select a supported payment method');
+  const received = Number(body.received);
+  const reference = typeof body.reference === 'string' ? body.reference.trim() : '';
+  if (method === 'cash' && (!Number.isSafeInteger(received) || received < 0 || received > 1e9)) throw new ApiError(400, 'Enter a valid cash amount');
+  if (method !== 'cash' && (!/^[A-Za-z0-9-]{4,40}$/.test(reference) || body.paymentConfirmed !== true)) throw new ApiError(400, 'Confirm the approved terminal/QR payment and enter its transaction reference');
+  const note = typeof body.customerNote === 'string' ? body.customerNote.trim().slice(0, 500) : '';
+  const hash = crypto.createHash('sha256').update(JSON.stringify({ items, method, payment: method === 'cash' ? received : reference, promotion: body.promotionId || '', note })).digest('hex');
+  const key = `pos:${staffId}:${body.idempotencyKey}`;
+  const resultOf = async (order, replayed) => {
+    if (order.checkoutHash !== hash) throw new ApiError(409, 'This checkout key was used for a different sale', { code: 'CHECKOUT_KEY_REUSED' });
+    const transaction = await Transaction.findOne({ orderId: order._id, status: 'success' }).lean();
+    if (!transaction) throw new ApiError(409, 'This checkout is still being confirmed. Retry the same request.', { code: 'CHECKOUT_PENDING' });
+    return { order, transaction, change: transaction.cash?.change || 0, replayed };
+  };
+  const findExisting = () => Order.findOne({ source: 'store', createdBy: staffId, idempotencyKey: key }).lean();
+  const existing = await findExisting();
+  if (existing) return resultOf(existing, true);
+  const quote = await exports.buildQuote(items, body.promotionId);
+  if (quote.issues.length || !quote.lines.length) throw new ApiError(409, quote.issues[0]?.message || 'No valid items in the bill', { code: 'ORDER_ISSUES', quote });
+  if (quote.promoError) throw new ApiError(409, quote.promoError, { code: 'PROMOTION_INVALID', quote });
+  if (quote.totalAmount <= 0) throw new ApiError(400, 'The bill total must be greater than zero');
+  if (Number(body.expectedTotal) !== quote.totalAmount) throw new ApiError(409, 'Prices or promotions changed. Review the updated bill before collecting payment.', { code: 'TOTAL_CHANGED', quote });
+  if (method === 'cash' && received < quote.totalAmount) throw new ApiError(400, 'The cash amount is less than the bill total', { code: 'INSUFFICIENT_CASH' });
+  if (method !== 'cash' && await Transaction.exists({ 'gateway.provider': 'pos', 'gateway.transactionNo': reference, status: 'success' })) throw new ApiError(409, 'This transaction reference has already been recorded', { code: 'DUPLICATE_REFERENCE' });
+  try {
+    const sale = await runAtomic(async ({ session, onRollback }) => {
+      const opts = session ? { session } : {};
+      const now = new Date();
+      const [order] = await Order.create([{
+        orderCode: await generateOrderCode(), source: 'store', createdBy: staffId, idempotencyKey: key, checkoutHash: hash,
+        items: quote.lines.map((l) => ({ productId: l.productId, name: l.name, sku: l.sku, unitPrice: l.unitPrice, quantity: l.quantity, discountAmount: l.discountAmount, lineTotal: l.lineTotal })),
+        subtotal: quote.subtotal, promotionDiscount: quote.discount, totalAmount: quote.totalAmount,
+        appliedPromotions: quote.promotion ? [{ promotionId: quote.promotion._id, name: quote.promotion.name, amount: quote.discount }] : [],
+        status: 'completed', paymentStatus: 'paid', paymentMethod: method, paidAt: now, pickedUpAt: now, customerNote: note,
+        statusHistory: [{ status: 'completed', changedAt: now, changedBy: staffId, note: 'In-store POS sale confirmed; payment collected and items handed over' }],
+      }], opts);
+      onRollback(() => Order.deleteOne({ _id: order._id }));
+      await stock.deductStock(quote.lines, { orderId: order._id, userId: staffId, session, reason: 'POS counter sale' });
+      onRollback(() => stock.releaseStock(order._id));
+      const [transaction] = await Transaction.create([{
+        orderId: order._id, processedBy: staffId, method, amount: quote.totalAmount, status: 'success', paidAt: now,
+        ...(method === 'cash' ? { cash: { received, change: received - quote.totalAmount } } : { gateway: { provider: 'pos', transactionNo: reference, payDate: now } }),
+      }], opts);
+      onRollback(() => Transaction.deleteOne({ _id: transaction._id }));
+      return { order, transaction, change: method === 'cash' ? received - quote.totalAmount : 0, replayed: false };
+    });
+    return sale;
+  } catch (error) {
+    if (error.code === 11000) {
+      const replay = await findExisting();
+      if (replay) return resultOf(replay, true);
+      throw new ApiError(409, 'This payment reference is already in use. Check order history before retrying.', { code: 'DUPLICATE_REFERENCE' });
+    }
+    throw error;
+  }
 };
 
 // Trả { lines, issues, subtotal, promotion, promoError, discount, totalAmount }
@@ -37,12 +102,12 @@ exports.buildQuote = async (items, promotionId) => {
   for (const it of items) {
     const p = byId.get(it.productId);
     if (!p || p.status !== 'active') {
-      issues.push({ productId: it.productId, type: 'unavailable', message: `Sản phẩm "${p ? p.name : 'không tồn tại'}" hiện không được bán` });
+      issues.push({ productId: it.productId, type: 'unavailable', message: `Product "${p ? p.name : "does not exist"}" is not available for sale` });
       if (p) lines.push({ productId: p._id, categoryId: p.categoryId, name: p.name, sku: p.sku, unit: p.unit, unitPrice: p.price, quantity: it.quantity, available: 0 });
       continue;
     }
     if (p.stockQuantity < it.quantity) {
-      issues.push({ productId: it.productId, type: 'insufficient_stock', available: p.stockQuantity, message: `Sản phẩm "${p.name}" không đủ hàng (còn ${p.stockQuantity})` });
+      issues.push({ productId: it.productId, type: 'insufficient_stock', available: p.stockQuantity, message: `Product "${p.name}" has insufficient stock (available: ${p.stockQuantity})` });
     }
     lines.push({ productId: p._id, categoryId: p.categoryId, name: p.name, sku: p.sku, unit: p.unit, unitPrice: p.price, quantity: it.quantity, available: p.stockQuantity });
   }
@@ -53,8 +118,8 @@ exports.buildQuote = async (items, promotionId) => {
   let priced = lines.map((l) => ({ ...l, lineSubtotal: l.unitPrice * l.quantity, discountAmount: 0, lineTotal: l.unitPrice * l.quantity }));
   if (promotionId) {
     const promo = mongoose.isValidObjectId(promotionId) ? await Promotion.findById(promotionId) : null;
-    if (!promo || promo.status === 'deleted') promoError = 'Không tìm thấy khuyến mãi';
-    else if (!promoService.isRunning(promo)) promoError = 'Khuyến mãi hiện không còn hiệu lực';
+    if (!promo || promo.status === 'deleted') promoError = "Promotion not found";
+    else if (!promoService.isRunning(promo)) promoError = "This promotion is no longer available";
     else {
       const r = promoService.evaluate(promo, lines);
       if (!r.applicable) promoError = r.reason;
@@ -83,12 +148,12 @@ exports.createStoreOrder = async (staffId, body) => {
   const items = exports.normalizeItems(body.items);
   const quote = await exports.buildQuote(items, body.promotionId);
   if (quote.issues.length || quote.lines.length === 0) {
-    throw new ApiError(409, quote.issues[0]?.message || 'Đơn hàng có sản phẩm không hợp lệ', { code: 'ORDER_ISSUES', quote });
+    throw new ApiError(409, quote.issues[0]?.message || "The order contains invalid products", { code: 'ORDER_ISSUES', quote });
   }
   if (quote.promoError) throw new ApiError(409, quote.promoError, { code: 'PROMOTION_INVALID', quote });
-  if (quote.totalAmount <= 0) throw new ApiError(400, 'Tổng thanh toán phải lớn hơn 0');
+  if (quote.totalAmount <= 0) throw new ApiError(400, "Payment total must be greater than zero");
   if (body.expectedTotal !== undefined && Number(body.expectedTotal) !== quote.totalAmount) {
-    throw new ApiError(409, 'Giá hoặc khuyến mãi đã thay đổi', { code: 'TOTAL_CHANGED', quote });
+    throw new ApiError(409, "Prices or promotions have changed", { code: 'TOTAL_CHANGED', quote });
   }
   const note = typeof body.customerNote === 'string' ? body.customerNote.trim().slice(0, 500) : '';
   const now = new Date();
@@ -109,7 +174,7 @@ exports.createStoreOrder = async (staffId, body) => {
         promotionDiscount: quote.discount,
         totalAmount: quote.totalAmount,
         status: 'pending_payment',
-        statusHistory: [{ status: 'pending_payment', changedAt: now, changedBy: staffId, note: 'Tạo đơn tại quầy' }],
+        statusHistory: [{ status: 'pending_payment', changedAt: now, changedBy: staffId, note: "Create store order" }],
         paymentStatus: 'unpaid',
         ...(note ? { customerNote: note } : {}),
         ...(key ? { idempotencyKey: key } : {}),

@@ -4,7 +4,7 @@ import { listCategories } from '../../api/category.api';
 import { listProducts } from '../../api/product.api';
 import '../../styles/admin-promotions.css';
 
-const money = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
+const money = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
 const date = (value) => new Date(value).toLocaleString('en-US');
 const STATUS = { inactive: 'Inactive', active: 'Active', suspended: 'Suspended', deleted: 'Deleted' };
 const SCOPE = { all: 'All products', category: 'Selected categories', product: 'Selected products' };

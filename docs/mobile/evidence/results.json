@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-09T09:11:59.669Z",
+  "environment": "Edge / Expo React Native Web + existing Express + existing MongoDB",
+  "noNewDatabase": true,
+  "liveGatewayTested": false,
+  "nativeDeviceTested": false,
+  "errors": [],
+  "results": [
+    {
+      "name": "Local Expo browser CORS works without widening the production website origin",
+      "passed": true
+    },
+    {
+      "name": "Real API login and customer role enforcement",
+      "passed": true
+    },
+    {
+      "name": "Registration, reset token consumption, password change and expired sessions",
+      "passed": true
+    },
+    {
+      "name": "Public native UI: real catalog, search and product gallery",
+      "passed": true
+    },
+    {
+      "name": "Guest add preserves product destination through real login",
+      "passed": true
+    },
+    {
+      "name": "Native cart quantity updates the same server cart used by the website",
+      "passed": true
+    },
+    {
+      "name": "Checkout shows server pricing and does not create orders on navigation",
+      "passed": true
+    },
+    {
+      "name": "Stock and changed-price validation prevent an unreviewed order",
+      "passed": true
+    },
+    {
+      "name": "Lost checkout response retries the same key and creates exactly one order",
+      "passed": true
+    },
+    {
+      "name": "VNPay mobile callback signature, amount check, pending reuse and duplicate safety",
+      "passed": true
+    },
+    {
+      "name": "Staff preparation, ready notice, pickup, points and cancellation boundary",
+      "passed": true
+    },
+    {
+      "name": "Refund goes to wallet once; next order spends wallet before VNPay",
+      "passed": true
+    },
+    {
+      "name": "Gateway cancellation remains unpaid; expired order restores reserved stock and wallet",
+      "passed": true
+    },
+    {
+      "name": "Ownership protection on orders and support; profile/address/review/support persistence",
+      "passed": true
+    },
+    {
+      "name": "Mobile account screens load real wallet, membership, notifications and support",
+      "passed": true
+    },
+    {
+      "name": "Responsive native web layout, reduced motion and no runtime errors",
+      "passed": true
+    },
+    {
+      "name": "Website renders a mobile-created order; web API order appears in mobile orders",
+      "passed": true
+    },
+    {
+      "name": "Login preserves payment deep-link order ID; logout removes protected access",
+      "passed": true
+    }
+  ]
+}

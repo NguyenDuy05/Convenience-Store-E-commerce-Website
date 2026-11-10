@@ -5,7 +5,7 @@ export const Icon = ({ name, size = '' }) => <span className={`hp-icon ${size}`}
 // Ô ảnh: có ảnh thì hiện ảnh, chưa có thì hiện ô trống theo màu danh mục
 export function Media({ product, cat }) {
     const src = productImage(product);
-    if (src) return <img className="hp-img" src={src} alt={product.name} loading="lazy" />;
+    if (src) return <img className="hp-img" src={src} alt={product.name} loading="lazy" width="240" height="240" />;
     const m = catMeta(cat?.slug);
     return <span className="hp-ph" style={{ '--tint': m.tint }}><Icon name={m.icon} size="xl" /></span>;
 }

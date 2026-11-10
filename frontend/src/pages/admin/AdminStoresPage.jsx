@@ -6,7 +6,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 
 function StoreEditor({ store, busy, error, onSave, onCancel }) {
-  const [f, setF] = useState({ name: store?.name || '', address: store?.address || '', phone: store?.phone || '' });
+  const [f, setF] = useState({ name: store?.name || '', address: store?.address || '', phone: store?.phone || '', website: store?.website || '' });
   const [err, setErr] = useState('');
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const submit = (e) => {
@@ -18,11 +18,12 @@ function StoreEditor({ store, busy, error, onSave, onCancel }) {
   };
   return <section className="pm-card" aria-labelledby="store-edit">
     <h2 id="store-edit">{store ? 'Update Store' : 'Add Store'}</h2>
-    {!store && <p>New stores start with default opening hours (07:00 – 22:00, every day). You can change them afterwards.</p>}
+    {!store && <p>New stores start with default opening hours (07:00 – 24:00, every day). You can change them afterwards.</p>}
     <form onSubmit={submit}><fieldset disabled={busy}>
       <div className="pm-form-grid">
         <label>Store name<input autoFocus value={f.name} maxLength={120} onChange={set('name')} /></label>
         <label>Phone<input value={f.phone} inputMode="tel" onChange={set('phone')} /></label>
+        <label>Website<input type="url" value={f.website} placeholder="https://Quickstore.com" onChange={set('website')} /></label>
         <label className="pm-wide">Address<input value={f.address} maxLength={255} onChange={set('address')} /></label>
       </div>
       {(err || error) && <p className="pm-error" role="alert">{err || error}</p>}
@@ -32,15 +33,16 @@ function StoreEditor({ store, busy, error, onSave, onCancel }) {
 }
 
 function HoursEditor({ store, busy, error, onSave, onCancel }) {
-  const initial = DAYS.map((_, day) => { const h = (store.openingHours || []).find((x) => x.day === day) || {}; return { day, openTime: h.openTime || '07:00', closeTime: h.closeTime || '22:00', isClosed: !!h.isClosed }; });
+  const initial = DAYS.map((_, day) => { const h = (store.openingHours || []).find((x) => x.day === day) || {}; return { day, openTime: h.openTime || '07:00', closeTime: h.closeTime === '24:00' ? '00:00' : h.closeTime || '00:00', isClosed: !!h.isClosed }; });
   const [rows, setRows] = useState(initial);
   const [err, setErr] = useState('');
   const set = (i, patch) => setRows((r) => r.map((x, k) => (k === i ? { ...x, ...patch } : x)));
   const submit = (e) => {
     e.preventDefault();
-    const bad = rows.find((r) => !r.isClosed && r.openTime >= r.closeTime);
+    const normalized = rows.map((r) => ({ ...r, closeTime: r.closeTime === '00:00' ? '24:00' : r.closeTime }));
+    const bad = normalized.find((r) => !r.isClosed && r.openTime >= r.closeTime);
     if (bad) return setErr(`${DAYS[bad.day]}: closing time must be later than opening time.`);
-    setErr(''); onSave(rows);
+    setErr(''); onSave(normalized);
   };
   return <section className="pm-card" aria-labelledby="hours-edit">
     <h2 id="hours-edit">Opening hours · {store.name}</h2>
@@ -49,7 +51,7 @@ function HoursEditor({ store, busy, error, onSave, onCancel }) {
         {rows.map((r, i) => <div className="pm-hours-row" key={r.day}>
           <strong>{DAYS[r.day]}</strong>
           <label>Opens<input type="time" value={r.openTime} disabled={r.isClosed} onChange={(e) => set(i, { openTime: e.target.value })} /></label>
-          <label>Closes<input type="time" value={r.closeTime} disabled={r.isClosed} onChange={(e) => set(i, { closeTime: e.target.value })} /></label>
+          <label>Closes (00:00 = midnight)<input type="time" value={r.closeTime} disabled={r.isClosed} onChange={(e) => set(i, { closeTime: e.target.value })} /></label>
           <label className="pm-inline"><input type="checkbox" checked={r.isClosed} onChange={(e) => set(i, { isClosed: e.target.checked })} />Closed</label>
         </div>)}
       </div>
@@ -86,6 +88,7 @@ export default function AdminStoresPage() {
       <div className="pm-store-grid">{stores.map((s) => <section className="pm-card" key={s._id}>
         <div className="pm-toolbar"><h2 style={{ margin: 0 }}>{s.name}</h2><Badge tone={STATUS_TONE[s.status]}>{s.status}</Badge></div>
         <p>{s.address}<br />{s.phone || 'No phone'}</p>
+        {s.website && <p><a href={s.website} target="_blank" rel="noreferrer">{s.website.replace(/^https?:\/\//, '')}</a></p>}
         {s.status === 'closed' && s.closedReason && <p className="pm-note">Closed: {s.closedReason}</p>}
         <div className="pm-table-wrap"><table><tbody>
           {DAYS.map((name, day) => { const h = (s.openingHours || []).find((x) => x.day === day); return <tr key={day}><td>{name}</td><td>{!h || h.isClosed ? 'Closed' : `${h.openTime} – ${h.closeTime}`}</td></tr>; })}

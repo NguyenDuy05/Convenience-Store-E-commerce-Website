@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 
 const STATUSES = ['pending', 'success', 'failed'];
-const METHODS = ['cash', 'card', 'vnpay', 'momo'];
+const METHODS = ['cash', 'card', 'vnpay', 'wallet'];
 const MAX_RANGE_DAYS = 366;   // giới hạn khoảng ngày tìm kiếm (UC-23.0.E2)
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -54,7 +54,7 @@ function serialize(t, role = 'admin') {
 function parseDate(value, name, endOfDay) {
   if (!value) return null;
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new ApiError(400, `Ngày "${name}" không hợp lệ`);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `Date "${name}" is invalid`);
   if (endOfDay && /^\d{4}-\d{2}-\d{2}$/.test(value)) d.setHours(23, 59, 59, 999);
   return d;
 }
@@ -64,14 +64,14 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const { q, status, method } = req.query;
-  if (q !== undefined && typeof q !== 'string') throw new ApiError(400, 'Từ khóa tìm kiếm không hợp lệ');
+  if (q !== undefined && typeof q !== 'string') throw new ApiError(400, "Invalid search query");
 
-  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái giao dịch không hợp lệ');
-  if (method && !METHODS.includes(method)) throw new ApiError(400, 'Phương thức thanh toán không hợp lệ');
-  const from = parseDate(req.query.from, 'từ ngày', false);
-  const to = parseDate(req.query.to, 'đến ngày', true);
-  if (from && to && from > to) throw new ApiError(400, 'Khoảng ngày không hợp lệ: "từ ngày" phải trước "đến ngày"');
-  if (from && to && (to - from) / 86400000 > MAX_RANGE_DAYS) throw new ApiError(400, `Khoảng ngày tối đa ${MAX_RANGE_DAYS} ngày`);
+  if (status && !STATUSES.includes(status)) throw new ApiError(400, "Invalid transaction status");
+  if (method && !METHODS.includes(method)) throw new ApiError(400, "Invalid payment method");
+  const from = parseDate(req.query.from, "from date", false);
+  const to = parseDate(req.query.to, "to date", true);
+  if (from && to && from > to) throw new ApiError(400, "Invalid date range: the start date must be before the end date");
+  if (from && to && (to - from) / 86400000 > MAX_RANGE_DAYS) throw new ApiError(400, `Maximum date range: ${MAX_RANGE_DAYS} days`);
 
   const filter = { ...scopeFilter(req) };
   if (status) filter.status = status;
@@ -80,7 +80,7 @@ exports.listTransactions = asyncHandler(async (req, res) => {
 
   const keyword = (q || '').trim();
   if (keyword) {
-    if (keyword.length > 100) throw new ApiError(400, 'Từ khóa tìm kiếm quá dài (tối đa 100 ký tự)');
+    if (keyword.length > 100) throw new ApiError(400, "Search must not exceed 100 characters");
     const re = new RegExp(escapeRegex(keyword), 'i');
     const orders = await Order.find({ orderCode: re }).select('_id').limit(500);
     const or = [{ txnRef: re }, { 'gateway.transactionNo': re }, { orderId: { $in: orders.map((o) => o._id) } }];
@@ -102,17 +102,17 @@ exports.listTransactions = asyncHandler(async (req, res) => {
 
 // UC-35.2 View Transaction Details (chỉ đọc, không sửa dữ liệu thanh toán/đơn hàng)
 exports.getTransaction = asyncHandler(async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Không tìm thấy giao dịch');
+  if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, "Transaction not found");
   const txn = await Transaction.findOne({ _id: req.params.id, ...scopeFilter(req) }).populate(POPULATE);
-  if (!txn) throw new ApiError(404, 'Không tìm thấy giao dịch');
+  if (!txn) throw new ApiError(404, "Transaction not found");
 
   const out = serialize(txn, req.user.role);
   // Các giao dịch khác của cùng đơn (lần thử trước / thử lại) để đối soát
   const siblings = await Transaction.find({ orderId: out.orderId, _id: { $ne: txn._id } })
     .select('method amount status txnRef createdAt paidAt').sort({ createdAt: -1 });
-  const timeline = [{ label: 'Khởi tạo giao dịch', at: out.createdAt }];
-  if (out.paidAt) timeline.push({ label: 'Thanh toán thành công', at: out.paidAt });
-  else if (out.status === 'failed') timeline.push({ label: 'Thanh toán thất bại', at: out.updatedAt, note: out.failureReason });
-  if (out.errorHandling?.handledAt) timeline.push({ label: 'Đã xử lý lỗi thanh toán', at: out.errorHandling.handledAt, note: out.errorHandling.resolution });
+  const timeline = [{ label: "Transaction created", at: out.createdAt }];
+  if (out.paidAt) timeline.push({ label: "Payment successful", at: out.paidAt });
+  else if (out.status === 'failed') timeline.push({ label: "Payment failed", at: out.updatedAt, note: out.failureReason });
+  if (out.errorHandling?.handledAt) timeline.push({ label: "Payment issue resolved", at: out.errorHandling.handledAt, note: out.errorHandling.resolution });
   res.json({ ...out, relatedTransactions: siblings, timeline });
 });

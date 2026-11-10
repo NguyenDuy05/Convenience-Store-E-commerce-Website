@@ -11,6 +11,7 @@ const cartItemSchema = new Schema({
 const cartSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   items: [cartItemSchema],
+  revision: { type: Number, default: 0 },
   budget: { type: Number, min: 0 },                         // ngân sách khách nhập cho tính năng giỏ hàng gợi ý
 }, { timestamps: true });
 

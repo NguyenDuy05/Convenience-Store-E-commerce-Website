@@ -7,7 +7,7 @@ import { ORDER_TABS } from '../../utils/orderMeta';
 export default function OrderFilterTabs({ active, counts, onChange }) {
   return (
     <div className="otabs">
-      <div className="otabs-list" role="tablist" aria-label="Lọc đơn hàng theo trạng thái">
+      <div className="otabs-list" role="tablist" aria-label="Filter orders by status">
         {ORDER_TABS.map((t) => {
           const selected = active === t.key;
           const n = counts ? counts[t.key || 'all'] ?? 0 : null;
@@ -26,7 +26,7 @@ export default function OrderFilterTabs({ active, counts, onChange }) {
           );
         })}
       </div>
-      <div className="otabs-sort"><Icon name="swap_vert" size="md" /> Mới nhất trước</div>
+      <div className="otabs-sort"><Icon name="swap_vert" size="md" /> Newest first</div>
     </div>
   );
 }

@@ -1,0 +1,116 @@
+▶ independent retail business-rule audit with HTTP and MongoDB
+  ✔ QA-01 invalid cart product IDs return a client error, not HTTP 500 (77.1322ms)
+  ✔ QA-02 locked staff tokens cannot view inactive catalog records through optional auth (24.7958ms)
+  ✔ QA-03 cancelled orders release the per-customer voucher allowance (109.7639ms)
+  ✔ QA-04 expired orders return the global voucher allocation exactly once (64.7722ms)
+  ✔ QA-05 concurrent orders cannot exceed a per-customer voucher limit (85.521ms)
+  ✔ QA-06 concurrent payment-link requests keep one pending gateway attempt (87.4974ms)
+  ✔ QA-07 a failed stock sale journal restores batch and product quantities (17.8631ms)
+  ✔ QA-08 concurrent stock releases do not return the same stock multiple times (39.3333ms)
+  ✔ QA-09 retry after a failed release journal does not inflate inventory (88.2437ms)
+  ✔ QA-10 admin reconciliation of a cancelled captured payment credits the wallet (132.0037ms)
+  ✔ QA-11 concurrent add-to-cart requests preserve every increment (68.0164ms)
+  ✔ QA-12 a reset token can be used only once under concurrent requests (205.2704ms)
+  ✔ QA-13 parallel registration returns a conflict for a duplicate email (178.6714ms)
+  ✔ QA-14 expired batches are excluded and FEFO sells the nearest valid expiry first (18.6725ms)
+  ✔ QA-15 two customers buying the last unit cannot oversell (36.8618ms)
+  ✔ QA-16 price changes block stale checkout and manual store closure blocks new orders (28.8795ms)
+  ✔ QA-17 off-hours orders show the next opening and preparation is blocked until opening (83.9454ms)
+  ✔ QA-18 checkout preserves quantities added from another tab during checkout (28.6273ms)
+  ✔ QA-19 role changes in the database immediately override old token roles (9.0288ms)
+  ✔ QA-20 interleaved payment reads cannot create multiple payable gateway links (149.716ms)
+  ✖ QA-21 password-reset emails escape untrusted customer display names (13.5482ms)
+  ✖ QA-22 failed receipt journal leaves no extra batch or product stock (13.9981ms)
+  ✖ QA-23 failed damage/removal journal does not reduce physical or product stock (12.2789ms)
+  ✖ QA-24 concurrent absolute stock adjustments cannot overshoot their target (17.7163ms)
+✖ independent retail business-rule audit with HTTP and MongoDB (2559.0366ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 20
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3011.8202
+
+✖ failing tests:
+
+test at test\business-rules.integration.test.js:224:11
+✖ QA-21 password-reset emails escape untrusted customer display names (13.5482ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /<img src=x/. Input:
+  
+  '<p>Hi <img src=x onerror=alert(1)>,</p><p>We received a request to reset your password. Click the button below to choose a new one (valid for 30 minutes).</p><p><a href="http://localhost:5173/reset-password?token=[REDACTED_QA_TOKEN]" style="display:inline-block;padding:12px 24px;background:#0058bc;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p><p style="color:#666;font-size:13px">Or copy this link: http://localhost:5173/reset-password?token=[REDACTED_QA_TOKEN]<br/>If you did not request this, you can ignore this email.</p>'
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:228:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:224:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<p>Hi <img src=x onerror=alert(1)>,</p><p>We received a request to reset your password. Click the button below to choose a new one (valid for 30 minutes).</p><p><a href="http://localhost:5173/reset-password?token=[REDACTED_QA_TOKEN]" style="display:inline-block;padding:12px 24px;background:#0058bc;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p><p style="color:#666;font-size:13px">Or copy this link: http://localhost:5173/reset-password?token=[REDACTED_QA_TOKEN]<br/>If you did not request this, you can ignore this email.</p>',
+    expected: /<img src=x/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:231:11
+✖ QA-22 failed receipt journal leaves no extra batch or product stock (13.9981ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  55 !== 50
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:236:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:231:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 55,
+    expected: 50,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:239:11
+✖ QA-23 failed damage/removal journal does not reduce physical or product stock (12.2789ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  45 !== 50
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:244:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:239:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 45,
+    expected: 50,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:247:11
+✖ QA-24 concurrent absolute stock adjustments cannot overshoot their target (17.7163ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  80 !== 60
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:251:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:247:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 80,
+    expected: 60,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

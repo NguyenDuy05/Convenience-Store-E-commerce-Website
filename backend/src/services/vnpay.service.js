@@ -24,8 +24,16 @@ const sign = (params, secret) => crypto.createHmac('sha512', secret).update(Buff
 const plain = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9 ]/g, ' ');
 
 // Tạo URL chuyển khách sang trang thanh toán VNPay
-exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new Date(), expireAt }) => {
+exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new Date(), expireAt, returnTo = 'web' }) => {
   const { tmnCode, secret, url, returnUrl } = cfg();
+  // Config is server-owned; never accept a callback URL from the client.
+  const callback = returnTo === 'mobile'
+    ? process.env.VNPAY_MOBILE_RETURN_URL || new URL('/api/payments/vnpay/mobile-return', returnUrl).href
+    : returnUrl;
+  if (returnTo === 'mobile') {
+    const callbackUrl = new URL(callback);
+    if (!['https:', 'http:'].includes(callbackUrl.protocol) || (process.env.NODE_ENV === 'production' && callbackUrl.protocol !== 'https:')) throw new Error('Mobile payment return URL must use HTTPS in production');
+  }
   const params = {
     vnp_Version: '2.1.0',
     vnp_Command: 'pay',
@@ -36,7 +44,7 @@ exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new
     vnp_OrderInfo: plain(orderInfo || `Thanh toan don hang ${txnRef}`),
     vnp_OrderType: 'other',
     vnp_Locale: 'vn',
-    vnp_ReturnUrl: returnUrl,
+    vnp_ReturnUrl: callback,
     vnp_IpAddr: ipAddr || '127.0.0.1',
     vnp_CreateDate: vnTime(createdAt),
   };
@@ -80,7 +88,7 @@ exports.verifyCallback = (query) => {
       )) : undefined,
       raw: params,
     },
-    reason: outcome === 'success' ? undefined : `VNPay mã lỗi ${code}`,
+    reason: outcome === 'success' ? undefined : `VNPay error code ${code}`,
   };
 };
 

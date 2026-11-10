@@ -20,10 +20,10 @@ async function buildCartView(userId) {
     if (!active) issue = 'unavailable';
     else if (p.stockQuantity <= 0) issue = 'out_of_stock';
     else if (it.quantity > p.stockQuantity) issue = 'insufficient_stock';
-    if (issue) issues.push({ productId: it.productId, name: p?.name || 'Sản phẩm', type: issue, available: p?.stockQuantity ?? 0 });
+    if (issue) issues.push({ productId: it.productId, name: p?.name || "Product", type: issue, available: p?.stockQuantity ?? 0 });
     return {
       productId: it.productId,
-      name: p?.name || 'Sản phẩm không còn bán',
+      name: p?.name || "Product is no longer available",
       image: p?.images?.[0] || null,
       unit: p?.unit || '',
       unitPrice: p?.price ?? 0,
@@ -41,4 +41,39 @@ async function buildCartView(userId) {
   };
 }
 
-module.exports = { buildCartView, MAX_PER_ITEM };
+// Compare revisions after validation so concurrent tabs cannot overwrite each other.
+async function mutateCart(userId, mutate) {
+  try { await Cart.updateOne({ userId }, { $setOnInsert: { items: [], revision: 0 } }, { upsert: true }); }
+  catch (error) { if (error.code !== 11000) throw error; }
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    const cart = await Cart.findOne({ userId }).lean();
+    const items = await mutate(cart.items || []);
+    const revision = cart.revision === undefined ? { $exists: false } : cart.revision;
+    const result = await Cart.updateOne({ _id: cart._id, revision }, { $set: { items }, $inc: { revision: 1 } });
+    if (result.modifiedCount) return;
+  }
+  throw new (require('../utils/ApiError'))(409, 'Your cart is being updated in another tab. Please try again.');
+}
+
+async function removePurchasedItems(userId, lines, { session } = {}) {
+  const branches = lines.map(line => ({ case: { $eq: ['$$item.productId', line.productId] }, then: line.quantity }));
+  const cart = await Cart.findOneAndUpdate({ userId }, [{ $set: {
+    items: { $filter: { input: { $map: { input: '$items', as: 'item', in: { $mergeObjects: ['$$item', {
+      quantity: { $subtract: ['$$item.quantity', { $switch: { branches, default: 0 } }] },
+    }] } } }, as: 'item', cond: { $gt: ['$$item.quantity', 0] } } },
+    revision: { $add: [{ $ifNull: ['$revision', 0] }, 1] },
+  } }], { ...(session ? { session } : {}), updatePipeline: true }).lean();
+  return lines.map(line => ({ productId: line.productId, quantity: Math.min(line.quantity, cart?.items.find(item => String(item.productId) === String(line.productId))?.quantity || 0) })).filter(line => line.quantity > 0);
+}
+
+async function restorePurchasedItems(userId, lines) {
+  for (const line of lines) await Cart.updateOne({ userId }, [{ $set: {
+    items: { $cond: [
+      { $in: [line.productId, '$items.productId'] },
+      { $map: { input: '$items', as: 'item', in: { $cond: [ { $eq: ['$$item.productId', line.productId] }, { $mergeObjects: ['$$item', { quantity: { $add: ['$$item.quantity', line.quantity] } }] }, '$$item' ] } } },
+      { $concatArrays: ['$items', [{ productId: line.productId, quantity: line.quantity, addedAt: new Date() }]] },
+    ] }, revision: { $add: [{ $ifNull: ['$revision', 0] }, 1] },
+  } }], { updatePipeline: true });
+}
+
+module.exports = { buildCartView, MAX_PER_ITEM, mutateCart, removePurchasedItems, restorePurchasedItems };

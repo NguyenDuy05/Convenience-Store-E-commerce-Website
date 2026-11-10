@@ -26,13 +26,13 @@ function enrich(shift, now, hasOtherInProgress = false) {
   const { startAt, endAt } = shiftTimes(s);
   const actions = { canClockIn: false, canClockOut: false, reason: null };
   if (s.status === 'scheduled') {
-    if (now < new Date(startAt.getTime() - CLOCK_IN_EARLY_MIN * MIN)) actions.reason = `Chưa đến giờ vào ca (được vào sớm tối đa ${CLOCK_IN_EARLY_MIN} phút)`;
-    else if (now >= endAt) actions.reason = 'Ca làm đã kết thúc';
-    else if (hasOtherInProgress) actions.reason = 'Bạn đang trong một ca làm khác, hãy ra ca trước';
+    if (now < new Date(startAt.getTime() - CLOCK_IN_EARLY_MIN * MIN)) actions.reason = `Check-in is not open yet (up to ${CLOCK_IN_EARLY_MIN} minutes early)`;
+    else if (now >= endAt) actions.reason = "This shift has ended";
+    else if (hasOtherInProgress) actions.reason = "You are checked in to another shift. Please check out first";
     else actions.canClockIn = true;
   } else if (s.status === 'in_progress') {
     actions.canClockOut = true;
-  } else if (s.status === 'missed') actions.reason = 'Ca này đã bị lỡ (không vào ca)';
+  } else if (s.status === 'missed') actions.reason = "This shift was missed";
   const lateMinutes = s.clockInAt ? Math.max(0, Math.floor((new Date(s.clockInAt) - startAt) / MIN)) : 0;
   return {
     _id: s._id, shiftDate: s.shiftDate, startTime: s.startTime, endTime: s.endTime, status: s.status, note: s.note,
@@ -57,7 +57,7 @@ async function markMissed(staffId, now) {
 const parseDate = (v, name, endOfDay) => {
   if (!v) return null;
   const d = new Date(v);
-  if (Number.isNaN(d.getTime())) throw new ApiError(400, `Ngày "${name}" không hợp lệ`);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `Date "${name}" is invalid`);
   if (endOfDay && /^\d{4}-\d{2}-\d{2}$/.test(v)) d.setHours(23, 59, 59, 999);
   return d;
 };
@@ -69,10 +69,10 @@ exports.listMyShifts = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
   const { status } = req.query;
-  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái ca làm không hợp lệ');
-  const from = parseDate(req.query.from, 'từ ngày', false);
-  const to = parseDate(req.query.to, 'đến ngày', true);
-  if (from && to && from > to) throw new ApiError(400, 'Khoảng ngày không hợp lệ: "từ ngày" phải trước "đến ngày"');
+  if (status && !STATUSES.includes(status)) throw new ApiError(400, "Invalid shift status");
+  const from = parseDate(req.query.from, "from date", false);
+  const to = parseDate(req.query.to, "to date", true);
+  if (from && to && from > to) throw new ApiError(400, "Invalid date range: the start date must be before the end date");
 
   await markMissed(staffId, now);
 
@@ -97,10 +97,10 @@ exports.listMyShifts = asyncHandler(async (req, res) => {
 
 async function loadOwnShift(req) {
   const { shiftId } = req.body || {};
-  if (!mongoose.isValidObjectId(shiftId)) throw new ApiError(400, 'Vui lòng chọn ca làm hợp lệ');
+  if (!mongoose.isValidObjectId(shiftId)) throw new ApiError(400, "Select a valid shift");
   const shift = await WorkShift.findById(shiftId);
-  if (!shift) throw new ApiError(404, 'Không tìm thấy ca làm');
-  if (String(shift.staffId) !== String(req.user.id)) throw new ApiError(403, 'Bạn không có quyền thao tác trên ca làm này');   // 24.0.E1
+  if (!shift) throw new ApiError(404, "Shift not found");
+  if (String(shift.staffId) !== String(req.user.id)) throw new ApiError(403, "You do not have permission to manage this shift");   // 24.0.E1
   return shift;
 }
 const logAction = (req, action, shift) =>
@@ -114,7 +114,7 @@ exports.clockIn = asyncHandler(async (req, res) => {
   const other = await WorkShift.findOne({ staffId: req.user.id, status: 'in_progress', _id: { $ne: shift._id } });
   const view = enrich(shift, now, !!other);
   if (shift.status !== 'scheduled' || !view.actions.canClockIn) {
-    const message = shift.status === 'in_progress' ? 'Ca làm này đã được vào ca trước đó' : (view.actions.reason || `Không thể vào ca khi ca đang ở trạng thái "${shift.status}"`);
+    const message = shift.status === 'in_progress' ? "You have already checked in to this shift" : (view.actions.reason || `Cannot check in to a shift with status "${shift.status}"`);
     return res.status(409).json({ message, shift: view });
   }
   const updated = await WorkShift.findOneAndUpdate(
@@ -122,11 +122,11 @@ exports.clockIn = asyncHandler(async (req, res) => {
     { $set: { status: 'in_progress', clockInAt: now } }, { new: true });
   if (!updated) {   // có yêu cầu khác vừa vào ca trước (bấm đúp / mạng chậm)
     const cur = await WorkShift.findById(shift._id);
-    return res.status(409).json({ message: 'Ca làm này đã được vào ca trước đó', shift: enrich(cur, now, false) });
+    return res.status(409).json({ message: "You have already checked in to this shift", shift: enrich(cur, now, false) });
   }
   await logAction(req, 'SHIFT_CLOCK_IN', updated);
   const v = enrich(updated, now, false);
-  res.json({ message: v.late ? `Đã vào ca (trễ ${v.lateMinutes} phút)` : 'Đã vào ca', shift: v });
+  res.json({ message: v.late ? `Checked in (late by ${v.lateMinutes} minutes early)` : "Checked in", shift: v });
 });
 
 // UC-24: ra ca. Chỉ ra ca khi đang trong ca; ra sớm vẫn được ghi nhận và đánh dấu ra sớm.
@@ -134,7 +134,7 @@ exports.clockOut = asyncHandler(async (req, res) => {
   const now = new Date();
   const shift = await loadOwnShift(req);
   if (shift.status !== 'in_progress') {
-    const message = shift.status === 'completed' ? 'Ca làm này đã được ra ca trước đó' : 'Bạn chưa vào ca nên không thể ra ca';
+    const message = shift.status === 'completed' ? "You have already checked out of this shift" : "You must check in before checking out";
     return res.status(409).json({ message, shift: enrich(shift, now, false) });
   }
   const updated = await WorkShift.findOneAndUpdate(
@@ -142,9 +142,9 @@ exports.clockOut = asyncHandler(async (req, res) => {
     { $set: { status: 'completed', clockOutAt: now } }, { new: true });
   if (!updated) {
     const cur = await WorkShift.findById(shift._id);
-    return res.status(409).json({ message: 'Ca làm này đã được ra ca trước đó', shift: enrich(cur, now, false) });
+    return res.status(409).json({ message: "You have already checked out of this shift", shift: enrich(cur, now, false) });
   }
   await logAction(req, 'SHIFT_CLOCK_OUT', updated);
   const v = enrich(updated, now, false);
-  res.json({ message: v.earlyLeave ? 'Đã ra ca (trước giờ kết thúc)' : 'Đã ra ca', shift: v });
+  res.json({ message: v.earlyLeave ? "Checked out early" : "Checked out", shift: v });
 });

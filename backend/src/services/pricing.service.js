@@ -20,12 +20,12 @@ const rawDiscount = (type, value, base, maxDiscount) => {
 
 // Kiểm tra mã giảm giá. Ném DiscountCodeError với thông báo cho khách nếu không dùng được.
 function validateDiscountCode(code, { amount, userUsedCount = 0, now = new Date() }) {
-  if (!code || code.status !== 'active') throw new DiscountCodeError('Mã giảm giá không tồn tại hoặc không còn hiệu lực');
-  if (!inRange(now, code.startDate, code.endDate)) throw new DiscountCodeError('Mã giảm giá đã hết hạn hoặc chưa đến thời gian áp dụng');
-  if (typeof code.usageLimit === 'number' && code.usedCount >= code.usageLimit) throw new DiscountCodeError('Mã giảm giá đã hết lượt sử dụng');
-  if (userUsedCount >= (code.perUserLimit || 1)) throw new DiscountCodeError('Bạn đã dùng hết số lần cho phép của mã này');
+  if (!code || code.status !== 'active') throw new DiscountCodeError("This discount code does not exist or is unavailable");
+  if (!inRange(now, code.startDate, code.endDate)) throw new DiscountCodeError("This discount code has expired or has not started yet");
+  if (typeof code.usageLimit === 'number' && code.usedCount >= code.usageLimit) throw new DiscountCodeError("This discount code has reached its usage limit");
+  if (userUsedCount >= (code.perUserLimit || 1)) throw new DiscountCodeError("You have reached the usage limit for this discount code");
   if (amount < (code.minOrderAmount || 0)) {
-    throw new DiscountCodeError(`Đơn tối thiểu ${new Intl.NumberFormat('vi-VN').format(code.minOrderAmount)}đ để dùng mã này`);
+    throw new DiscountCodeError(`Minimum order: ${new Intl.NumberFormat('vi-VN').format(code.minOrderAmount)}đ to use this code`);
   }
 }
 

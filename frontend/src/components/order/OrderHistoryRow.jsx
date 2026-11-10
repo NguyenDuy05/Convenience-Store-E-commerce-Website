@@ -24,9 +24,9 @@ export default function OrderHistoryRow({ order, fromPath }) {
           <Link className="ohrow-code" to={`/orders/${order._id}`} state={{ from: fromPath }}>#{order.orderCode}</Link>
           <OrderStatusBadge status={order.status} />
         </div>
-        <p className="ohrow-summary" title={summary}>{summary || 'Chi tiết sản phẩm không còn được lưu'}</p>
+        <p className="ohrow-summary" title={summary}>{summary || "Product details are no longer available"}</p>
         <p className="ohrow-meta">
-          {formatDateTime(order.createdAt)} • {order.itemCount} sản phẩm • {paymentSummary(order)}
+          {formatDateTime(order.createdAt)} • {order.itemCount} items • {paymentSummary(order)}
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function OrderHistoryRow({ order, fromPath }) {
       <div className="ohrow-side">
         <b>{formatCurrency(order.totalAmount)}</b>
         <Link className="ohrow-link" to={`/orders/${order._id}`} state={{ from: fromPath }}>
-          Xem chi tiết<Icon name="arrow_forward" size="md" />
+          View details<Icon name="arrow_forward" size="md" />
         </Link>
       </div>
     </li>

@@ -7,10 +7,10 @@ import { formatDateTime } from '../../utils/format';
 // Timeline dọc các mốc của đơn. Mốc chưa diễn ra hiện mờ; mốc thiếu dữ liệu thời gian ghi rõ thay vì bịa.
 export default function OrderTimeline({ order }) {
   const steps = buildTimeline(order);
-  if (steps.length === 0) return <p className="otl-empty">Chưa có thông tin các mốc của đơn này.</p>;
+  if (steps.length === 0) return <p className="otl-empty">No timeline information is available for this order.</p>;
 
   return (
-    <ol className="otl" aria-label="Các mốc của đơn hàng">
+    <ol className="otl" aria-label="Order timeline">
       {steps.map((s) => (
         <li key={s.key} className={`otl-step ${s.state}`} aria-current={s.state === 'current' ? 'step' : undefined}>
           <span className="otl-mark">
@@ -23,8 +23,8 @@ export default function OrderTimeline({ order }) {
             {s.state !== 'upcoming' && <span className="otl-desc">{s.desc}</span>}
             <span className="otl-time">
               {s.state === 'upcoming'
-                ? 'Chưa diễn ra'
-                : s.time ? formatDateTime(s.time) : 'Không có dữ liệu thời gian cho mốc này'}
+                ? "Not yet reached"
+                : s.time ? formatDateTime(s.time) : "No timestamp is available for this step"}
             </span>
           </div>
         </li>

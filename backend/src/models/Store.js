@@ -13,6 +13,7 @@ const storeSchema = new Schema({
   name: { type: String, required: true, trim: true },
   address: { type: String, required: true, trim: true },
   phone: String,
+  website: String,
   openingHours: [openingHourSchema],                        // UC-31.6 Update Store Hours
   status: { type: String, enum: ['open', 'closed'], default: 'open' },   // UC-31.4 Close / UC-31.5 Open
   closedReason: String,

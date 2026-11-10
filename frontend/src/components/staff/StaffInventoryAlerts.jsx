@@ -10,19 +10,19 @@ export default function StaffInventoryAlerts({ products }) {
         }));
 
     const statusMap = {
-        out: { label: 'Hết Hàng', color: '#DC2626' },
-        low: { label: 'Sắp Hết', color: '#D97706' },
+        out: { label: "Out of stock", color: '#DC2626' },
+        low: { label: "Low stock", color: '#D97706' },
     };
 
     return (
         <div className="staff-card">
             <div className="staff-card-header">
-                <h2 className="staff-card-title">Cảnh Báo Kho Hàng</h2>
-                <span className="staff-card-tag">Cần kiểm tra</span>
+                <h2 className="staff-card-title">Inventory alerts</h2>
+                <span className="staff-card-tag">Needs review</span>
             </div>
 
             {alerts.length === 0 ? (
-                <p className="staff-empty">Kho hàng bình thường</p>
+                <p className="staff-empty">Inventory is healthy</p>
             ) : (
                 <div className="staff-alerts-list">
                     {alerts.map((alert) => (

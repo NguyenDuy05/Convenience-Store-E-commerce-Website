@@ -44,7 +44,7 @@ export default function OrdersPage() {
           navigate('/login', { state: { from: location }, replace: true });
           return;
         }
-        setError(err.response?.data?.message || 'Không tải được danh sách đơn hàng. Vui lòng thử lại.');
+        setError(err.response?.data?.message || "Could not load orders. Please try again.");
       })
       .finally(() => { if (!ignore) setLoading(false); });
     return () => { ignore = true; };
@@ -71,22 +71,22 @@ export default function OrdersPage() {
   return (
     <div className="orders">
       <nav className="orders-crumb" aria-label="Breadcrumb">
-        <Link to="/">Trang chủ</Link><Icon name="chevron_right" size="sm" />
-        <Link to="/profile">Tài khoản</Link><Icon name="chevron_right" size="sm" />
-        <span aria-current="page">Đơn hàng của tôi</span>
+        <Link to="/">Home</Link><Icon name="chevron_right" size="sm" />
+        <Link to="/profile">Account</Link><Icon name="chevron_right" size="sm" />
+        <span aria-current="page">My orders</span>
       </nav>
 
       <div className="orders-head">
         <div>
-          <h1>Đơn hàng của tôi</h1>
-          <p>Theo dõi đơn đang chuẩn bị và xem lại các đơn đã mua. Tất cả đơn đều nhận trực tiếp tại cửa hàng.</p>
+          <h1>My orders</h1>
+          <p>Track active orders and review past purchases. All orders are collected in store.</p>
         </div>
-        <Link className="orders-link" to="/orders/history"><Icon name="history" size="md" />Lịch sử mua hàng</Link>
+        <Link className="orders-link" to="/orders/history"><Icon name="history" size="md" />Order history</Link>
         {counts && (counts.ready_for_pickup > 0 || counts.preparing > 0) && (
           <div className="orders-chips">
-            <span className="orders-chip ready"><i />{counts.ready_for_pickup} sẵn sàng nhận</span>
+            <span className="orders-chip ready"><i />{counts.ready_for_pickup} ready for pickup</span>
             <span className="orders-chip-sep">•</span>
-            <span className="orders-chip"><Icon name="schedule" size="md" />{counts.preparing} đang chuẩn bị</span>
+            <span className="orders-chip"><Icon name="schedule" size="md" />{counts.preparing} being prepared</span>
           </div>
         )}
       </div>
@@ -98,7 +98,7 @@ export default function OrdersPage() {
           <OrderFilterTabs active={status} counts={counts} onChange={changeStatus} />
 
           {loading && (
-            <div className="orders-list" aria-busy="true" aria-label="Đang tải đơn hàng">
+            <div className="orders-list" aria-busy="true" aria-label="Loading orders">
               {[0, 1, 2].map((i) => <div className="orders-skeleton" key={i} />)}
             </div>
           )}
@@ -106,10 +106,10 @@ export default function OrdersPage() {
           {!loading && error && (
             <div className="orders-state error" role="alert">
               <Icon name="cloud_off" size="xl" />
-              <h3>Chưa tải được đơn hàng</h3>
+              <h3>Could not load the order</h3>
               <p>{error}</p>
               <button type="button" className="orders-btn" onClick={() => setReloadKey((k) => k + 1)}>
-                <Icon name="refresh" size="md" />Thử lại
+                <Icon name="refresh" size="md" />Try again
               </button>
             </div>
           )}
@@ -117,11 +117,11 @@ export default function OrdersPage() {
           {!loading && !error && data && data.items.length === 0 && (
             <div className="orders-state">
               <Icon name="shopping_bag" size="xl" />
-              <h3>{status ? 'Không có đơn nào ở trạng thái này' : 'Bạn chưa có đơn hàng nào'}</h3>
-              <p>{status ? 'Thử chọn trạng thái khác hoặc xem tất cả đơn hàng.' : 'Đặt món đầu tiên và ghé cửa hàng nhận hàng trong ít phút.'}</p>
+              <h3>{status ? "No orders with this status" : "You have no orders yet"}</h3>
+              <p>{status ? "Select another status or view all orders." : "Place your first order and collect it at the store."}</p>
               {status
-                ? <button type="button" className="orders-btn" onClick={() => changeStatus('')}>Xem tất cả đơn</button>
-                : <Link className="orders-btn" to="/products"><Icon name="storefront" />Bắt đầu mua sắm</Link>}
+                ? <button type="button" className="orders-btn" onClick={() => changeStatus('')}>View all orders</button>
+                : <Link className="orders-btn" to="/products"><Icon name="storefront" />Start shopping</Link>}
             </div>
           )}
 
@@ -133,7 +133,7 @@ export default function OrdersPage() {
               {totalPages > 1 && (
                 <div className="orders-pager">
                   <button type="button" disabled={page <= 1} onClick={() => changePage(page - 1)}>
-                    <Icon name="chevron_left" size="md" />Trước
+                    <Icon name="chevron_left" size="md" />Previous
                   </button>
                   <span>Trang {page} / {totalPages}</span>
                   <button type="button" disabled={page >= totalPages} onClick={() => changePage(page + 1)}>

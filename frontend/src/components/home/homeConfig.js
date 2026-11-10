@@ -2,7 +2,7 @@
 //  THƯƠNG HIỆU + ẢNH: để trống, thêm sau. Đặt ảnh vào frontend/public/images/...
 //  rồi điền đường dẫn (bắt đầu bằng "/") vào các biến dưới đây.
 // ============================================================
-export const BRAND_NAME = 'Convenience Store';   // tên hiển thị ở header/footer
+export const BRAND_NAME = 'QUICK';
 export const LOGO_IMAGE = '';                    // vd '/images/logo.png' (trống = dùng icon)
 export const HERO_IMAGE = '';                    // vd '/images/hero.jpg'
 export const CATEGORY_IMAGES = {};               // vd { snack: '/images/cat/snack.jpg' } (khóa = slug danh mục)
@@ -12,7 +12,7 @@ export const PRODUCT_IMAGES = {};                // vd { SP001: '/images/product
 export const productImage = (p) => PRODUCT_IMAGES[p.sku] || p.images?.[0] || '';
 
 // ---------- Tiền tệ: 1 nghìn đồng => "1000 đ" ----------
-export const money = (n) => `${Math.round(Number(n) || 0)} đ`;
+export const money = (n) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n) || 0);
 
 // Icon + màu nền ô ảnh trống theo danh mục (khóa = slug)
 const DEFAULT_META = { icon: 'shopping_basket', tint: '#e4e7ff' };
@@ -107,13 +107,14 @@ export function stockState(p) {
 }
 
 // ---------- Giờ mở cửa hôm nay ----------
-export function openInfo(store) {
+export function openInfo(store, date = new Date()) {
     if (!store) return null;
-    const d = store.openingHours?.find((h) => h.day === new Date().getDay());
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Ho_Chi_Minh', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date).filter((p) => p.type !== 'literal').map((p) => [p.type, p.value]));
+    const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday);
+    const d = store.openingHours?.find((h) => h.day === day);
     if (!d || d.isClosed || store.status === 'closed') return { open: false, text: 'Closed today' };
     const [oh, om] = d.openTime.split(':').map(Number);
     const [ch, cm] = d.closeTime.split(':').map(Number);
-    const now = new Date();
-    const m = now.getHours() * 60 + now.getMinutes();
+    const m = Number(parts.hour) * 60 + Number(parts.minute);
     return { open: m >= oh * 60 + om && m < ch * 60 + cm, text: `${d.openTime} – ${d.closeTime}` };
 }

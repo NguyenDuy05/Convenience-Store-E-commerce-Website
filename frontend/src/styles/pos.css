@@ -1,0 +1,64 @@
+.pos-page { max-width: 1500px; margin: auto; }
+.pos-steps { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; color: #64748b; font-size: 12px; margin: -4px 0 24px; }
+.pos-steps .active { color: #0058bc; font-weight: 700; }
+.pos-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 22px; align-items: start; }
+.pos-catalog { min-width: 0; padding: 20px; }
+.pos-search { display: flex; align-items: end; gap: 10px; }
+.pos-search-field { display: grid; gap: 7px; flex: 1; min-width: 0; font-size: 12px; font-weight: 600; }
+.pos-page input, .pos-page select { min-height: 42px; width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 9px; padding: 10px 12px; font: inherit; background: #fff; color: #0c1842; }
+.pos-categories { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+.pos-categories button { color: #526079; background: #f5f7fb; border: 1px solid #e2e7f0; padding: 7px 11px; border-radius: 20px; font-size: 11px; }
+.pos-categories button.active { background: #e7f0ff; border-color: #accbf1; color: #0058bc; }
+.pos-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.pos-product { display: flex; flex-direction: column; text-align: left; gap: 8px; padding: 12px; border: 1px solid #e2e7f0; border-radius: 12px; background: #fff; color: #0c1842; min-width: 0; }
+.pos-product:hover:not(:disabled) { border-color: #77a5e0; background: #f7faff; }
+.pos-product b { font-size: 12px; line-height: 1.5; min-height: 36px; overflow-wrap: anywhere; }
+.pos-product > span:not(.pos-product-image) { color: #0058bc; font-size: 14px; font-weight: 700; }
+.pos-product small { font-size: 10px; color: #64748b; }
+.pos-product-image { display: grid; place-items: center; height: 96px; width: 100%; color: #a5b5cb; background: #f5f7fb; border-radius: 8px; }
+.pos-product-image img { width: 100%; height: 100%; object-fit: contain; }
+.pos-bill { position: sticky; top: 96px; padding: 20px; min-width: 0; }
+.pos-bill > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid #e2e7f0; }
+.pos-bill h2, .pos-payment h2 { font-size: 20px; margin: 0; }
+.pos-bill > header > span { font-size: 12px; color: #64748b; }
+.pos-empty { display: grid; place-items: center; gap: 10px; padding: 36px 12px; text-align: center; color: #8090a8; font-size: 12px; }
+.pos-lines { list-style: none; margin: 0 0 16px; padding: 0; max-height: 44vh; overflow-y: auto; }
+.pos-lines li { padding: 16px 0; border-bottom: 1px solid #edf1f7; }
+.pos-lines li > div:first-child { display: grid; gap: 4px; }
+.pos-lines li b { font-size: 12px; line-height: 1.5; }
+.pos-lines li small { font-size: 11px; color: #64748b; }
+.pos-line-controls { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+.pos-line-controls > div { display: flex; align-items: center; border: 1px solid #e2e7f0; border-radius: 7px; overflow: hidden; }
+.pos-line-controls button { display: grid; place-items: center; padding: 0; width: 28px; height: 28px; border-radius: 0; background: #f5f7fb; color: #344866; }
+.pos-line-controls > div > span { min-width: 28px; text-align: center; font-size: 12px; }
+.pos-line-controls > b { margin-left: auto; }
+.pos-line-controls > button { background: transparent; }
+.pos-line-error { display: block; color: #a32019; font-size: 11px; line-height: 1.6; }
+.pos-bill fieldset, .pos-payment fieldset { display: grid; gap: 14px; border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.pos-bill label, .pos-payment label { display: grid; gap: 7px; font-size: 12px; font-weight: 600; }
+.pos-totals { display: grid; gap: 10px; margin: 18px 0; }
+.pos-totals > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 13px; }
+.pos-totals > div > span { color: #64748b; }
+.pos-totals .pos-grand-total { margin-top: 7px; padding-top: 16px; border-top: 1px solid #e2e7f0; }
+.pos-grand-total strong { font-size: 24px; color: #0058bc; }
+.pos-confirm { width: 100%; }
+.pos-bill-note { font-size: 11px; line-height: 1.7; color: #64748b; margin: 14px 0 0; }
+.pos-payment { max-width: 620px; padding: 6px; }
+.pos-payment > p { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+.pos-payment legend { font-size: 12px; font-weight: 700; padding: 0 0 10px; }
+.pos-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.pos-methods label { display: flex; align-items: center; gap: 8px; padding: 14px 12px; border: 1px solid #d5dfec; border-radius: 10px; cursor: pointer; }
+.pos-methods label.active { border-color: #0058bc; background: #edf4ff; color: #0058bc; }
+.pos-methods input, .pos-page .pos-approved input { width: 16px; min-height: 16px; height: 16px; margin: 0; flex-shrink: 0; accent-color: #0058bc; }
+.pos-payment .pos-approved { display: flex; align-items: flex-start; line-height: 1.7; gap: 10px; font-weight: 400; margin-top: 8px; }
+.pos-change { display: flex; justify-content: space-between; align-items: center; border-radius: 12px; background: #edf7ec; color: #35643b; padding: 20px; }
+.pos-change strong { font-size: 23px; }
+.pos-terminal-note { background: #f0f5ff; border-radius: 10px; padding: 16px; font-size: 12px; color: #526079; }
+.pos-success { max-width: 620px; margin: 30px auto; padding: 36px; text-align: center; }
+.pos-success-icon { color: #3b7a43; display: block; margin-bottom: 16px; }
+.pos-success > p { color: #64748b; }
+.pos-success .pos-totals { padding: 20px; border-radius: 12px; background: #f7f9fc; margin: 28px 0; }
+.pos-success-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 1200px) { .pos-workspace { grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; } .pos-catalog, .pos-bill { padding: 16px; } }
+@media (max-width: 1000px) { .pos-workspace { grid-template-columns: 1fr; } .pos-bill { position: static; } .pos-products { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .pos-lines { max-height: 380px; } }
+@media (max-width: 480px) { .pos-products { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .pos-product { padding: 10px; } .pos-search { gap: 8px; } .pos-search > button { padding-inline: 12px; } .pos-steps { font-size: 10px; gap: 7px; } .pos-success { padding: 24px 18px; } .pos-methods { gap: 8px; } }

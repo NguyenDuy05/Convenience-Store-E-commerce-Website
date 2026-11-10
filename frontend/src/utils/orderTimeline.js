@@ -3,13 +3,13 @@
 const FLOW = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed'];
 
 const STEP_TEXT = {
-  pending_payment: { title: 'Đơn được tạo, chờ thanh toán', desc: 'Đơn đã ghi nhận và đang chờ thanh toán.' },
-  confirmed: { title: 'Cửa hàng đã xác nhận', desc: 'Đơn đã được xác nhận và xếp hàng chờ chuẩn bị.' },
-  preparing: { title: 'Đang chuẩn bị đơn', desc: 'Nhân viên đang lấy hàng và đóng gói.' },
-  ready_for_pickup: { title: 'Sẵn sàng nhận hàng', desc: 'Mời bạn đến cửa hàng và đọc mã đơn cho nhân viên.' },
-  completed: { title: 'Đã nhận hàng', desc: 'Đơn đã được giao cho bạn tại cửa hàng.' },
-  failed: { title: 'Thanh toán không thành công', desc: 'Đơn chưa được xác nhận.' },
-  cancelled: { title: 'Đơn đã bị hủy', desc: 'Cửa hàng đã hủy đơn này. Nếu đã thanh toán, khoản tiền sẽ được hoàn lại.' },
+  pending_payment: { title: "Order created, awaiting payment", desc: "Your order has been recorded and is awaiting payment." },
+  confirmed: { title: "Store confirmed", desc: "Your order has been confirmed and queued for preparation." },
+  preparing: { title: "Preparing your order", desc: "Staff are picking and packing your items." },
+  ready_for_pickup: { title: "Ready for pickup", desc: "Visit the store and give your order code to a staff member." },
+  completed: { title: "Collected", desc: "Your order has been handed to you at the store." },
+  failed: { title: "Payment unsuccessful", desc: "Your order was not confirmed." },
+  cancelled: { title: "Order cancelled", desc: "The store cancelled this order. If paid, your payment will be refunded." },
 };
 
 // state: done | current | upcoming | error

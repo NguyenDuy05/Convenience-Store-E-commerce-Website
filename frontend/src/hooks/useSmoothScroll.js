@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -6,30 +6,26 @@ import 'lenis/dist/lenis.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Only the homepage owns this instance. Touch devices keep native momentum.
 export default function useSmoothScroll(enabled = true) {
+  const instance = useRef(null);
   useEffect(() => {
-    if (!enabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-
-    const lenis = new Lenis({
-      duration: 1.05,
-      smoothWheel: true,
-      syncTouch: false,
-      wheelMultiplier: 0.9,
-    });
-    const onScroll = () => ScrollTrigger.update();
-    lenis.on('scroll', onScroll);
-
-    let frame = 0;
-    const raf = (time) => {
-      lenis.raf(time);
-      frame = window.requestAnimationFrame(raf);
+    const media = window.matchMedia('(min-width: 900px) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
+    let dispose = () => {};
+    const sync = () => {
+      dispose();
+      if (!enabled || !media.matches) return;
+      const lenis = new Lenis({ duration: 0.85, smoothWheel: true, syncTouch: false, anchors: false, prevent: (node) => node.closest?.('dialog, [data-lenis-prevent]') });
+      instance.current = lenis;
+      const update = () => ScrollTrigger.update();
+      const tick = (seconds) => lenis.raf(seconds * 1000);
+      lenis.on('scroll', update);
+      gsap.ticker.add(tick);
+      dispose = () => { gsap.ticker.remove(tick); lenis.off('scroll', update); lenis.destroy(); instance.current = null; dispose = () => {}; };
     };
-    frame = window.requestAnimationFrame(raf);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      lenis.off('scroll', onScroll);
-      lenis.destroy();
-    };
+    sync();
+    media.addEventListener('change', sync);
+    return () => { media.removeEventListener('change', sync); dispose(); };
   }, [enabled]);
+  return instance;
 }

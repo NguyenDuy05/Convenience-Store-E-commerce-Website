@@ -14,6 +14,6 @@ exports.log = async (req, action, target = {}, detail) => {
       ip: req.ip,
     });
   } catch (err) {
-    console.error('Không ghi được ActivityLog:', err.message);
+    console.error("Could not write ActivityLog:", err.message);
   }
 };

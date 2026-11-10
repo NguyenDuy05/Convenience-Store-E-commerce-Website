@@ -40,7 +40,7 @@ async function run() {
   const [c1, c2, c3] = customers.slice(1);
   const rows = [
     { customerId: demo._id, type: 'complaint', subject: 'Thiếu 1 gói mì khi nhận hàng', message: 'Tôi nhận đơn tại quầy nhưng thiếu 1 gói mì so với hóa đơn. Mong cửa hàng kiểm tra giúp.', orderId: order?._id, status: 'open', createdAt: ago(0, 9) },
-    { customerId: demo._id, type: 'complaint', subject: 'Bị trừ tiền hai lần khi thanh toán MoMo', message: 'Tài khoản MoMo của tôi bị trừ 2 lần cho cùng một đơn hàng. Vui lòng kiểm tra và hoàn tiền.', status: 'open', createdAt: ago(1, 14) },
+    { customerId: demo._id, type: 'complaint', subject: 'Bị trừ tiền hai lần khi thanh toán VNPay', message: 'Tài khoản VNPay của tôi bị trừ 2 lần cho cùng một đơn hàng. Vui lòng kiểm tra và hoàn tiền.', status: 'open', createdAt: ago(1, 14) },
     { customerId: c1._id, type: 'complaint', subject: 'Sản phẩm đã quá hạn sử dụng', message: 'Hộp bánh quy tôi mua hôm qua đã hết hạn từ tuần trước. Tôi muốn đổi sản phẩm khác.', status: 'in_progress', handledBy: staff._id, createdAt: ago(2, 11),
       responses: [{ responderId: staff._id, message: 'Cửa hàng xin lỗi chị. Bên em đã ghi nhận và đang kiểm tra lô hàng, sẽ phản hồi sớm.', createdAt: ago(2, 13) }] },
     { customerId: c2._id, type: 'support', subject: 'Hỏi giờ mở cửa dịp lễ', message: 'Cửa hàng có mở cửa vào ngày lễ sắp tới không ạ?', status: 'resolved', handledBy: staff._id, resolvedAt: ago(4, 9), createdAt: ago(5, 16),

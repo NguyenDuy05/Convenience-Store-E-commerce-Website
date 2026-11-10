@@ -9,8 +9,8 @@ export function estimatePromo(product, promotions) {
     const applied = [];
     promotions.forEach((p) => {
         const applies = p.scope === 'all'
-            || (p.scope === 'category' && (p.categoryIds || []).some((c) => sameId(c, product.categoryId)))
-            || (p.scope === 'product' && (p.productIds || []).some((x) => sameId(x, product._id)));
+            || (p.scope === 'category' && (p.categoryIds || p.categories || []).some((c) => sameId(c, product.categoryId)))
+            || (p.scope === 'product' && (p.productIds || p.products || []).some((x) => sameId(x, product._id)));
         if (!applies) return;
         let d = p.type === 'percent' ? Math.floor((price * p.value) / 100) : Math.floor(p.value);
         if (p.maxDiscount > 0) d = Math.min(d, p.maxDiscount);

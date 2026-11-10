@@ -28,7 +28,7 @@ export default function StaffCustomerDetailPage() {
       .catch(async (err) => {
         if (err.response?.status === 401) { await logout(); navigate('/login', { state: { from: location }, replace: true }); return; }
         const code = err.response?.status;
-        setError({ notFound: code === 404, denied: code === 403, message: code === 404 ? 'Không tìm thấy khách hàng này.' : code === 403 ? 'Bạn không có quyền xem thông tin khách hàng.' : (err.response?.data?.message || 'Không tải được thông tin khách hàng. Vui lòng thử lại.') });
+        setError({ notFound: code === 404, denied: code === 403, message: code === 404 ? "This customer was not found." : code === 403 ? "You do not have permission to view customer information." : (err.response?.data?.message || "Could not load customer information. Please try again.") });
       })
       .finally(() => setLoading(false));
   }, [id, logout, navigate, location]);
@@ -38,20 +38,20 @@ export default function StaffCustomerDetailPage() {
   const backTo = location.state?.from || '/staff/customers';
   const crumb = (
     <nav className="scdt-crumb" aria-label="Breadcrumb">
-      <Link to="/staff">Nhân viên</Link><Icon name="chevron_right" size="sm" />
-      <Link to={backTo}>Khách hàng</Link><Icon name="chevron_right" size="sm" />
-      <span aria-current="page">{c ? c.fullName : 'Chi tiết'}</span>
+      <Link to="/staff">Staff</Link><Icon name="chevron_right" size="sm" />
+      <Link to={backTo}>Customer</Link><Icon name="chevron_right" size="sm" />
+      <span aria-current="page">{c ? c.fullName : "Details"}</span>
     </nav>
   );
 
-  if (loading) return <div className="scdt">{crumb}<div className="scdt-skeleton" aria-busy="true" aria-label="Đang tải khách hàng" /></div>;
+  if (loading) return <div className="scdt">{crumb}<div className="scdt-skeleton" aria-busy="true" aria-label="Loading customer" /></div>;
   if (error) {
     return (
       <div className="scdt">{crumb}
         <div className="scdt-state" role="alert"><Icon name={error.denied ? 'lock' : error.notFound ? 'person_off' : 'cloud_off'} size="xl" />
-          <h2>{error.denied ? 'Không có quyền truy cập' : error.notFound ? 'Không tìm thấy khách hàng' : 'Chưa tải được thông tin'}</h2><p>{error.message}</p>
-          <div className="scdt-actions">{!error.notFound && !error.denied && <button type="button" className="scdt-btn" onClick={load}><Icon name="refresh" size="md" />Thử lại</button>}
-            <Link className="scdt-btn ghost" to="/staff/customers"><Icon name="arrow_back" size="md" />Về danh sách</Link></div></div>
+          <h2>{error.denied ? "Access denied" : error.notFound ? "Customer not found" : "Could not load information"}</h2><p>{error.message}</p>
+          <div className="scdt-actions">{!error.notFound && !error.denied && <button type="button" className="scdt-btn" onClick={load}><Icon name="refresh" size="md" />Try again</button>}
+            <Link className="scdt-btn ghost" to="/staff/customers"><Icon name="arrow_back" size="md" />Back to list</Link></div></div>
       </div>
     );
   }
@@ -62,33 +62,33 @@ export default function StaffCustomerDetailPage() {
       <header className="scdt-head">
         <div>
           <div className="scdt-title"><h1>{c.fullName}</h1><span className={`scdt-status ${c.status}`}>{CUSTOMER_STATUS[c.status] || c.status}</span></div>
-          <p><Icon name="shield_person" size="md" />Thông tin liên hệ được che một phần. Trang này chỉ để xem, không sửa dữ liệu khách hàng.</p>
+          <p><Icon name="shield_person" size="md" />Contact details are partially masked. This page is read-only.</p>
         </div>
-        <Link className="scdt-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />Quay lại danh sách</Link>
+        <Link className="scdt-btn ghost" to={backTo}><Icon name="arrow_back" size="md" />Back to list</Link>
       </header>
 
       <div className="scdt-stats">
-        <div><span>Đơn hàng</span><b>{c.stats.orderCount}</b></div>
-        <div><span>Đã nhận hàng</span><b>{c.stats.completedCount}</b></div>
-        <div><span>Tổng chi tiêu</span><b>{formatCurrency(c.stats.totalSpent)}</b></div>
-        <div><span>Đơn gần nhất</span><b>{c.stats.lastOrderAt ? formatDate(c.stats.lastOrderAt) : '—'}</b></div>
+        <div><span>Orders</span><b>{c.stats.orderCount}</b></div>
+        <div><span>Collected</span><b>{c.stats.completedCount}</b></div>
+        <div><span>Total spent</span><b>{formatCurrency(c.stats.totalSpent)}</b></div>
+        <div><span>Latest order</span><b>{c.stats.lastOrderAt ? formatDate(c.stats.lastOrderAt) : '—'}</b></div>
       </div>
 
       <div className="scdt-grid">
         <section className="scdt-card">
-          <h2><Icon name="badge" />Thông tin khách hàng</h2>
+          <h2><Icon name="badge" />Customer information</h2>
           <dl className="scdt-dl">
             <dt>Email</dt><dd>{c.email || '—'}</dd>
-            <dt>Số điện thoại</dt><dd>{c.phone || '—'}</dd>
+            <dt>Phone number</dt><dd>{c.phone || '—'}</dd>
             <dt>Tham gia</dt><dd>{formatDate(c.joinedAt)}</dd>
-            <dt>Hạng thành viên</dt><dd>{c.membership.tier || '—'}</dd>
-            <dt>Điểm hiện có</dt><dd>{c.membership.points}</dd>
+            <dt>Membership tier</dt><dd>{c.membership.tier || '—'}</dd>
+            <dt>Available points</dt><dd>{c.membership.points}</dd>
           </dl>
         </section>
 
         <section className="scdt-card">
-          <h2><Icon name="report" />Khiếu nại / hỗ trợ {c.complaints.openCount > 0 && <span className="scdt-count">{c.complaints.openCount} đang mở</span>}</h2>
-          {c.complaints.recent.length === 0 && <p className="scdt-muted">Khách chưa gửi khiếu nại hay yêu cầu hỗ trợ nào.</p>}
+          <h2><Icon name="report" />Complaints / support {c.complaints.openCount > 0 && <span className="scdt-count">{c.complaints.openCount} open</span>}</h2>
+          {c.complaints.recent.length === 0 && <p className="scdt-muted">This customer has no complaints or support requests.</p>}
           <ul className="scdt-list">
             {c.complaints.recent.map((r) => (
               <li key={r._id}>
@@ -101,12 +101,12 @@ export default function StaffCustomerDetailPage() {
         </section>
 
         <section className="scdt-card wide">
-          <h2><Icon name="receipt_long" />Đơn hàng gần đây</h2>
-          {c.recentOrders.length === 0 && <p className="scdt-muted">Khách chưa có đơn hàng nào.</p>}
+          <h2><Icon name="receipt_long" />Recent orders</h2>
+          {c.recentOrders.length === 0 && <p className="scdt-muted">This customer has no orders yet.</p>}
           {c.recentOrders.length > 0 && (
             <div className="scdt-table-wrap">
               <table className="scdt-table">
-                <thead><tr><th>Mã đơn</th><th>Trạng thái</th><th>Thanh toán</th><th className="num">Tổng tiền</th><th>Ngày đặt</th></tr></thead>
+                <thead><tr><th>Order code</th><th>Status</th><th>Payment</th><th className="num">Total</th><th>Order date</th></tr></thead>
                 <tbody>{c.recentOrders.map((o) => (
                   <tr key={o._id}><td><b>#{o.orderCode}</b></td><td><OrderStatusBadge status={o.status} /></td><td>{PAYMENT_METHOD[o.paymentMethod] || '—'}</td><td className="num">{formatCurrency(o.totalAmount)}</td><td>{formatDateTime(o.createdAt)}</td></tr>
                 ))}</tbody>

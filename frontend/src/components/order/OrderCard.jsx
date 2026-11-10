@@ -16,10 +16,10 @@ function Callout({ order }) {
         <div className="ocard-callout ready">
           <span className="ocard-callout-icon"><Icon name="storefront" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Đơn đã sẵn sàng, mời bạn đến cửa hàng nhận</strong>
-            <span>{order.readyAt ? `Sẵn sàng từ ${formatTime(order.readyAt)}. ` : ''}Đọc mã đơn cho nhân viên khi nhận hàng.</span>
+            <strong>Your order is ready for pickup</strong>
+            <span>{order.readyAt ? `Ready since ${formatTime(order.readyAt)}. ` : ''}Give your order code to a staff member at pickup.</span>
           </div>
-          <div className="ocard-code"><span>Mã đơn</span><b>{order.orderCode}</b></div>
+          <div className="ocard-code"><span>Order code</span><b>{order.orderCode}</b></div>
         </div>
       );
     case 'preparing':
@@ -27,8 +27,8 @@ function Callout({ order }) {
         <div className="ocard-callout info">
           <span className="ocard-callout-icon"><Icon name="inventory_2" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Nhân viên đang chuẩn bị đơn hàng</strong>
-            <span>Bạn sẽ thấy trạng thái đổi sang “Sẵn sàng nhận hàng” khi đơn xong.</span>
+            <strong>Your order is being prepared</strong>
+            <span>The status will change to “Ready for pickup” when your order is ready.</span>
           </div>
           <div className="ocard-progress" aria-hidden="true"><i /></div>
         </div>
@@ -38,8 +38,8 @@ function Callout({ order }) {
         <div className="ocard-callout info">
           <span className="ocard-callout-icon"><Icon name="task_alt" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Cửa hàng đã xác nhận đơn</strong>
-            <span>Đơn sẽ được chuẩn bị trong ít phút.</span>
+            <strong>The store has confirmed your order</strong>
+            <span>Your order will be prepared shortly.</span>
           </div>
         </div>
       );
@@ -48,10 +48,10 @@ function Callout({ order }) {
         <div className="ocard-callout warn">
           <span className="ocard-callout-icon"><Icon name="payments" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>{order.paymentStatus === 'failed' ? 'Thanh toán chưa thành công' : 'Đơn đang chờ thanh toán'}</strong>
+            <strong>{order.paymentStatus === 'failed' ? "Payment not completed" : "Awaiting payment"}</strong>
             <span>{order.paymentStatus === 'failed'
-              ? 'Đơn vẫn được giữ hàng đến khi hết hạn. Bạn có thể thanh toán lại.'
-              : 'Cửa hàng chỉ chuẩn bị đơn sau khi thanh toán thành công.'}</span>
+              ? "Items are reserved until the payment deadline. You can try paying again."
+              : "The store starts preparing your order after successful payment."}</span>
           </div>
         </div>
       );
@@ -60,8 +60,8 @@ function Callout({ order }) {
         <div className="ocard-callout error">
           <span className="ocard-callout-icon"><Icon name="error" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Thanh toán không thành công</strong>
-            <span>Đơn chưa được xác nhận. Bạn có thể đặt lại từ giỏ hàng.</span>
+            <strong>Payment unsuccessful</strong>
+            <span>This order was not confirmed. You can place a new order from your cart.</span>
           </div>
         </div>
       );
@@ -70,8 +70,8 @@ function Callout({ order }) {
         <div className="ocard-callout error">
           <span className="ocard-callout-icon"><Icon name="cancel" size="lg" /></span>
           <div className="ocard-callout-text">
-            <strong>Đơn hàng đã bị hủy</strong>
-            <span>Nếu bạn đã thanh toán, khoản tiền sẽ được hoàn lại.</span>
+            <strong>Order cancelled</strong>
+            <span>If you have paid, your payment will be refunded.</span>
           </div>
         </div>
       );
@@ -90,12 +90,12 @@ export default function OrderCard({ order, storeName }) {
     <article className="ocard">
       <header className="ocard-head">
         <div className="ocard-title-row">
-          <h3 className="ocard-title">Đơn #{order.orderCode}</h3>
+          <h3 className="ocard-title">Order #{order.orderCode}</h3>
           <OrderStatusBadge status={order.status} />
         </div>
         <div className="ocard-meta">
-          <span>Đặt lúc {formatDateTime(order.createdAt)}</span>
-          {order.status === 'completed' && order.pickedUpAt && <><span>•</span><span>Nhận lúc {formatTime(order.pickedUpAt)}</span></>}
+          <span>Placed on {formatDateTime(order.createdAt)}</span>
+          {order.status === 'completed' && order.pickedUpAt && <><span>•</span><span>Collected on {formatTime(order.pickedUpAt)}</span></>}
           {storeName && <><span>•</span><span className="ocard-store"><Icon name="store" size="md" />{storeName}</span></>}
         </div>
       </header>
@@ -118,29 +118,29 @@ export default function OrderCard({ order, storeName }) {
           </div>
           <div className="ocard-total">
             <span className="ocard-price">{formatCurrency(order.totalAmount)}</span>
-            <span className="ocard-sub">{order.itemCount} sản phẩm • {paymentSummary(order)}</span>
+            <span className="ocard-sub">{order.itemCount} items • {paymentSummary(order)}</span>
           </div>
         </div>
       </div>
 
       <footer className="ocard-foot">
         <span className="ocard-foot-note">
-          {order.status === 'ready_for_pickup' && <><Icon name="verified" size="md" />Đã đóng gói tại cửa hàng</>}
-          {order.status === 'completed' && <><Icon name="check_circle" size="md" />Hoàn tất</>}
+          {order.status === 'ready_for_pickup' && <><Icon name="verified" size="md" />Packed at the store</>}
+          {order.status === 'completed' && <><Icon name="check_circle" size="md" />Completed</>}
         </span>
         <div className="ocard-actions">
           {order.status === 'pending_payment' && (
             <Link className="ocard-btn pay" to={`/orders/${order._id}/pay`}>
-              <Icon name="payments" size="md" />Thanh toán
+              <Icon name="payments" size="md" />Payment
             </Link>
           )}
           {ACTIVE_STATUSES.includes(order.status) && (
             <Link className="ocard-btn ghost" to={`/orders/${order._id}/tracking`}>
-              <Icon name="local_shipping" size="md" />Theo dõi
+              <Icon name="local_shipping" size="md" />Track order
             </Link>
           )}
           <Link className="ocard-btn" to={`/orders/${order._id}`}>
-            Xem chi tiết <Icon name="arrow_forward" size="md" />
+            View details <Icon name="arrow_forward" size="md" />
           </Link>
         </div>
       </footer>

@@ -9,9 +9,9 @@ import QuantityStepper from '../../components/cart/QuantityStepper';
 import { formatCurrency } from '../../utils/format';
 
 const ISSUE_TEXT = {
-  unavailable: 'Sản phẩm không còn bán, vui lòng xóa khỏi giỏ',
-  out_of_stock: 'Sản phẩm đã hết hàng',
-  insufficient_stock: (n) => `Chỉ còn ${n} sản phẩm, vui lòng giảm số lượng`,
+  unavailable: "This product is no longer available. Please remove it from your cart",
+  out_of_stock: "This product is out of stock",
+  insufficient_stock: (n) => `Only ${n} items available. Please reduce the quantity`,
 };
 
 // UC-07 Manage Cart: xem, đổi số lượng, xóa sản phẩm (UC-07.1, 07.3, 07.4). Thêm sản phẩm làm ở trang chi tiết sản phẩm (UC-07.2).
@@ -36,7 +36,7 @@ export default function CartPage() {
     setLoading(true); setError('');
     getCart()
       .then((res) => setCart(res.data))
-      .catch(async (err) => { if (!(await handleAuth(err))) setError(err.response?.data?.message || 'Không tải được giỏ hàng. Vui lòng thử lại.'); })
+      .catch(async (err) => { if (!(await handleAuth(err))) setError(err.response?.data?.message || "Could not load your cart. Please try again."); })
       .finally(() => setLoading(false));
   }, [handleAuth]);
 
@@ -50,7 +50,7 @@ export default function CartPage() {
       setCart(res.data);
     } catch (err) {
       if (await handleAuth(err)) return;
-      setRowError((e) => ({ ...e, [productId]: err.response?.data?.message || 'Không cập nhật được. Vui lòng thử lại.' }));
+      setRowError((e) => ({ ...e, [productId]: err.response?.data?.message || "Could not update the item. Please try again." }));
     } finally {
       setBusyId('');
     }
@@ -58,18 +58,18 @@ export default function CartPage() {
 
   const crumb = (
     <nav className="cart-crumb" aria-label="Breadcrumb">
-      <Link to="/">Trang chủ</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Giỏ hàng</span>
+      <Link to="/">Home</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Cart</span>
     </nav>
   );
 
-  if (loading) return <div className="cart">{crumb}<div className="cart-skeleton" aria-busy="true" aria-label="Đang tải giỏ hàng" /></div>;
+  if (loading) return <div className="cart">{crumb}<div className="cart-skeleton" aria-busy="true" aria-label="Loading cart" /></div>;
 
   if (error) {
     return (
       <div className="cart">{crumb}
         <div className="cart-state" role="alert">
-          <Icon name="cloud_off" size="xl" /><h2>Chưa tải được giỏ hàng</h2><p>{error}</p>
-          <button type="button" className="cart-btn" onClick={load}><Icon name="refresh" size="md" />Thử lại</button>
+          <Icon name="cloud_off" size="xl" /><h2>Could not load your cart</h2><p>{error}</p>
+          <button type="button" className="cart-btn" onClick={load}><Icon name="refresh" size="md" />Try again</button>
         </div>
       </div>
     );
@@ -79,8 +79,8 @@ export default function CartPage() {
     return (
       <div className="cart">{crumb}
         <div className="cart-state">
-          <Icon name="shopping_cart" size="xl" /><h2>Giỏ hàng đang trống</h2><p>Chọn vài món bạn thích rồi quay lại đây để đặt hàng.</p>
-          <Link className="cart-btn" to="/products"><Icon name="storefront" size="md" />Xem sản phẩm</Link>
+          <Icon name="shopping_cart" size="xl" /><h2>Your cart is empty</h2><p>Choose a few favorites, then return here to place your order.</p>
+          <Link className="cart-btn" to="/products"><Icon name="storefront" size="md" />Browse products</Link>
         </div>
       </div>
     );
@@ -91,7 +91,7 @@ export default function CartPage() {
   return (
     <div className="cart">
       {crumb}
-      <h1 className="cart-title">Giỏ hàng <small>({cart.itemCount} sản phẩm)</small></h1>
+      <h1 className="cart-title">Cart <small>({cart.itemCount} items)</small></h1>
 
       <div className="cart-grid">
         <ul className="cart-list">
@@ -115,7 +115,7 @@ export default function CartPage() {
                   )}
                 </div>
                 <div className="cart-line">{formatCurrency(it.lineTotal)}</div>
-                <button type="button" className="cart-remove" disabled={busy} aria-label={`Xóa ${it.name} khỏi giỏ`} onClick={() => act(id, () => removeCartItem(id))}>
+                <button type="button" className="cart-remove" disabled={busy} aria-label={`Remove ${it.name} from cart`} onClick={() => act(id, () => removeCartItem(id))}>
                   <Icon name="delete" size="md" />
                 </button>
               </li>
@@ -124,14 +124,14 @@ export default function CartPage() {
         </ul>
 
         <aside className="cart-side">
-          <h2>Tóm tắt</h2>
-          <div className="cart-sum"><span>Tạm tính</span><b>{formatCurrency(cart.subtotal)}</b></div>
-          <p className="cart-hint">Khuyến mãi và mã giảm giá sẽ được tính ở bước đặt hàng. Hàng được giữ sau khi bạn đặt hàng thành công.</p>
-          {blocked && <p className="cart-issue" role="alert"><Icon name="warning" size="md" />Vui lòng xử lý các sản phẩm có cảnh báo trước khi đặt hàng.</p>}
+          <h2>Summary</h2>
+          <div className="cart-sum"><span>Subtotal</span><b>{formatCurrency(cart.subtotal)}</b></div>
+          <p className="cart-hint">Promotions and discount codes are calculated at checkout. Items are reserved after your order is placed.</p>
+          {blocked && <p className="cart-issue" role="alert"><Icon name="warning" size="md" />Resolve the highlighted item issues before checking out.</p>}
           <button type="button" className="cart-btn block" disabled={blocked} onClick={() => navigate('/checkout')}>
-            Tiến hành đặt hàng<Icon name="arrow_forward" size="md" />
+            Proceed to checkout<Icon name="arrow_forward" size="md" />
           </button>
-          <Link className="cart-link" to="/products">Tiếp tục mua sắm</Link>
+          <Link className="cart-link" to="/products">Continue shopping</Link>
         </aside>
       </div>
     </div>

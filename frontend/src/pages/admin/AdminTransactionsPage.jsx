@@ -5,8 +5,8 @@ export default function AdminTransactionsPage() {
   return (
     <TransactionManager
       homePath="/admin"
-      homeLabel="Quản trị"
-      subtitle="Tra cứu các giao dịch thanh toán (chỉ xem, không thể chỉnh sửa)."
+      homeLabel="Admin"
+      subtitle="Search payment transactions (read-only)."
     />
   );
 }

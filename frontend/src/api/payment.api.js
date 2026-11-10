@@ -1,6 +1,6 @@
 import api from './axios';
 
-// UC-08.2 Make Payment (tạo link VNPay/Momo). data: { orderId, method: 'vnpay'|'momo' } -> { paymentUrl, txnRef, expiresAt }
+// UC-08.2 Make Payment (tạo link VNPay). data: { orderId, method: 'vnpay' } -> { paymentUrl, txnRef, expiresAt }
 export const createOnlinePayment = (data) => api.post(`/payments/online`, data);
 
 // VNPay chuyển hướng trình duyệt về sau khi thanh toán
@@ -9,8 +9,6 @@ export const vnpayReturn = (params) => api.get(`/payments/vnpay/return`, { param
 // VNPay gọi server báo kết quả (IPN)
 export const vnpayIpn = (params) => api.get(`/payments/vnpay/ipn`, { params });
 
-// Momo gọi server báo kết quả (IPN)
-export const momoIpn = (data) => api.post(`/payments/momo/ipn`, data);
 
 // UC-23.1 Process Cash Payment
 export const processCashPayment = (data) => api.post(`/payments/cash`, data);

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="admin membership management boundaries and point accounting" time="0.425842" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="member search escapes regex input, excludes deleted users and selects contact/membership fields only" time="0.002549" classname="test"/>
+		<testcase name="member details cannot expose staff or deleted accounts" time="0.000355" classname="test"/>
+		<testcase name="tier validation and assigned-tier deletion guard" time="0.000562" classname="test"/>
+		<testcase name="redemption history always filters redeemed points and supports a selected member" time="0.000563" classname="test"/>
+		<testcase name="adjustments reject negative balances, preserve lifetime points, and record the administrator" time="0.001103" classname="test"/>
+		<testcase name="concurrent balance changes do not create an audit row" time="0.000264" classname="test"/>
+		<testcase name="standalone database restores balance when history cannot be saved" time="0.000512" classname="test"/>
+		<testcase name="all administrator endpoints reject customer, staff and unauthenticated access" time="0.416944" classname="test"/>
+	</testsuite>
+	<testsuite name="customer membership points and history API" time="0.386142" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="requires sign-in and customer role on both endpoints" time="0.101493" classname="test"/>
+		<testcase name="returns current balance separately from lifetime tier points" time="0.006130" classname="test"/>
+		<testcase name="new member defaults to zero and highest tier has no next tier" time="0.009408" classname="test"/>
+		<testcase name="history is scoped to signed-in user, paginated and sorted newest first" time="0.033032" classname="test"/>
+		<testcase name="rejects invalid pagination and unknown transaction types" time="0.075914" classname="test"/>
+		<testcase name="empty history returns a usable empty page with default pagination" time="0.016146" classname="test"/>
+		<testcase name="only staff and admin can resolve a member code, without exposing contact data" time="0.109637" classname="test"/>
+		<testcase name="missing or inactive member gets 404" time="0.010441" classname="test"/>
+	</testsuite>
+	<testsuite name="promotion management" time="0.258732" disabled="0" errors="0" tests="11" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="invalid discount, dates, scope and text fail before writing" time="0.007982" classname="test"/>
+		<testcase name="create trims fields, starts inactive, ignores injected status and creator" time="0.000864" classname="test"/>
+		<testcase name="scoped promotions require active references and deduplicate IDs" time="0.000918" classname="test"/>
+		<testcase name="partial update preserves dates, clears irrelevant scope and cap, protects status" time="0.001118" classname="test"/>
+		<testcase name="invalid IDs, deleted and missing records cannot be modified" time="0.000479" classname="test"/>
+		<testcase name="activation rejects expired offers, permits future offers, and rechecks references" time="0.000567" classname="test"/>
+		<testcase name="suspension and soft deletion make offers unavailable while retaining history" time="0.000427" classname="test"/>
+		<testcase name="concurrent changes return a conflict instead of overwriting" time="0.000323" classname="test"/>
+		<testcase name="management list escapes search, filters status, caps pagination and returns populated records" time="0.000845" classname="test"/>
+		<testcase name="public availability query excludes inactive, suspended, deleted and out-of-date offers" time="0.000639" classname="test"/>
+		<testcase name="HTTP routes require an admin for all management operations" time="0.240294" classname="test"/>
+	</testsuite>
+	<testsuite name="Update Review validation, ownership, editable status and rating summary" time="0.006806" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="invalid payloads fail before any database write" time="0.002849" classname="test"/>
+		<testcase name="lookup requires ownership and visible status" time="0.000652" classname="test"/>
+		<testcase name="saves allowed fields and recalculates public product rating" time="0.000803" classname="test"/>
+		<testcase name="comment-only update preserves rating and permits clearing comment" time="0.000199" classname="test"/>
+	</testsuite>
+	<testsuite name="review creation, deletion and moderation lifecycle" time="0.010966" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="invalid ratings and store IDs fail before writing or falling back to another store" time="0.003433" classname="test"/>
+		<testcase name="store review uses the selected store and authenticated customer only" time="0.001249" classname="test"/>
+		<testcase name="product review requires a completed online order owned by the customer" time="0.000300" classname="test"/>
+		<testcase name="delete is scoped to the owner and removes the rating from the product summary" time="0.000841" classname="test"/>
+		<testcase name="confirm, restore, and dismiss a violation keep visibility and violation flag independent" time="0.001420" classname="test"/>
+		<testcase name="public store reviews exclude moderated reviews and support selecting a store" time="0.000573" classname="test"/>
+	</testsuite>
+	<testsuite name="customer support validation and access boundaries" time="0.005346" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="reject invalid submissions before writing" time="0.001612" classname="test"/>
+		<testcase name="submission ignores client ownership and status" time="0.000670" classname="test"/>
+		<testcase name="order association requires ownership" time="0.000449" classname="test"/>
+		<testcase name="detail hides another customer request" time="0.000360" classname="test"/>
+		<testcase name="list always scopes to customer, validates filters and caps pagination" time="0.000476" classname="test"/>
+	</testsuite>
+	<testsuite name="independent retail business-rule audit with HTTP and MongoDB" time="6.227739" disabled="0" errors="0" tests="24" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="QA-01 invalid cart product IDs return a client error, not HTTP 500" time="0.086998" classname="test"/>
+		<testcase name="QA-02 locked staff tokens cannot view inactive catalog records through optional auth" time="0.030762" classname="test"/>
+		<testcase name="QA-03 cancelled orders release the per-customer voucher allowance" time="0.108017" classname="test"/>
+		<testcase name="QA-04 expired orders return the global voucher allocation exactly once" time="0.070282" classname="test"/>
+		<testcase name="QA-05 concurrent orders cannot exceed a per-customer voucher limit" time="0.090772" classname="test"/>
+		<testcase name="QA-06 concurrent payment-link requests keep one pending gateway attempt" time="0.130764" classname="test"/>
+		<testcase name="QA-07 a failed stock sale journal restores batch and product quantities" time="0.018952" classname="test"/>
+		<testcase name="QA-08 concurrent stock releases do not return the same stock multiple times" time="0.020850" classname="test"/>
+		<testcase name="QA-09 retry after a failed release journal does not inflate inventory" time="0.028596" classname="test"/>
+		<testcase name="QA-10 admin reconciliation of a cancelled captured payment credits the wallet" time="0.121474" classname="test"/>
+		<testcase name="QA-11 concurrent add-to-cart requests preserve every increment" time="0.065087" classname="test"/>
+		<testcase name="QA-12 a reset token can be used only once under concurrent requests" time="0.211869" classname="test"/>
+		<testcase name="QA-13 parallel registration returns a conflict for a duplicate email" time="0.174902" classname="test"/>
+		<testcase name="QA-14 expired batches are excluded and FEFO sells the nearest valid expiry first" time="0.019313" classname="test"/>
+		<testcase name="QA-15 two customers buying the last unit cannot oversell" time="0.037900" classname="test"/>
+		<testcase name="QA-16 price changes block stale checkout and manual store closure blocks new orders" time="0.056045" classname="test"/>
+		<testcase name="QA-17 off-hours orders show the next opening and preparation is blocked until opening" time="0.101634" classname="test"/>
+		<testcase name="QA-18 checkout preserves quantities added from another tab during checkout" time="0.043626" classname="test"/>
+		<testcase name="QA-19 role changes in the database immediately override old token roles" time="0.023113" classname="test"/>
+		<testcase name="QA-20 interleaved payment reads cannot create multiple payable gateway links" time="0.144755" classname="test"/>
+		<testcase name="QA-21 password-reset emails escape untrusted customer display names" time="0.013766" classname="test"/>
+		<testcase name="QA-22 failed receipt journal leaves no extra batch or product stock" time="0.016120" classname="test"/>
+		<testcase name="QA-23 failed damage/removal journal does not reduce physical or product stock" time="0.016676" classname="test"/>
+		<testcase name="QA-24 concurrent absolute stock adjustments cannot overshoot their target" time="0.016534" classname="test"/>
+	</testsuite>
+	<testsuite name="requested features through HTTP and real MongoDB" time="5.265996" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="add, edit, moderate, restore and delete product/store reviews" time="0.378994" classname="test"/>
+		<testcase name="manage members, tiers, balances, point history and redemption history" time="0.237487" classname="test"/>
+		<testcase name="create, update, activate and delete promotions with correct public availability" time="0.122830" classname="test"/>
+		<testcase name="view only owned support requests and read staff responses" time="0.078928" classname="test"/>
+	</testsuite>
+	<testsuite name="in-app notifications: HTTP authorization, lifecycle, receipts and automatic events" time="4.613678" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="only authenticated users read; only admin manages and configures" time="0.266720" classname="test"/>
+		<testcase name="audiences, drafts, scheduled and expired announcements are enforced by server" time="0.219726" classname="test"/>
+		<testcase name="read receipts belong to each user and are idempotent" time="0.162153" classname="test"/>
+		<testcase name="scheduled event becomes visible when its time arrives; draft fields cannot inject status" time="0.038069" classname="test"/>
+		<testcase name="order and pickup notifications persist without SMTP and deduplicate retries" time="0.059793" classname="test"/>
+		<testcase name="new voucher announcements honor dates, settings and source deduplication" time="0.073987" classname="test"/>
+	</testsuite>
+	<testsuite name="email notifications and payment callback boundaries" time="0.030601" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="ready-for-pickup message uses customer email, safe HTML and correct link" time="0.020222" classname="test"/>
+		<testcase name="order, payment and expiry templates resolve order IDs" time="0.001339" classname="test"/>
+		<testcase name="no SMTP or anonymous order sends nothing" time="0.000264" classname="test"/>
+		<testcase name="deleted customers receive no mail" time="0.000201" classname="test"/>
+		<testcase name="SMTP failure is contained and logs no SMTP credentials" time="0.000643" classname="test"/>
+		<testcase name="repeated success/failure callbacks notify only the winning transaction" time="0.005101" classname="test"/>
+	</testsuite>
+	<testsuite name="Vietnam opening hours and preorder policy" time="0.031409" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="06:59 accepts preorder for 07:00" time="0.027361" classname="test"/>
+		<testcase name="07:00 allows preparation" time="0.000151" classname="test"/>
+		<testcase name="23:59 allows preparation" time="0.000150" classname="test"/>
+		<testcase name="00:00 accepts next-opening preorder" time="0.000312" classname="test"/>
+		<testcase name="manual closure rejects new orders even during opening hours" time="0.000133" classname="test"/>
+		<testcase name="closed days are skipped when calculating the next opening" time="0.001073" classname="test"/>
+		<testcase name="no scheduled opening does not accept an unfulfillable preorder" time="0.000227" classname="test"/>
+	</testsuite>
+	<testsuite name="local POS and staff pickup workflow through HTTP and MongoDB" time="5.199426" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="staff-only POS; a bill quote does not reserve stock or create a sale" time="0.092277" classname="test"/>
+		<testcase name="cash confirmation saves bill, payment, change, stock and receipt exactly once" time="0.136259" classname="test"/>
+		<testcase name="invalid prices, insufficient cash/stock and unapproved terminal payments create no sale" time="0.074840" classname="test"/>
+		<testcase name="concurrent POS confirmations cannot reuse a terminal payment reference" time="0.058834" classname="test"/>
+		<testcase name="payment storage failure rolls back the sale and stock on a standalone database" time="0.046448" classname="test"/>
+		<testcase name="staff prepares website order; Done means ready and sends one private pickup notification" time="0.276742" classname="test"/>
+		<testcase name="store hours support midnight and the website remains pickup only" time="0.054708" classname="test"/>
+	</testsuite>
+	<testsuite name="wallet, VNPay-only checkout, refunds, rewards and local product images" time="6.353647" disabled="0" errors="0" tests="12" failures="0" skipped="0" hostname="DESKTOP-43P277J">
+		<testcase name="wallet is private and cannot be credited through a customer endpoint" time="0.112655" classname="test"/>
+		<testcase name="website rejects cash, card, wallet and removed MoMo; only VNPay links are available" time="0.362794" classname="test"/>
+		<testcase name="wallet pays the whole order; duplicate checkout/cancellation never debits or refunds twice" time="0.170398" classname="test"/>
+		<testcase name="partial credit charges only the VNPay remainder; invalid callbacks cannot mint funds" time="0.213762" classname="test"/>
+		<testcase name="expiry returns wallet credit and a late VNPay payment is refunded once" time="0.136829" classname="test"/>
+		<testcase name="concurrent wallet debits never overdraw; failed checkout reverses its debit" time="0.054774" classname="test"/>
+		<testcase name="points accrue after pickup, once even if history storage fails and retries overlap" time="0.106895" classname="test"/>
+		<testcase name="a failure after cart clearing restores both cart and wallet on standalone MongoDB" time="0.054260" classname="test"/>
+		<testcase name="replayed callbacks recover a captured payment after order confirmation failed" time="0.117335" classname="test"/>
+		<testcase name="admin image library contains all 78 photos; remote URL and path traversal are rejected" time="0.175814" classname="test"/>
+		<testcase name="a second successful gateway attempt is returned once, without charging the wallet twice" time="0.162855" classname="test"/>
+		<testcase name="closed-order reconciliation retries a wallet credit after temporary storage failure" time="0.217049" classname="test"/>
+	</testsuite>
+	<!-- tests 121 -->
+	<!-- suites 0 -->
+	<!-- pass 121 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 7021.8118 -->
+</testsuites>

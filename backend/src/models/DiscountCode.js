@@ -11,6 +11,7 @@ const discountCodeSchema = new Schema({
   minOrderAmount: { type: Number, default: 0, min: 0 },
   usageLimit: { type: Number, min: 0 },                       // tổng lượt dùng tối đa (bỏ trống = không giới hạn)
   usedCount: { type: Number, default: 0, min: 0 },
+  allocations: { type: [{ orderId: Schema.Types.ObjectId, userId: Schema.Types.ObjectId, _id: false }], default: [], select: false },
   perUserLimit: { type: Number, default: 1, min: 1 },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },

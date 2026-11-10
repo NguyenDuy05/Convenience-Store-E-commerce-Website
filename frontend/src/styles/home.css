@@ -1,6 +1,10 @@
 /* Trang chủ: phong cách Corner Aisle (xanh dương, Rubik/Inter, biển treo, kệ hàng).
    Mọi class bắt đầu bằng "hp-" nên không đụng CSS các trang khác. */
 
+.hp-cart-indicator { position: relative; }
+.hp-cart-count { position: absolute; top: -7px; right: -7px; min-width: 20px; padding: 2px 5px; border: 2px solid white; border-radius: 12px; background: #19244e; color: white; font: 700 10px/14px Inter, sans-serif; text-align: center; }
+@media (max-width: 380px) { .hp.storefront-header .hp-brand > span:last-child { display: none; } }
+
 .hp {
     --surface: #fbf8ff;
     --surface-low: #f3f2ff;

@@ -1,0 +1,88 @@
+{
+  "checkedAt": "2026-11-09T03:46:02.009Z",
+  "isolatedDatabaseRemoved": true,
+  "results": [
+    {
+      "name": "Real catalog, local Baloo 2 font and two shelf rows",
+      "passed": true
+    },
+    {
+      "name": "Category navigation, rapid switching, search and clear filters",
+      "passed": true
+    },
+    {
+      "name": "Price sorting and promotion estimates",
+      "passed": true
+    },
+    {
+      "name": "Guest product dialog, focus trapping, Escape and login return",
+      "passed": true
+    },
+    {
+      "name": "Authenticated add quantity 2, server cart and header count",
+      "passed": true
+    },
+    {
+      "name": "Stock race rejects add without false success or badge increment",
+      "passed": true
+    },
+    {
+      "name": "Out of stock product has no add button",
+      "passed": true
+    },
+    {
+      "name": "Existing cart quantity/removal updates the shared indicator",
+      "passed": true
+    },
+    {
+      "name": "Expanding shelves keeps all products accessible",
+      "passed": true
+    },
+    {
+      "name": "Every desktop story scene, including direct jumps and reverse scroll",
+      "passed": true
+    },
+    {
+      "name": "ScrollTrigger and Lenis cleanup after repeated SPA navigation",
+      "passed": true
+    },
+    {
+      "name": "Responsive layout 1440",
+      "passed": true
+    },
+    {
+      "name": "Responsive layout 1024",
+      "passed": true
+    },
+    {
+      "name": "Responsive layout 768",
+      "passed": true
+    },
+    {
+      "name": "Responsive layout 390",
+      "passed": true
+    },
+    {
+      "name": "Responsive layout 320",
+      "passed": true
+    },
+    {
+      "name": "Mobile swipe changes aisle, vertical scrolling remains native",
+      "passed": true
+    },
+    {
+      "name": "Reduced motion exposes every scene and preserves shopping",
+      "passed": true
+    },
+    {
+      "name": "Catalog failure, retry and empty state",
+      "passed": true
+    },
+    {
+      "name": "No runtime exceptions or scroll-triggered orders/payments",
+      "passed": true
+    }
+  ],
+  "runtimeErrors": [],
+  "orderRequests": []
+}

@@ -25,8 +25,10 @@ test('promotion management', async (t) => {
     model[method] = implementation;
   };
   t.after(() => { for (const [model, method, original] of originals) model[method] = original; });
-  stub(require('../models').User, 'findById', () => ({ select: () => ({ lean: async () => ({ status: 'active' }) }) }));   // auth middleware kiểm tra tài khoản còn hoạt động
+  stub(require('../models').User, 'findById', actorId => ({ select: () => ({ lean: async () => ({ status: 'active', role: actorId === admin ? 'admin' : actorId === target ? 'customer' : 'staff' }) }) }));
   stub(ActivityLog, 'create', async () => ({}));
+  stub(require('../services/inAppNotification.service'), 'announceOffer', async () => {});
+  stub(require('../services/inAppNotification.service'), 'withdrawOffer', async () => {});
 
   await t.test('invalid discount, dates, scope and text fail before writing', async () => {
     stub(Promotion, 'create', () => assert.fail('Invalid input reached database'));
@@ -147,7 +149,7 @@ test('promotion management', async (t) => {
       for (const [method, path] of routes) {
         assert.equal((await fetch(base + path, { method })).status, 401);
         for (const role of ['customer', 'staff']) {
-          const token = jwt.sign({ id: admin, role }, process.env.JWT_SECRET);
+          const token = jwt.sign({ id: role === 'customer' ? target : id, role }, process.env.JWT_SECRET);
           assert.equal((await fetch(base + path, { method, headers: { Authorization: `Bearer ${token}` } })).status, 403);
         }
       }

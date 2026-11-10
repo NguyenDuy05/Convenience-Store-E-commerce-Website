@@ -7,7 +7,7 @@ const { logActivity } = require('../services/activity.service');
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const defaultHours = () => Array.from({ length: 7 }, (_, day) => ({ day, openTime: '07:00', closeTime: '22:00', isClosed: false }));
+const defaultHours = () => require('../config/store').openingHours.map((day) => ({ ...day }));
 
 async function loadStore(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Store not found');
@@ -26,7 +26,9 @@ function parseBasics(body = {}) {
   if (!address) throw new ApiError(400, 'Address is required');
   if (address.length > 255) throw new ApiError(400, 'Address must be 255 characters or fewer');
   if (phone && !PHONE_RE.test(phone)) throw new ApiError(400, 'Phone number is invalid');
-  return { name, address, phone: phone || undefined };
+  const website = str(body.website);
+  if (website && !/^https?:\/\/[a-z0-9.-]+(?::\d+)?(?:\/[^\s]*)?$/i.test(website)) throw new ApiError(400, 'Website must be an http or https URL');
+  return { name, address, phone: phone || undefined, website: website || undefined };
 }
 
 function parseHours(hours) {
@@ -37,7 +39,7 @@ function parseHours(hours) {
     if (!Number.isInteger(day) || day < 0 || day > 6 || seen.has(day)) throw new ApiError(400, 'Opening hours contain an invalid or duplicate day');
     seen.add(day);
     if (h.isClosed === true) return { day, isClosed: true };
-    if (!TIME_RE.test(h.openTime || '') || !TIME_RE.test(h.closeTime || '')) throw new ApiError(400, 'Opening and closing times must be in HH:MM format');
+    if (!TIME_RE.test(h.openTime || '') || !(h.closeTime === '24:00' || TIME_RE.test(h.closeTime || ''))) throw new ApiError(400, 'Use HH:MM times; closing time can be 24:00 for midnight');
     if (h.openTime >= h.closeTime) throw new ApiError(400, 'Closing time must be later than opening time');
     return { day, openTime: h.openTime, closeTime: h.closeTime, isClosed: false };
   }).sort((a, b) => a.day - b.day);

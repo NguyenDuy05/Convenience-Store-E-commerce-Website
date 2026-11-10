@@ -3,10 +3,10 @@ export default function PagePlaceholder({ title, ucs = [] }) {
   return (
     <section>
       <h2>{title}</h2>
-      <p className="muted">Trang đang được xây dựng.</p>
+      <p className="muted">This page is under construction.</p>
       {ucs.length > 0 && (
         <>
-          <p>Use case cần làm:</p>
+          <p>Pending features:</p>
           <ul>
             {ucs.map((u) => <li key={u}>{u}</li>)}
           </ul>

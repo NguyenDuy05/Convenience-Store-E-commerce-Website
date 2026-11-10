@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { listPromotions } from '../../api/promotion.api';
 import { listProducts } from '../../api/product.api';
 import { listStores } from '../../api/store.api';
-import HomeHeader from '../../components/home/HomeHeader';
-import HomeFooter from '../../components/home/HomeFooter';
 import ProductSearchInput from '../../components/home/ProductSearchInput';
 import { bestPromo, scopeText } from '../../components/home/homeConfig';
 import { formatCurrency } from '../../utils/format';
@@ -127,7 +125,6 @@ export default function PromotionsPage() {
 
   return (
     <div className="deals-shell">
-      <HomeHeader store={store} info={null} q={query} setQ={setQuery} active="promotions" onNav={goToSection} onSearch={submitSearch} products={products} />
 
       <main className="deals-page">
         <div className="deals-context-row">
@@ -174,7 +171,6 @@ export default function PromotionsPage() {
             </div>}
       </main>
 
-      <HomeFooter categories={categories} store={store} info={null} onNav={goToSection} onCategory={() => navigate('/products')} />
     </div>
   );
 }

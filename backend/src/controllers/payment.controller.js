@@ -4,8 +4,8 @@ const ApiError = require('../utils/ApiError');
 const mongoose = require('mongoose');
 const payment = require('../services/payment.service');
 const vnpay = require('../services/vnpay.service');
-const momo = require('../services/momo.service');
 const mock = require('../services/mock.service');
+const { notifyOrder } = require('../services/notification.service');
 
 const frontend = () => process.env.FRONTEND_URL || 'http://localhost:5173';
 // Trang kết quả KHÔNG tin tham số trên URL: nó đọc lại trạng thái đơn từ server
@@ -17,14 +17,15 @@ const clientIp = (req) => {
   return ip === '::1' ? '127.0.0.1' : ip;
 };
 
-// UC-08.2 Make Payment (catalog tài liệu; code cũ ghi UC-09.2): tạo link thanh toán VNPay/MoMo cho đơn đang chờ thanh toán.
-// Body: { orderId, method: 'vnpay' | 'momo' }. Gọi lại khi còn giao dịch đang chờ cùng cổng -> trả lại đúng link cũ (không tạo giao dịch mới).
+// UC-08.2 Make Payment (catalog tài liệu; code cũ ghi UC-09.2): tạo link thanh toán VNPay cho đơn đang chờ thanh toán.
+// Body: { orderId, method: 'vnpay' }. Gọi lại khi còn giao dịch đang chờ cùng cổng -> trả lại đúng link cũ (không tạo giao dịch mới).
 exports.createOnlinePayment = asyncHandler(async (req, res) => {
-  const { orderId, method } = req.body;
-  if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  const { orderId, method, returnTo = 'web' } = req.body;
+  if (!['web', 'mobile'].includes(returnTo)) throw new ApiError(400, 'Invalid payment return destination');
+  if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
   const order = await Order.findOne({ _id: orderId, customerId: req.user.id }).lean();
-  if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
-  const out = await payment.startOnlinePayment({ order, method, ipAddr: clientIp(req) });
+  if (!order) throw new ApiError(404, "Order not found");
+  const out = await payment.startOnlinePayment({ order, method, ipAddr: clientIp(req), returnTo });
   res.json(out);
 });
 
@@ -42,6 +43,15 @@ exports.vnpayReturn = asyncHandler(async (req, res) => {
   res.redirect(resultUrl(r.orderId));
 });
 
+// A fixed app scheme prevents open redirects. The app still reads its owned order
+// from the API; neither a deep link nor an unsigned URL can mark an order paid.
+exports.vnpayMobileReturn = asyncHandler(async (req, res) => {
+  const v = vnpay.verifyCallback(req.query);
+  if (!v.valid) return res.redirect('quickstore://payment-result?error=invalid_signature');
+  const r = await applyVerified(v);
+  res.redirect(r.orderId ? `quickstore://payment-result?orderId=${encodeURIComponent(r.orderId)}` : 'quickstore://payment-result?error=unknown');
+});
+
 // VNPay gọi SERVER báo kết quả (IPN). Phản hồi theo mã VNPay quy định.
 exports.vnpayIpn = asyncHandler(async (req, res) => {
   const v = vnpay.verifyCallback(req.query);
@@ -53,52 +63,36 @@ exports.vnpayIpn = asyncHandler(async (req, res) => {
   res.json({ RspCode: '00', Message: 'Confirm Success' });
 });
 
-// MoMo gọi SERVER báo kết quả (IPN). Phản hồi HTTP 204 theo quy định MoMo.
-exports.momoIpn = asyncHandler(async (req, res) => {
-  const v = momo.verifyCallback(req.body);
-  if (!v.valid) return res.status(400).json({ message: 'Invalid signature' });
-  await applyVerified(v);
-  res.status(204).end();
-});
-
-// MoMo chuyển TRÌNH DUYỆT của khách về đây (query có đủ tham số + chữ ký giống IPN)
-exports.momoReturn = asyncHandler(async (req, res) => {
-  const v = momo.verifyCallback(req.query);
-  if (!v.valid) return res.redirect(`${frontend()}/payment/result?error=invalid_signature`);
-  const r = await applyVerified(v);
-  res.redirect(resultUrl(r.orderId));
-});
-
 // ---- Cổng giả lập (chỉ khi PAYMENT_MOCK=true) ----
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 exports.mockPay = asyncHandler(async (req, res) => {
-  if (!mock.enabled()) return res.status(404).json({ message: 'Không tìm thấy đường dẫn' });
+  if (!mock.enabled()) return res.status(404).json({ message: "Page not found" });
   const txn = await Transaction.findOne({ txnRef: String(req.query.txnRef || '') }).lean();
-  if (!txn) return res.status(404).send('Không tìm thấy giao dịch');
+  if (!txn) return res.status(404).send("Transaction not found");
   const order = await Order.findById(txn.orderId).select('orderCode').lean();
   const btn = (result, label, color) => `<a href="${esc(mock.completeUrl(txn.txnRef, result))}" style="display:block;margin:10px 0;padding:14px;border-radius:10px;background:${color};color:#fff;text-decoration:none;font-weight:700;text-align:center">${label}</a>`;
-  res.type('html').send(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cổng thanh toán giả lập</title></head>
+  res.type('html').send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mock payment gateway</title></head>
 <body style="font-family:system-ui,sans-serif;background:#f3f2ff;margin:0;padding:24px">
 <div style="max-width:420px;margin:40px auto;background:#fff;border-radius:16px;padding:28px;box-shadow:0 6px 18px rgba(25,36,78,.12)">
-<p style="margin:0;font-size:12px;font-weight:700;color:#b45309;letter-spacing:.05em">CỔNG THANH TOÁN GIẢ LẬP (${esc(txn.method.toUpperCase())}) - CHỈ DÙNG ĐỂ TEST</p>
-<h2 style="margin:12px 0 4px">Đơn ${esc(order ? order.orderCode : '')}</h2>
-<p style="margin:0 0 4px;color:#555">Mã giao dịch: <b>${esc(txn.txnRef)}</b></p>
+<p style="margin:0;font-size:12px;font-weight:700;color:#b45309;letter-spacing:.05em">MOCK PAYMENT GATEWAY (${esc(txn.method.toUpperCase())}) - FOR TESTING ONLY</p>
+<h2 style="margin:12px 0 4px">Order ${esc(order ? order.orderCode : '')}</h2>
+<p style="margin:0 0 4px;color:#555">Transaction reference: <b>${esc(txn.txnRef)}</b></p>
 <p style="margin:0 0 20px;font-size:22px;font-weight:700">${new Intl.NumberFormat('vi-VN').format(txn.amount)} ₫</p>
-${btn('success', 'Thanh toán thành công', '#356b0a')}${btn('failed', 'Thanh toán thất bại / hủy', '#ba1a1a')}${btn('pending', 'Đang chờ xác nhận (chưa có kết quả)', '#6f5d0e')}
+${btn('success', "Payment successful", '#356b0a')}${btn('failed', "Payment failed / cancelled", '#ba1a1a')}${btn('pending', "Awaiting confirmation (no result yet)", '#6f5d0e')}
 </div></body></html>`);
 });
 
 exports.mockComplete = asyncHandler(async (req, res) => {
-  if (!mock.enabled()) return res.status(404).json({ message: 'Không tìm thấy đường dẫn' });
+  if (!mock.enabled()) return res.status(404).json({ message: "Page not found" });
   const { txnRef, result, sig } = req.query;
-  if (!mock.RESULTS.includes(result) || !mock.verify(txnRef, result, sig)) return res.status(400).send('Yêu cầu không hợp lệ');
+  if (!mock.RESULTS.includes(result) || !mock.verify(txnRef, result, sig)) return res.status(400).send("Invalid request");
   const txn = await Transaction.findOne({ txnRef }).lean();
-  if (!txn) return res.status(404).send('Không tìm thấy giao dịch');
+  if (!txn) return res.status(404).send("Transaction not found");
   const r = await applyVerified({
     txnRef, amount: txn.amount, outcome: result,
     gateway: { provider: 'mock', transactionNo: `MOCK${Date.now()}`, responseCode: result === 'success' ? '00' : result === 'pending' ? '07' : '24' },
-    reason: result === 'failed' ? 'Khách hủy / thanh toán thất bại (giả lập)' : undefined,
+    reason: result === 'failed' ? "Customer cancelled / mock payment failed" : undefined,
   });
   res.redirect(resultUrl(r.orderId || String(txn.orderId)));
 });
@@ -108,12 +102,12 @@ const { logActivity } = require('../services/activity.service');
 const escapeRx = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function loadPayableStoreOrder(orderId) {
-  if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
   await payment.expireStaleOrders();
   const order = await Order.findById(orderId).lean();
-  if (!order || order.source !== 'store') throw new ApiError(404, 'Không tìm thấy đơn tại quầy');
-  if (order.status === 'failed') throw new ApiError(409, 'Đơn đã hết hạn thanh toán và đã hoàn kho. Vui lòng tạo đơn mới.', { code: 'ORDER_EXPIRED' });
-  if (order.status !== 'pending_payment' || order.paymentStatus === 'paid') throw new ApiError(409, 'Đơn này không còn chờ thanh toán', { code: 'NOT_PAYABLE' });
+  if (!order || order.source !== 'store') throw new ApiError(404, "Store order not found");
+  if (order.status === 'failed') throw new ApiError(409, "This order expired and its stock was released. Please create a new order.", { code: 'ORDER_EXPIRED' });
+  if (order.status !== 'pending_payment' || order.paymentStatus === 'paid') throw new ApiError(409, "This order is no longer awaiting payment", { code: 'NOT_PAYABLE' });
   return order;
 }
 
@@ -124,15 +118,16 @@ async function settleStoreOrder({ order, staffId, method, extra }) {
     { _id: order._id, status: 'pending_payment', paymentStatus: 'unpaid' },
     {
       $set: { status: 'completed', paymentStatus: 'paid', paymentMethod: method, paidAt: now, pickedUpAt: now },
-      $push: { statusHistory: { status: 'completed', changedAt: now, changedBy: staffId, note: 'Đã thanh toán tại quầy' } },
+      $push: { statusHistory: { status: 'completed', changedAt: now, changedBy: staffId, note: "Paid at the counter" } },
     },
     { new: true },
   );
-  if (!claimed) throw new ApiError(409, 'Đơn này vừa được thanh toán hoặc hết hạn. Vui lòng tải lại.', { code: 'NOT_PAYABLE' });
+  if (!claimed) throw new ApiError(409, "This order was just paid or expired. Please refresh.", { code: 'NOT_PAYABLE' });
   try {
     const txn = await Transaction.create({
       orderId: order._id, processedBy: staffId, method, amount: order.totalAmount, status: 'success', paidAt: now, ...extra,
     });
+    void notifyOrder(claimed, 'payment_success', { amount: order.totalAmount, txnRef: String(txn._id) });
     return { order: claimed, transaction: txn };
   } catch (err) {
     await Order.updateOne({ _id: order._id }, { $set: { status: 'pending_payment', paymentStatus: 'unpaid' }, $unset: { paidAt: '', pickedUpAt: '', paymentMethod: '' }, $pop: { statusHistory: 1 } });
@@ -154,30 +149,30 @@ exports.listStoreOrdersToPay = asyncHandler(async (req, res) => {
 exports.processCashPayment = asyncHandler(async (req, res) => {
   const order = await loadPayableStoreOrder(req.body?.orderId);
   const received = Number(req.body?.received);
-  if (!Number.isInteger(received) || received < 0 || received > 1000000000) throw new ApiError(400, 'Số tiền khách đưa không hợp lệ');
-  if (received < order.totalAmount) throw new ApiError(400, `Khách đưa chưa đủ. Cần thu ${new Intl.NumberFormat('vi-VN').format(order.totalAmount)}đ.`, { code: 'INSUFFICIENT_CASH' });
+  if (!Number.isInteger(received) || received < 0 || received > 1000000000) throw new ApiError(400, "Invalid cash amount");
+  if (received < order.totalAmount) throw new ApiError(400, `Insufficient cash. Amount due: ${new Intl.NumberFormat('vi-VN').format(order.totalAmount)}đ.`, { code: 'INSUFFICIENT_CASH' });
   const out = await settleStoreOrder({ order, staffId: req.user.id, method: 'cash', extra: { cash: { received, change: received - order.totalAmount } } });
   await logActivity(req, { action: 'PAYMENT_CASH', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, amount: order.totalAmount } });
   res.status(201).json({ order: out.order, transaction: out.transaction, change: received - order.totalAmount });
 });
 
-// UC-23.2 Process Card/E-wallet Payment. body: { orderId, method: card|momo|vnpay, reference, outcome?: success|failed, reason? }
+// UC-23.2 Process Card/E-wallet Payment. body: { orderId, method: card|vnpay, reference, outcome?: success|failed, reason? }
 // Thanh toán thực hiện trên máy POS / ví của khách; nhân viên nhập mã chuẩn chi hoặc báo thất bại để ghi nhận giao dịch lỗi.
 exports.processCardPayment = asyncHandler(async (req, res) => {
   const order = await loadPayableStoreOrder(req.body?.orderId);
   const method = req.body?.method || 'card';
-  if (!['card', 'momo', 'vnpay'].includes(method)) throw new ApiError(400, 'Phương thức thanh toán không hợp lệ');
+  if (!['card', 'vnpay'].includes(method)) throw new ApiError(400, "Invalid payment method");
   const outcome = req.body?.outcome === 'failed' ? 'failed' : 'success';
 
   if (outcome === 'failed') {
-    const reason = typeof req.body?.reason === 'string' && req.body.reason.trim() ? req.body.reason.trim().slice(0, 300) : 'Giao dịch không thành công tại quầy';
+    const reason = typeof req.body?.reason === 'string' && req.body.reason.trim() ? req.body.reason.trim().slice(0, 300) : "In-store transaction failed";
     const txn = await Transaction.create({ orderId: order._id, processedBy: req.user.id, method, amount: order.totalAmount, status: 'failed', failureReason: reason });
     await logActivity(req, { action: 'PAYMENT_FAILED', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, method, reason } });
     return res.status(201).json({ order, transaction: txn, outcome });
   }
   const reference = typeof req.body?.reference === 'string' ? req.body.reference.trim() : '';
-  if (!/^[A-Za-z0-9-]{4,40}$/.test(reference)) throw new ApiError(400, 'Nhập mã giao dịch / mã chuẩn chi (4-40 ký tự chữ và số)');
-  if (await Transaction.exists({ 'gateway.transactionNo': reference, status: 'success' })) throw new ApiError(409, 'Mã giao dịch này đã được dùng cho một đơn khác', { code: 'DUPLICATE_REFERENCE' });
+  if (!/^[A-Za-z0-9-]{4,40}$/.test(reference)) throw new ApiError(400, "Enter a transaction / authorization reference (4–40 letters or digits)");
+  if (await Transaction.exists({ 'gateway.transactionNo': reference, status: 'success' })) throw new ApiError(409, "This transaction reference has already been used for another order", { code: 'DUPLICATE_REFERENCE' });
   const out = await settleStoreOrder({ order, staffId: req.user.id, method, extra: { gateway: { provider: 'pos', transactionNo: reference, payDate: new Date() } } });
   await logActivity(req, { action: 'PAYMENT_CARD', targetType: 'Order', targetId: order._id, detail: { orderCode: order.orderCode, method, amount: order.totalAmount } });
   res.status(201).json({ order: out.order, transaction: out.transaction, outcome });
@@ -186,13 +181,13 @@ exports.processCardPayment = asyncHandler(async (req, res) => {
 // Print Receipt: dữ liệu hóa đơn của đơn đã thanh toán. GET /api/payments/receipt/:orderId (staff, admin)
 exports.getReceipt = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
-  if (!mongoose.isValidObjectId(orderId)) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+  if (!mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
   const order = await Order.findById(orderId).populate('createdBy', 'fullName').lean();
-  if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
-  if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') throw new ApiError(409, 'Đơn chưa thanh toán nên chưa có hóa đơn', { code: 'NOT_PAID' });
+  if (!order) throw new ApiError(404, "Order not found");
+  if (order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') throw new ApiError(409, "A receipt is not available until this order is paid", { code: 'NOT_PAID' });
   const [txn, store] = await Promise.all([
     Transaction.findOne({ orderId: order._id, status: 'success' }).sort({ paidAt: -1 }).populate('processedBy', 'fullName').lean(),
-    Store.findOne().select('name address phone').lean(),
+    Store.findOne().select('name address phone website openingHours').lean(),
   ]);
   res.json({
     store: store || null,
@@ -211,7 +206,7 @@ const POP = [{ path: 'orderId', select: 'orderCode source status paymentStatus t
 const dateOf = (v, label, end) => {
   if (!v) return null;
   const d = new Date(v);
-  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} không hợp lệ`);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} is invalid`);
   if (end && /^\d{4}-\d{2}-\d{2}$/.test(v)) d.setHours(23, 59, 59, 999);
   return d;
 };
@@ -235,15 +230,15 @@ async function listByStatus(req, res, forcedStatus) {
   const filter = {};
   if (forcedStatus) filter.status = forcedStatus;
   else if (req.query.status) {
-    if (!['pending', 'success', 'failed'].includes(req.query.status)) throw new ApiError(400, 'Trạng thái không hợp lệ');
+    if (!['pending', 'success', 'failed'].includes(req.query.status)) throw new ApiError(400, "Invalid status");
     filter.status = req.query.status;
   }
   if (req.query.method) {
-    if (!['cash', 'card', 'vnpay', 'momo'].includes(req.query.method)) throw new ApiError(400, 'Phương thức không hợp lệ');
+    if (!['cash', 'card', 'vnpay', 'wallet'].includes(req.query.method)) throw new ApiError(400, "Invalid method");
     filter.method = req.query.method;
   }
-  const from = dateOf(req.query.from, 'Từ ngày', false);
-  const to = dateOf(req.query.to, 'Đến ngày', true);
+  const from = dateOf(req.query.from, "From date", false);
+  const to = dateOf(req.query.to, "To date", true);
   if (from || to) filter.createdAt = { ...(from && { $gte: from }), ...(to && { $lte: to }) };
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
   if (q) {
@@ -266,36 +261,45 @@ exports.listPendingPayments = asyncHandler((req, res) => listByStatus(req, res, 
 // UC-41.4 Handle Payment Error. PATCH /api/payments/admin/:id/resolve  body: { action: confirm_paid|mark_failed|dismiss, note }
 exports.handlePaymentError = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Không tìm thấy giao dịch');
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, "Transaction not found");
   const action = req.body?.action;
-  if (!['confirm_paid', 'mark_failed', 'dismiss'].includes(action)) throw new ApiError(400, 'Hành động không hợp lệ');
+  if (!['confirm_paid', 'mark_failed', 'dismiss'].includes(action)) throw new ApiError(400, "Invalid action");
   const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
-  if (note.length < 3 || note.length > 500) throw new ApiError(400, 'Ghi chú xử lý cần từ 3 đến 500 ký tự');
-  const txn = await Transaction.findById(id);
-  if (!txn) throw new ApiError(404, 'Không tìm thấy giao dịch');
-  if (txn.errorHandling?.handledAt) throw new ApiError(409, 'Giao dịch này đã được xử lý', { code: 'ALREADY_HANDLED' });
+  if (note.length < 3 || note.length > 500) throw new ApiError(400, "Resolution notes must contain 3–500 characters");
+  let txn = await Transaction.findById(id);
+  if (!txn) throw new ApiError(404, "Transaction not found");
+  if (txn.errorHandling?.handledAt) throw new ApiError(409, "This transaction has already been resolved", { code: 'ALREADY_HANDLED' });
   const now = new Date();
 
   if (action === 'confirm_paid') {
-    if (txn.status === 'success') throw new ApiError(409, 'Giao dịch đã thành công');
+    if (txn.status === 'success') throw new ApiError(409, "This transaction is already successful");
+    if (txn.txnRef && txn.method === 'vnpay') {
+      await payment.applyGatewayResult({ txnRef: txn.txnRef, amount: txn.amount, outcome: 'success', gateway: { provider: txn.gateway?.provider || 'vnpay' } });
+      txn = await Transaction.findById(id);
+    } else {
     txn.status = 'success';
     txn.paidAt = now;
     txn.failureReason = undefined;
     const order = await Order.findOneAndUpdate(
       { _id: txn.orderId, status: 'pending_payment' },
-      { $set: { status: 'confirmed', paymentStatus: 'paid', paidAt: now, paymentMethod: txn.method }, $push: { statusHistory: { status: 'confirmed', changedAt: now, changedBy: req.user.id, note: 'Admin xác nhận đã thanh toán' } } },
+      { $set: { status: 'confirmed', paymentStatus: 'paid', paidAt: now, paymentMethod: txn.method }, $push: { statusHistory: { status: 'confirmed', changedAt: now, changedBy: req.user.id, note: "Payment confirmed by admin" } } },
       { new: true },
     );
-    if (!order) txn.failureReason = 'Admin xác nhận đã nhận tiền nhưng đơn không còn chờ thanh toán, cần xử lý đơn thủ công';
+    if (!order) txn.failureReason = "Payment confirmed by admin, but the order is no longer awaiting payment and requires manual review";
+    }
   } else if (action === 'mark_failed') {
-    if (txn.status === 'success') throw new ApiError(409, 'Không thể đánh dấu thất bại một giao dịch đã thành công');
+    if (txn.status === 'success') throw new ApiError(409, "A successful transaction cannot be marked as failed");
     txn.status = 'failed';
     txn.failureReason = txn.failureReason || note;
   } else if (txn.status === 'pending') {
-    throw new ApiError(400, 'Giao dịch đang chờ cần được xác nhận hoặc đánh dấu thất bại, không thể bỏ qua');
+    throw new ApiError(400, "A pending transaction must be confirmed or marked as failed");
   }
   txn.errorHandling = { handledBy: req.user.id, handledAt: now, resolution: `${action}: ${note}` };
   await txn.save();
+  if ((action === 'confirm_paid' || action === 'mark_failed') && !(action === 'confirm_paid' && txn.txnRef && txn.method === 'vnpay')) {
+    const event = action === 'mark_failed' ? 'payment_failed' : txn.failureReason ? 'payment_late' : 'payment_success';
+    void notifyOrder(txn.orderId, event, { amount: txn.amount, txnRef: txn.txnRef || String(txn._id) });
+  }
   await logActivity(req, { action: 'PAYMENT_ERROR_HANDLE', targetType: 'Transaction', targetId: txn._id, detail: { action, note } });
   res.json(paymentView(await txn.populate(POP)));
 });

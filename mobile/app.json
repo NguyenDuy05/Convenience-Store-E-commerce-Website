@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "QUICK",
+    "slug": "quick-store",
+    "scheme": "quickstore",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/quick-icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.quickstore.customer",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.quickstore.customer",
+      "adaptiveIcon": {
+        "backgroundColor": "#3882F6",
+        "foregroundImage": "./assets/quick-icon.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/quick-favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-web-browser", "expo-font"],
+    "splash": {
+      "image": "./assets/quick-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#EAF6FF"
+    }
+  }
+}
