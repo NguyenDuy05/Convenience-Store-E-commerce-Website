@@ -13,6 +13,8 @@ const MAX_POLLS = 10; // chờ tối đa ~30 giây cho cổng báo kết quả
 // Quyết định hiển thị chỉ dựa vào TRẠNG THÁI ĐƠN do server trả về, không tin tham số trên URL.
 function resolve(order) {
   const last = order.latestPayment;
+  if (order.paymentStatus === 'refunded') return 'refunded';
+  if (order.status === 'cancelled') return 'cancelled';
   if (order.status === 'failed') return last?.status === 'success' ? 'late' : 'expired';
   if (order.status === 'pending_payment') {
     if (last?.status === 'pending') return 'waiting';
@@ -23,13 +25,15 @@ function resolve(order) {
 }
 
 const VIEW = {
-  paid: { tone: 'ok', icon: 'check_circle', title: 'Thanh toán thành công', text: 'Cửa hàng đã nhận đơn và sẽ chuẩn bị ngay. Khi đơn sẵn sàng, bạn đến quầy và đọc mã đơn để nhận hàng.' },
-  cash: { tone: 'ok', icon: 'check_circle', title: 'Đặt hàng thành công', text: 'Bạn thanh toán tiền mặt khi đến nhận hàng. Khi đơn sẵn sàng, đọc mã đơn cho nhân viên tại quầy.' },
-  waiting: { tone: 'wait', icon: 'hourglass_top', title: 'Đang chờ xác nhận thanh toán', text: 'Cổng thanh toán chưa báo kết quả. Vui lòng không thanh toán lại để tránh bị trừ tiền hai lần.' },
-  declined: { tone: 'bad', icon: 'cancel', title: 'Thanh toán chưa thành công', text: 'Chưa có khoản tiền nào được ghi nhận. Đơn vẫn được giữ hàng đến khi hết hạn, bạn có thể thanh toán lại hoặc chọn cổng khác.' },
-  unpaid: { tone: 'wait', icon: 'payments', title: 'Đơn chưa được thanh toán', text: 'Bạn chưa hoàn tất thanh toán. Đơn vẫn được giữ hàng đến khi hết hạn.' },
-  expired: { tone: 'bad', icon: 'timer_off', title: 'Đơn đã hết hạn thanh toán', text: 'Hàng đã được trả lại kho. Bạn có thể đặt lại từ giỏ hàng.' },
-  late: { tone: 'wait', icon: 'support_agent', title: 'Đã nhận thanh toán nhưng đơn đã hết hạn', text: 'Cửa hàng sẽ liên hệ để xử lý hoặc hoàn tiền cho bạn. Vui lòng lưu mã đơn và liên hệ cửa hàng nếu cần hỗ trợ.' },
+  refunded: { tone: 'ok', icon: 'account_balance_wallet', title: 'Payment returned to wallet', text: 'Payments received for this closed order have been credited to your wallet. Use the balance on your next purchase.' },
+  cancelled: { tone: 'bad', icon: 'cancel', title: 'Order cancelled', text: 'This order has been cancelled. Any payment received later will be returned to your wallet.' },
+  paid: { tone: 'ok', icon: 'check_circle', title: "Payment successful", text: "The store has received your order and will prepare it shortly. When it is ready, visit the counter and provide your order code." },
+  cash: { tone: 'ok', icon: 'check_circle', title: "Order placed successfully", text: "Pay in cash at pickup. When your order is ready, give the order code to a staff member at the counter." },
+  waiting: { tone: 'wait', icon: 'hourglass_top', title: "Awaiting payment confirmation", text: "The payment gateway has not returned a result. Do not pay again to avoid a duplicate charge." },
+  declined: { tone: 'bad', icon: 'cancel', title: "Payment not completed", text: "No payment has been recorded. Your items are reserved until the deadline; you can retry with VNPay." },
+  unpaid: { tone: 'wait', icon: 'payments', title: "Order not yet paid", text: "You have not completed payment. Your items are reserved until the payment deadline." },
+  expired: { tone: 'bad', icon: 'timer_off', title: "Order payment expired", text: "The items have been returned to stock. You can place another order from your cart." },
+  late: { tone: 'wait', icon: 'support_agent', title: "Payment received after the order expired", text: "The payment has been returned to your wallet. Open your wallet to see the credit." },
 };
 
 // Kết quả đặt hàng / thanh toán (UC-08.1, UC-08.2). Cổng thanh toán và tiền mặt đều dẫn về đây.
@@ -61,7 +65,7 @@ export default function PaymentResultPage() {
       .then((res) => { if (!ignore) { setOrder(res.data); setError(''); } })
       .catch(async (err) => {
         if (ignore || (await handleAuth(err))) return;
-        setError(err.response?.status === 404 ? 'Không tìm thấy đơn hàng này.' : 'Không kiểm tra được kết quả. Vui lòng xem lại trong mục Đơn hàng của tôi.');
+        setError(err.response?.status === 404 ? "This order was not found." : "Could not verify the result. Please check My orders.");
       })
       .finally(() => { if (!ignore) setLoading(false); });
     return () => { ignore = true; };
@@ -80,21 +84,21 @@ export default function PaymentResultPage() {
     return (
       <div className="pres">
         <div className="pres-card bad"><span className="pres-icon"><Icon name="gpp_maybe" size="xl" /></span>
-          <h1>Không xác minh được kết quả thanh toán</h1>
-          <p>Thông tin trả về từ cổng thanh toán không hợp lệ. Để chắc chắn, hãy kiểm tra trạng thái trong mục Đơn hàng của tôi trước khi thanh toán lại.</p>
-          <div className="pres-actions"><Link className="pres-btn" to="/orders">Xem đơn hàng của tôi</Link></div></div>
+          <h1>Could not verify the payment result</h1>
+          <p>The payment gateway returned invalid information. Check My orders before paying again.</p>
+          <div className="pres-actions"><Link className="pres-btn" to="/orders">View my orders</Link></div></div>
       </div>
     );
   }
 
-  if (loading) return <div className="pres"><div className="pres-skeleton" aria-busy="true" aria-label="Đang kiểm tra kết quả" /></div>;
+  if (loading) return <div className="pres"><div className="pres-skeleton" aria-busy="true" aria-label="Checking payment result" /></div>;
 
   if (error) {
     return (
       <div className="pres">
-        <div className="pres-card bad" role="alert"><span className="pres-icon"><Icon name="cloud_off" size="xl" /></span><h1>Chưa kiểm tra được kết quả</h1><p>{error}</p>
-          <div className="pres-actions"><button type="button" className="pres-btn" onClick={() => { setLoading(true); setTick((k) => k + 1); }}><Icon name="refresh" size="md" />Thử lại</button>
-            <Link className="pres-btn ghost" to="/orders">Đơn hàng của tôi</Link></div></div>
+        <div className="pres-card bad" role="alert"><span className="pres-icon"><Icon name="cloud_off" size="xl" /></span><h1>Could not check the result</h1><p>{error}</p>
+          <div className="pres-actions"><button type="button" className="pres-btn" onClick={() => { setLoading(true); setTick((k) => k + 1); }}><Icon name="refresh" size="md" />Try again</button>
+            <Link className="pres-btn ghost" to="/orders">My orders</Link></div></div>
       </div>
     );
   }
@@ -109,21 +113,23 @@ export default function PaymentResultPage() {
         <span className="pres-icon"><Icon name={v.icon} size="xl" fill /></span>
         <h1>{v.title}</h1>
         <p>{v.text}</p>
-        {gaveUp && <p className="pres-sub">Chưa có kết quả sau {Math.round((MAX_POLLS * POLL_MS) / 1000)} giây. Kết quả sẽ tự cập nhật trong mục Đơn hàng của tôi, bạn không cần thanh toán lại.</p>}
-        {stillWaiting && !gaveUp && <p className="pres-sub"><span className="pres-spin" />Đang kiểm tra…</p>}
+        {state === 'paid' && order.pickupSchedule && !order.pickupSchedule.isOpen && <p className="pres-sub">{order.pickupSchedule.notice}</p>}
+        {gaveUp && <p className="pres-sub">No result after {Math.round((MAX_POLLS * POLL_MS) / 1000)} seconds. My orders will update automatically; you do not need to pay again.</p>}
+        {stillWaiting && !gaveUp && <p className="pres-sub"><span className="pres-spin" />Checking…</p>}
 
         <dl className="pres-info">
-          <dt>Mã đơn</dt><dd className="code">{order.orderCode}</dd>
-          <dt>Tổng tiền</dt><dd>{formatCurrency(order.totalAmount)}</dd>
-          <dt>Đặt lúc</dt><dd>{formatDateTime(order.createdAt)}</dd>
-          {order.store?.name && <><dt>Nhận hàng tại</dt><dd>{order.store.name}{order.store.address ? `, ${order.store.address}` : ''}</dd></>}
+          <dt>Order code</dt><dd className="code">{order.orderCode}</dd>
+          <dt>Total</dt><dd>{formatCurrency(order.totalAmount)}</dd>
+          <dt>Placed on</dt><dd>{formatDateTime(order.createdAt)}</dd>
+          {order.store?.name && <><dt>Pickup at</dt><dd>{order.store.name}{order.store.address ? `, ${order.store.address}` : ''}</dd></>}
         </dl>
 
         <div className="pres-actions">
-          {(state === 'declined' || state === 'unpaid') && <Link className="pres-btn" to={`/orders/${order._id}/pay`}><Icon name="payments" size="md" />Thanh toán lại</Link>}
-          {(state === 'paid' || state === 'cash') && <Link className="pres-btn" to={`/orders/${order._id}/tracking`}><Icon name="local_shipping" size="md" />Theo dõi đơn</Link>}
-          <Link className={`pres-btn ${state === 'paid' || state === 'cash' || state === 'declined' || state === 'unpaid' ? 'ghost' : ''}`} to={`/orders/${order._id}`}>Xem chi tiết đơn</Link>
-          {(state === 'expired' || state === 'paid' || state === 'cash') && <Link className="pres-btn ghost" to="/products">Tiếp tục mua sắm</Link>}
+          {state === 'refunded' && <Link className="pres-btn" to="/wallet">View wallet</Link>}
+          {(state === 'declined' || state === 'unpaid') && <Link className="pres-btn" to={`/orders/${order._id}/pay`}><Icon name="payments" size="md" />Retry payment</Link>}
+          {(state === 'paid' || state === 'cash') && <Link className="pres-btn" to={`/orders/${order._id}/tracking`}><Icon name="local_shipping" size="md" />Track orders</Link>}
+          <Link className={`pres-btn ${state === 'paid' || state === 'cash' || state === 'declined' || state === 'unpaid' ? 'ghost' : ''}`} to={`/orders/${order._id}`}>View order details</Link>
+          {(state === 'expired' || state === 'paid' || state === 'cash') && <Link className="pres-btn ghost" to="/products">Continue shopping</Link>}
         </div>
       </div>
     </div>

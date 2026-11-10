@@ -1,0 +1,7 @@
+{
+  "device": "Local headless Edge, desktop 1440x900; not a mobile hardware benchmark",
+  "initialLayoutShift": 0.0008484519675925926,
+  "frameMedianMs": 5.599999999999454,
+  "frameP95Ms": 16.600000000000364,
+  "sampledFrames": 119
+}

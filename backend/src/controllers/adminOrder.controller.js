@@ -8,11 +8,13 @@ const ApiError = require('../utils/ApiError');
 const { runAtomic } = require('../utils/atomic');
 const { toItem } = require('../utils/orderDto');
 const { logActivity } = require('../services/activity.service');
+const { pickupSchedule } = require('../services/pickupSchedule.service');
+const { notifyOrder } = require('../services/notification.service');
 
 const STATUSES = Order.schema.path('status').enumValues;
 const SOURCES = ['online', 'store'];
 const PAY_STATUSES = ['unpaid', 'paid', 'failed', 'refunded'];
-const PAY_METHODS = ['cash', 'card', 'vnpay', 'momo'];
+const PAY_METHODS = ['cash', 'card', 'vnpay', 'wallet'];
 const SORTS = {
   newest: { createdAt: -1, _id: -1 },
   oldest: { createdAt: 1, _id: 1 },
@@ -21,7 +23,7 @@ const SORTS = {
 };
 // Chuyển trạng thái theo đúng thứ tự xử lý đơn nhận tại cửa hàng
 const NEXT_STATUS = { confirmed: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
-const NOT_FOUND = 'Không tìm thấy đơn hàng';
+const NOT_FOUND = "Order not found";
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isId = (v) => mongoose.isValidObjectId(v);
@@ -29,13 +31,13 @@ const isId = (v) => mongoose.isValidObjectId(v);
 const parseDate = (value, label) => {
   if (value === undefined || value === '') return null;
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} không hợp lệ`);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} is invalid`);
   return d;
 };
 
 const pick = (value, allowed, label) => {
   if (value === undefined || value === '') return undefined;
-  if (!allowed.includes(value)) throw new ApiError(400, `${label} không hợp lệ`);
+  if (!allowed.includes(value)) throw new ApiError(400, `${label} is invalid`);
   return value;
 };
 
@@ -47,14 +49,14 @@ const openIssues = (o) => (o.issues || []).filter((i) => i.status === 'open').le
 exports.listOrders = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
-  const status = pick(req.query.status, STATUSES, 'Trạng thái');
-  const source = pick(req.query.source, SOURCES, 'Nguồn đơn');
-  const paymentStatus = pick(req.query.paymentStatus, PAY_STATUSES, 'Trạng thái thanh toán');
-  const paymentMethod = pick(req.query.paymentMethod, PAY_METHODS, 'Phương thức thanh toán');
-  const sortKey = pick(req.query.sort, Object.keys(SORTS), 'Cách sắp xếp') || 'newest';
-  const from = parseDate(req.query.from, 'Ngày bắt đầu');
-  const to = parseDate(req.query.to, 'Ngày kết thúc');
-  if (from && to && from > to) throw new ApiError(400, 'Ngày bắt đầu phải trước ngày kết thúc');
+  const status = pick(req.query.status, STATUSES, "Status");
+  const source = pick(req.query.source, SOURCES, "Order source");
+  const paymentStatus = pick(req.query.paymentStatus, PAY_STATUSES, "Payment status");
+  const paymentMethod = pick(req.query.paymentMethod, PAY_METHODS, "Payment method");
+  const sortKey = pick(req.query.sort, Object.keys(SORTS), "Sort order") || 'newest';
+  const from = parseDate(req.query.from, "Start date");
+  const to = parseDate(req.query.to, "End date");
+  if (from && to && from > to) throw new ApiError(400, "Start date must be before end date");
 
   const base = {};
   if (source) base.source = source;
@@ -130,7 +132,7 @@ exports.getOrder = asyncHandler(async (req, res) => {
   const [o, txns, store] = await Promise.all([
     Order.findById(id).populate({ path: 'items.productId', select: 'images unit' }).lean(),
     Transaction.find({ orderId: id }).sort({ createdAt: 1 }).lean(),
-    Store.findOne().select('name address phone').lean(),
+    Store.findOne().select('name address phone openingHours status').lean(),
   ]);
   if (!o) throw new ApiError(404, NOT_FOUND);
 
@@ -159,6 +161,7 @@ exports.getOrder = asyncHandler(async (req, res) => {
     pointsUsed: o.pointsUsed || 0,
     pointsDiscount: o.pointsDiscount || 0,
     totalAmount: o.totalAmount,
+    walletAmount: o.walletAmount || 0, payableAmount: o.payableAmount ?? o.totalAmount,
     pointsEarned: o.pointsEarned || 0,
     paymentMethod: o.paymentMethod,
     paymentStatus: o.paymentStatus,
@@ -183,9 +186,10 @@ exports.getOrder = asyncHandler(async (req, res) => {
     })),
     issues: (o.issues || []).map((i) => ({
       _id: i._id, description: i.description, status: i.status, resolution: i.resolution || null,
-      reportedBy: i.reportedBy ? name(i.reportedBy) : 'Hệ thống', handledBy: name(i.handledBy),
+      reportedBy: i.reportedBy ? name(i.reportedBy) : "System", handledBy: name(i.handledBy),
       createdAt: i.createdAt, resolvedAt: i.resolvedAt || null,
     })),
+    pickupSchedule: pickupSchedule(store), preparationStartsAt: o.preparationStartsAt || null,
     nextTransition: allowedTransition(o),
     store,
   });
@@ -193,8 +197,8 @@ exports.getOrder = asyncHandler(async (req, res) => {
 
 const text = (v, label, min, max) => {
   const s = typeof v === 'string' ? v.trim() : '';
-  if (s.length < min) throw new ApiError(400, `${label} cần tối thiểu ${min} ký tự`);
-  if (s.length > max) throw new ApiError(400, `${label} tối đa ${max} ký tự`);
+  if (s.length < min) throw new ApiError(400, `${label} must contain at least ${min} characters`);
+  if (s.length > max) throw new ApiError(400, `${label} at most ${max} characters`);
   return s;
 };
 
@@ -205,21 +209,28 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
   const target = req.body.status;
-  if (!STATUSES.includes(target)) throw new ApiError(400, 'Trạng thái không hợp lệ');
-  const note = req.body.note ? text(req.body.note, 'Ghi chú', 1, 300) : undefined;
+  if (!STATUSES.includes(target)) throw new ApiError(400, "Invalid status");
+  const note = req.body.note ? text(req.body.note, "Note", 1, 300) : undefined;
 
   const o = await Order.findById(id).lean();
   if (!o) throw new ApiError(404, NOT_FOUND);
+  if (req.user.role === 'staff' && o.source !== 'online') throw new ApiError(403, 'Use POS checkout to complete an in-store sale');
   if (NEXT_STATUS[o.status] !== target) {
-    throw new ApiError(409, `Không thể chuyển đơn từ "${o.status}" sang "${target}"`, { code: 'INVALID_TRANSITION' });
+    throw new ApiError(409, `Cannot change order status from "${o.status}" sang "${target}"`, { code: 'INVALID_TRANSITION' });
+  }
+  if (target === 'preparing' && o.source === 'online') {
+    const schedule = pickupSchedule(await Store.findOne().lean());
+    if (!schedule.isOpen) throw new ApiError(409, schedule.notice, { code: 'STORE_NOT_OPEN', pickupSchedule: schedule });
   }
   const needsCash = target === 'completed' && o.paymentStatus !== 'paid';
   if (needsCash && o.paymentMethod !== 'cash') {
-    throw new ApiError(409, 'Đơn chưa thanh toán nên không thể hoàn tất', { code: 'NOT_PAID' });
+    throw new ApiError(409, "An unpaid order cannot be completed", { code: 'NOT_PAID' });
   }
   if (needsCash && req.body.cashCollected !== true) {
-    throw new ApiError(409, 'Đơn tiền mặt: vui lòng xác nhận đã thu đủ tiền của khách trước khi hoàn tất', { code: 'CASH_NOT_COLLECTED' });
+    throw new ApiError(409, "Confirm that the full cash amount has been collected before completing this order", { code: 'CASH_NOT_COLLECTED' });
   }
+  const cashReceived = req.body.received === undefined ? o.totalAmount : Number(req.body.received);
+  if (needsCash && (!Number.isSafeInteger(cashReceived) || cashReceived < o.totalAmount || cashReceived > 1e9)) throw new ApiError(400, 'Cash received must cover the order total');
 
   const now = new Date();
   const set = { status: target };
@@ -231,7 +242,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     const opts = session ? { session } : {};
     // Điều kiện status hiện tại: hai admin bấm cùng lúc thì chỉ một người thành công
     const upd = await Order.findOneAndUpdate({ _id: id, status: o.status }, { $set: set, $push: { statusHistory: entry } }, { new: true, ...opts });
-    if (!upd) throw new ApiError(409, 'Trạng thái đơn vừa được thay đổi bởi người khác. Vui lòng tải lại.', { code: 'STALE_STATUS' });
+    if (!upd) throw new ApiError(409, "The order status changed. Please refresh and try again.", { code: 'STALE_STATUS' });
     onRollback(() => {
       // Khôi phục đúng giá trị cũ; trường trước đó chưa có thì gỡ bỏ (không truyền undefined vào $set)
       const back = { status: o.status, paymentStatus: o.paymentStatus };
@@ -242,12 +253,13 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     if (needsCash) {
       await Transaction.create([{
         orderId: o._id, customerId: o.customerId, processedBy: req.user.id, method: 'cash', amount: o.totalAmount,
-        status: 'success', paidAt: now, cash: { received: o.totalAmount, change: 0 },
+        status: 'success', paidAt: now, cash: { received: cashReceived, change: cashReceived - o.totalAmount },
       }], opts);
     }
     return upd;
   });
 
+  void notifyOrder(updated, 'status_updated');
   if (target === 'completed') await awardPointsForOrder(o._id);
   await logActivity(req, { action: 'ORDER_STATUS_CHANGE', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, from: o.status, to: target, note, cashCollected: needsCash || undefined } });
   res.json({ _id: updated._id, status: updated.status, paymentStatus: updated.paymentStatus, readyAt: updated.readyAt, pickedUpAt: updated.pickedUpAt });
@@ -258,7 +270,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 exports.handleOrderIssue = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
-  const description = text(req.body.description, 'Mô tả sự cố', 5, 1000);
+  const description = text(req.body.description, "Issue description", 5, 1000);
   const o = await Order.findOneAndUpdate(
     { _id: id },
     { $push: { issues: { description, status: 'open', reportedBy: req.user.id } } },
@@ -274,8 +286,8 @@ exports.handleOrderIssue = asyncHandler(async (req, res) => {
 // PATCH /api/orders/:id/issues/:issueId  body: { resolution }
 exports.resolveOrderIssue = asyncHandler(async (req, res) => {
   const { id, issueId } = req.params;
-  if (!isId(id) || !isId(issueId)) throw new ApiError(404, 'Không tìm thấy sự cố');
-  const resolution = text(req.body.resolution, 'Hướng xử lý', 3, 1000);
+  if (!isId(id) || !isId(issueId)) throw new ApiError(404, "Issue not found");
+  const resolution = text(req.body.resolution, "Resolution", 3, 1000);
   const now = new Date();
   // Chỉ chuyển được khi sự cố còn "open": bấm lặp hoặc hai admin cùng xử lý không ghi đè nhau
   const o = await Order.findOneAndUpdate(
@@ -285,8 +297,8 @@ exports.resolveOrderIssue = asyncHandler(async (req, res) => {
   );
   if (!o) {
     const exists = await Order.findOne({ _id: id, 'issues._id': issueId }).select('_id').lean();
-    if (!exists) throw new ApiError(404, 'Không tìm thấy sự cố');
-    throw new ApiError(409, 'Sự cố này đã được xử lý trước đó', { code: 'ALREADY_RESOLVED' });
+    if (!exists) throw new ApiError(404, "Issue not found");
+    throw new ApiError(409, "This issue has already been resolved", { code: 'ALREADY_RESOLVED' });
   }
   await logActivity(req, { action: 'ORDER_ISSUE_RESOLVE', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, issueId, resolution } });
   res.json({ issue: { _id: issueId, status: 'resolved', resolution, resolvedAt: now } });
@@ -298,34 +310,29 @@ exports.resolveOrderIssue = asyncHandler(async (req, res) => {
 exports.cancelOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
-  const reason = text(req.body?.reason, 'Lý do hủy', 3, 500);
-  const o = await Order.findById(id);
+  const reason = text(req.body?.reason, "Cancellation reason", 3, 500);
+  const o = await Order.findOne({ _id: id, ...(req.user.role === 'customer' ? { customerId: req.user.id, source: 'online' } : {}) });
   if (!o) throw new ApiError(404, NOT_FOUND);
-  if (!['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'].includes(o.status)) {
-    throw new ApiError(409, 'Chỉ có thể hủy đơn chưa hoàn tất, chưa bị hủy và chưa thất bại', { code: 'NOT_CANCELLABLE' });
-  }
+  const allowed = req.user.role === 'customer' ? ['pending_payment', 'confirmed'] : ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
+  if (!allowed.includes(o.status) || !o.checkoutReady) throw new ApiError(409, req.user.role === 'customer' ? 'You can cancel only before staff starts preparing your order.' : 'Only active, incomplete orders can be cancelled', { code: 'NOT_CANCELLABLE' });
+  if (!o.customerId && o.paymentStatus === 'paid') throw new ApiError(409, 'This counter sale has no customer wallet. Handle it through the counter return process.');
   const now = new Date();
   const wasPaid = o.paymentStatus === 'paid';
-  const set = { status: 'cancelled', cancelledAt: now, cancelReason: reason };
-  if (wasPaid) {
-    set.paymentStatus = 'refunded';
-    set.refund = { amount: o.totalAmount, method: o.paymentMethod, reason, refundedAt: now, refundedBy: req.user.id };
-  }
-  // Điều kiện status hiện tại: hai admin bấm cùng lúc thì chỉ một người hủy được (và chỉ một lần hoàn kho)
-  const upd = await Order.findOneAndUpdate(
-    { _id: id, status: o.status },
-    { $set: set, $push: { statusHistory: { status: 'cancelled', changedAt: now, changedBy: req.user.id, note: reason } } },
-    { new: true },
-  );
-  if (!upd) throw new ApiError(409, 'Trạng thái đơn vừa được thay đổi bởi người khác. Vui lòng tải lại.', { code: 'STALE_STATUS' });
-
-  await Transaction.updateMany({ orderId: o._id, status: 'pending' }, { $set: { status: 'failed', failureReason: 'Đơn hàng đã bị hủy' } });
-  try { await stockService.releaseStock(o._id, { reason: `Hoàn kho: hủy đơn ${o.orderCode}` }); }
-  catch (e) { console.error('Hoàn kho khi hủy đơn lỗi:', String(o._id), e); }
-  if (o.discountCode?.codeId) await DiscountCode.updateOne({ _id: o.discountCode.codeId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
+  const upd = await Order.findOneAndUpdate({ _id: id, status: o.status }, {
+    $set: { status: 'cancelled', cancelledAt: now, cancelReason: reason, walletPolicy: true },
+    $push: { statusHistory: { status: 'cancelled', changedAt: now, changedBy: req.user.id, note: reason } },
+  }, { new: true });
+  if (!upd) throw new ApiError(409, 'The order status changed. Please refresh and try again.', { code: 'STALE_STATUS' });
+  await Transaction.updateMany({ orderId: o._id, status: 'pending' }, { $set: { status: 'failed', failureReason: 'Order cancelled' } });
+  try { await stockService.releaseStock(o._id, { reason: 'Stock returned: cancelled order ' + o.orderCode }); }
+  catch (e) { console.error('Stock return failed for cancelled order:', String(o._id), e); }
+  await require('../services/discountReservation.service').release(o);
+  await require('../services/wallet.service').settleClosedOrder(o._id);
+  const settled = await Order.findById(id).lean();
+  void notifyOrder(settled, 'status_updated');
 
   await logActivity(req, { action: 'ORDER_CANCEL', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, reason, refunded: wasPaid ? o.totalAmount : 0 } });
-  res.json({ _id: upd._id, status: upd.status, paymentStatus: upd.paymentStatus, refund: upd.refund?.refundedAt ? upd.refund : null });
+  res.json({ _id: upd._id, status: upd.status, paymentStatus: settled.paymentStatus, refund: settled.refund?.refundedAt ? settled.refund : null });
 });
 
 // View Refund History. GET /api/orders/refunds?q=&from=&to=&page=&limit=
@@ -333,8 +340,8 @@ exports.listRefunds = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const filter = { 'refund.refundedAt': { $exists: true } };
-  const from = parseDate(req.query.from, 'Từ ngày');
-  const to = parseDate(req.query.to, 'Đến ngày');
+  const from = parseDate(req.query.from, "From date");
+  const to = parseDate(req.query.to, "To date");
   if (to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)) to.setHours(23, 59, 59, 999);
   if (from || to) filter['refund.refundedAt'] = { $exists: true, ...(from && { $gte: from }), ...(to && { $lte: to }) };
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';

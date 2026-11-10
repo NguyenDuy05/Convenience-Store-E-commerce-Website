@@ -3,7 +3,7 @@ import { handlePaymentError, listFailedPayments, listPayments, listPendingPaymen
 import { Badge, Notice, Pager, STATUS_TONE, Stat, Tabs, dt, money, useAction, useFetch } from '../../components/admin/kit';
 
 const TABS = [{ key: 'all', label: 'All payments', fn: listPayments }, { key: 'failed', label: 'Failed', fn: listFailedPayments }, { key: 'pending', label: 'Pending', fn: listPendingPayments }];
-const METHOD = { cash: 'Cash', card: 'Card', vnpay: 'VNPay', momo: 'MoMo' };
+const METHOD = { cash: 'Cash', card: 'Card', vnpay: 'VNPay', wallet: 'Wallet' };
 const ACTIONS = {
   confirm_paid: 'Confirm payment received',
   mark_failed: 'Mark as failed',

@@ -3,7 +3,7 @@ import '../../../styles/admin-promotions.css';
 import '../../../styles/admin-kit.css';
 
 // Bộ nhỏ dùng chung cho các trang quản trị (Admin/Staff): lỗi, ngày, tiền, phân trang, tab, hook tải danh sách.
-export const money = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
+export const money = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 export const moneyVi = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
 export const dt = (v) => (v ? new Date(v).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 export const d = (v) => (v ? new Date(v).toLocaleDateString('en-GB', { dateStyle: 'medium' }) : '—');

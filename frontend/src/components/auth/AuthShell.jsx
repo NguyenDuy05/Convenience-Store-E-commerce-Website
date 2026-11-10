@@ -6,8 +6,8 @@ export function Icon({ name, size = '' }) {
 }
 
 const perks = [
-    { icon: 'qr_code_scanner', color: 'blue', title: 'QR pickup', desc: 'Scan the code, grab your order' },
-    { icon: 'ac_unit', color: 'green', title: 'Chilled at 4°C', desc: 'Drinks stay cold' },
+    { icon: 'shopping_bag', color: 'blue', title: 'Store pickup', desc: 'Collect your order with its order code' },
+    { icon: 'notifications', color: 'green', title: 'Order updates', desc: 'Know when your order is ready' },
     { icon: 'loyalty', color: 'gold', title: 'Member rewards', desc: 'Earn points on every purchase' },
 ];
 
@@ -21,11 +21,11 @@ export default function AuthShell({ active = null, children }) {
                 <section className="auth-hero">
                     <div className="auth-badge">
                         <span className="auth-badge-dot" />
-                        Pick up in store in just 15 minutes
+                        Order online. Collect when ready.
                     </div>
                     <h2 className="auth-hero-title">Shop fast,<br />pick up easy.</h2>
                     <p className="auth-hero-desc">
-                        Order snacks, drinks and daily essentials online, then collect them at the store. No queue, no delivery wait.
+                        Order snacks, drinks and daily essentials online. We will notify you when your order is ready to collect.
                     </p>
                     <div className="auth-perks">
                         {perks.map((p) => (

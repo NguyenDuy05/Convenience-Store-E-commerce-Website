@@ -14,7 +14,7 @@ import ProductCard from '../../components/product/ProductCard';
 import { formatCurrency } from '../../utils/format';
 import { estimatePromo } from '../../utils/promoPrice';
 
-const MEAL = { main: 'Món no', light: 'Ăn nhẹ', snack: 'Ăn vặt', beverage: 'Đồ uống' };
+const MEAL = { main: "Main meals", light: "Light meals", snack: "Snacks", beverage: "Drinks" };
 // UC-02.2 View Product Details
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -36,7 +36,7 @@ export default function ProductDetailPage() {
         const catId = res.data.categoryId?._id || res.data.categoryId;
         if (catId) listProducts({ categoryId: catId, limit: 5 }).then((r) => { if (alive) setRelated((r.data.items || []).filter((p) => p._id !== res.data._id).slice(0, 4)); }).catch(() => { });
       })
-      .catch((err) => { if (alive) setError(err.response?.status === 404 ? 'Sản phẩm không tồn tại hoặc đã ngừng bán.' : (err.response?.data?.message || 'Không tải được sản phẩm. Vui lòng thử lại.')); });
+      .catch((err) => { if (alive) setError(err.response?.status === 404 ? "This product does not exist or is no longer available." : (err.response?.data?.message || "Could not load the product. Please try again.")); });
     return () => { alive = false; };
   }, [id]);
 
@@ -50,8 +50,8 @@ export default function ProductDetailPage() {
   if (error) {
     return (
       <section className="pd pd-state">
-        <Icon name="search_off" size="lg" /><h1>Không tìm thấy sản phẩm</h1><p>{error}</p>
-        <Link className="pd-btn" to="/products">Xem tất cả sản phẩm</Link>
+        <Icon name="search_off" size="lg" /><h1>Product not found</h1><p>{error}</p>
+        <Link className="pd-btn" to="/products">View all products</Link>
       </section>
     );
   }
@@ -64,8 +64,8 @@ export default function ProductDetailPage() {
 
   return (
     <section className="pd">
-      <nav className="pd-crumbs" aria-label="Điều hướng">
-        <Link to="/">Trang chủ</Link><Icon name="chevron_right" /><Link to="/products">Sản phẩm</Link>
+      <nav className="pd-crumbs" aria-label="Navigation">
+        <Link to="/">Home</Link><Icon name="chevron_right" /><Link to="/products">Products</Link>
         {catName && <><Icon name="chevron_right" /><span>{catName}</span></>}
         <Icon name="chevron_right" /><span aria-current="page">{product.name}</span>
       </nav>
@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
 
           <a className="pd-ratingline" href="#danh-gia">
             <Stars value={product.ratingAvg || 0} size={17} />
-            <span>{product.ratingCount ? `${product.ratingAvg.toFixed(1)} · ${product.ratingCount} đánh giá` : 'Chưa có đánh giá'}</span>
+            <span>{product.ratingCount ? `${product.ratingAvg.toFixed(1)} · ${product.ratingCount} reviews` : "No reviews yet"}</span>
           </a>
 
           <div className="pd-pricebox">
@@ -93,42 +93,42 @@ export default function ProductDetailPage() {
             {discounted && (
               <ul className="pd-promos">
                 {promo.applied.map((a) => <li key={a.name}><Icon name="local_offer" size="md" fill /><b>{a.name}</b><em>{a.label}</em></li>)}
-                <li className="pd-hint">Giá ước tính cho 1 sản phẩm, khuyến mãi được áp dụng tự động khi thanh toán.</li>
+                <li className="pd-hint">Estimated price for one item. Promotions are applied automatically at checkout.</li>
               </ul>
             )}
           </div>
 
           <p className={`pd-stock ${stock <= 0 ? 'out' : low ? 'low' : 'ok'}`}>
             <Icon name={stock <= 0 ? 'cancel' : low ? 'warning' : 'check_circle'} size="md" fill />
-            {stock <= 0 ? 'Tạm hết hàng' : low ? `Sắp hết hàng, chỉ còn ${stock} ${product.unit}` : `Còn hàng (${stock} ${product.unit})`}
+            {stock <= 0 ? "Temporarily out of stock" : low ? `Low stock, only ${stock} ${product.unit}` : `In stock (${stock} ${product.unit})`}
           </p>
 
           <AddToCart product={product} />
 
           <div className="pd-pickup">
             <Icon name="storefront" size="md" />
-            <div><b>Nhận tại cửa hàng</b><span>{store ? `${store.name}${store.address ? ` · ${store.address}` : ''}` : 'Đặt online, ra cửa hàng nhận hàng (không giao tận nơi).'}</span></div>
+            <div><b>Store pickup</b><span>{store ? `${store.name}${store.address ? ` · ${store.address}` : ''}` : "Order online and collect in store."}</span></div>
           </div>
 
           <dl className="pd-specs">
-            <div><dt>Mã SKU</dt><dd className="mono">{product.sku}</dd></div>
-            {product.barcode && <div><dt>Mã vạch</dt><dd className="mono">{product.barcode}</dd></div>}
-            <div><dt>Đơn vị</dt><dd>{product.unit}</dd></div>
-            {catName && <div><dt>Danh mục</dt><dd>{catName}</dd></div>}
+            <div><dt>SKU</dt><dd className="mono">{product.sku}</dd></div>
+            {product.barcode && <div><dt>Barcode</dt><dd className="mono">{product.barcode}</dd></div>}
+            <div><dt>Unit</dt><dd>{product.unit}</dd></div>
+            {catName && <div><dt>Category</dt><dd>{catName}</dd></div>}
           </dl>
         </div>
       </div>
 
       <section className="pd-section" aria-labelledby="pd-desc-title">
-        <h2 id="pd-desc-title">Mô tả sản phẩm</h2>
-        {product.description ? <p className="pd-desc">{product.description}</p> : <p className="pd-hint">Sản phẩm này chưa có mô tả.</p>}
+        <h2 id="pd-desc-title">Product description</h2>
+        {product.description ? <p className="pd-desc">{product.description}</p> : <p className="pd-hint">No description is available for this product.</p>}
       </section>
 
       <ProductReviews productId={product._id} ratingAvg={product.ratingAvg || 0} ratingCount={product.ratingCount || 0} />
 
       {related.length > 0 && (
         <section className="pd-section" aria-labelledby="pd-rel-title">
-          <h2 id="pd-rel-title">Sản phẩm cùng danh mục</h2>
+          <h2 id="pd-rel-title">Related products</h2>
           <div className="grid">{related.map((p) => <ProductCard key={p._id} product={p} />)}</div>
         </section>
       )}

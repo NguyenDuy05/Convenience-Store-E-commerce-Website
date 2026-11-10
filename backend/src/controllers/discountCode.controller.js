@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { validateDiscountCode: checkCode, DiscountCodeError } = require('../services/pricing.service');
 const { logActivity } = require('../services/activity.service');
+const notifications = require('../services/inAppNotification.service');
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const CODE_RE = /^[A-Z0-9_-]{3,30}$/;
@@ -111,6 +112,7 @@ exports.activateDiscountCode = asyncHandler(async (req, res) => {
   if (d.endDate <= new Date()) throw new ApiError(409, 'This code has already expired. Update its dates first.');
   d.status = 'active';
   await d.save();
+  void notifications.announceOffer(d, 'voucher');
   await logActivity(req, { action: 'DISCOUNT_CODE_ACTIVATE', targetType: 'DiscountCode', targetId: d._id });
   res.json(d);
 });
@@ -121,6 +123,7 @@ exports.suspendDiscountCode = asyncHandler(async (req, res) => {
   if (d.status !== 'active') throw new ApiError(409, 'Only active codes can be suspended');
   d.status = 'suspended';
   await d.save();
+  void notifications.withdrawOffer(d, 'voucher');
   await logActivity(req, { action: 'DISCOUNT_CODE_SUSPEND', targetType: 'DiscountCode', targetId: d._id });
   res.json(d);
 });
@@ -130,6 +133,7 @@ exports.deleteDiscountCode = asyncHandler(async (req, res) => {
   const d = await loadCode(req.params.id);
   d.status = 'deleted';
   await d.save();
+  void notifications.withdrawOffer(d, 'voucher');
   await logActivity(req, { action: 'DISCOUNT_CODE_DELETE', targetType: 'DiscountCode', targetId: d._id, detail: { code: d.code } });
   res.json({ message: 'Discount code deleted' });
 });

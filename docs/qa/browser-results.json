@@ -1,0 +1,398 @@
+{
+  "executedAt": "2026-11-08T21:35:24.865Z",
+  "browser": "msedge",
+  "results": [
+    {
+      "name": "UI-01 registration validates inputs and creates a customer account",
+      "status": "PASS",
+      "milliseconds": 4184
+    },
+    {
+      "name": "UI-02 product to cart to VNPay simulator confirms a paid pickup order",
+      "status": "PASS",
+      "milliseconds": 4170
+    },
+    {
+      "name": "UI-03 staff prepares, Done notifies the customer, pickup completes and awards points",
+      "status": "PASS",
+      "milliseconds": 4349
+    },
+    {
+      "name": "UI-04 cancellation credits wallet, partial credit charges only the remainder, and refunds are visible to admin",
+      "status": "PASS",
+      "milliseconds": 5234
+    },
+    {
+      "name": "UI-05 full-wallet checkout bypasses the gateway",
+      "status": "PASS",
+      "milliseconds": 414
+    },
+    {
+      "name": "UI-06 outside-hours preorder is explained and staff preparation is disabled",
+      "status": "PASS",
+      "milliseconds": 739
+    },
+    {
+      "name": "UI-07 cash POS confirms a bill, prints the correct receipt, and saves sales history",
+      "status": "PASS",
+      "milliseconds": 970
+    },
+    {
+      "name": "UI-08 admin selects a local folder photo and saves the product without URL input",
+      "status": "PASS",
+      "milliseconds": 611
+    },
+    {
+      "name": "UI-09 customer and guest routes cannot open admin or staff portals",
+      "status": "PASS",
+      "milliseconds": 3513
+    },
+    {
+      "name": "ROUTE guest /",
+      "status": "PASS",
+      "milliseconds": 605
+    },
+    {
+      "name": "ROUTE guest /products",
+      "status": "PASS",
+      "milliseconds": 529
+    },
+    {
+      "name": "ROUTE guest /products/6af0eadc85a77e50a09774b4",
+      "status": "PASS",
+      "milliseconds": 528
+    },
+    {
+      "name": "ROUTE guest /promotions",
+      "status": "PASS",
+      "milliseconds": 516
+    },
+    {
+      "name": "ROUTE guest /login",
+      "status": "PASS",
+      "milliseconds": 543
+    },
+    {
+      "name": "ROUTE guest /register",
+      "status": "PASS",
+      "milliseconds": 521
+    },
+    {
+      "name": "ROUTE guest /forgot-password",
+      "status": "PASS",
+      "milliseconds": 531
+    },
+    {
+      "name": "ROUTE customer /profile",
+      "status": "PASS",
+      "milliseconds": 578
+    },
+    {
+      "name": "ROUTE customer /addresses",
+      "status": "PASS",
+      "milliseconds": 535
+    },
+    {
+      "name": "ROUTE customer /cart",
+      "status": "PASS",
+      "milliseconds": 528
+    },
+    {
+      "name": "ROUTE customer /checkout",
+      "status": "PASS",
+      "milliseconds": 525
+    },
+    {
+      "name": "ROUTE customer /orders",
+      "status": "PASS",
+      "milliseconds": 563
+    },
+    {
+      "name": "ROUTE customer /orders/history",
+      "status": "PASS",
+      "milliseconds": 537
+    },
+    {
+      "name": "ROUTE customer /reviews",
+      "status": "PASS",
+      "milliseconds": 533
+    },
+    {
+      "name": "ROUTE customer /wallet",
+      "status": "PASS",
+      "milliseconds": 527
+    },
+    {
+      "name": "ROUTE customer /membership",
+      "status": "PASS",
+      "milliseconds": 560
+    },
+    {
+      "name": "ROUTE customer /support",
+      "status": "PASS",
+      "milliseconds": 539
+    },
+    {
+      "name": "ROUTE customer /notifications",
+      "status": "PASS",
+      "milliseconds": 532
+    },
+    {
+      "name": "ROUTE staff /staff",
+      "status": "PASS",
+      "milliseconds": 587
+    },
+    {
+      "name": "ROUTE staff /staff/store-order",
+      "status": "PASS",
+      "milliseconds": 533
+    },
+    {
+      "name": "ROUTE staff /staff/orders",
+      "status": "PASS",
+      "milliseconds": 521
+    },
+    {
+      "name": "ROUTE staff /staff/orders/history",
+      "status": "PASS",
+      "milliseconds": 530
+    },
+    {
+      "name": "ROUTE staff /staff/payment",
+      "status": "PASS",
+      "milliseconds": 543
+    },
+    {
+      "name": "ROUTE staff /staff/transactions",
+      "status": "PASS",
+      "milliseconds": 539
+    },
+    {
+      "name": "ROUTE staff /staff/products",
+      "status": "PASS",
+      "milliseconds": 543
+    },
+    {
+      "name": "ROUTE staff /staff/inventory",
+      "status": "PASS",
+      "milliseconds": 544
+    },
+    {
+      "name": "ROUTE staff /staff/customers",
+      "status": "PASS",
+      "milliseconds": 542
+    },
+    {
+      "name": "ROUTE staff /staff/complaints",
+      "status": "PASS",
+      "milliseconds": 531
+    },
+    {
+      "name": "ROUTE staff /staff/promotions",
+      "status": "PASS",
+      "milliseconds": 528
+    },
+    {
+      "name": "ROUTE staff /staff/shifts",
+      "status": "PASS",
+      "milliseconds": 527
+    },
+    {
+      "name": "ROUTE staff /staff/profile",
+      "status": "PASS",
+      "milliseconds": 538
+    },
+    {
+      "name": "ROUTE staff /staff/notifications",
+      "status": "PASS",
+      "milliseconds": 525
+    },
+    {
+      "name": "ROUTE admin /admin",
+      "status": "PASS",
+      "milliseconds": 590
+    },
+    {
+      "name": "ROUTE admin /admin/orders",
+      "status": "PASS",
+      "milliseconds": 533
+    },
+    {
+      "name": "ROUTE admin /admin/transactions",
+      "status": "PASS",
+      "milliseconds": 528
+    },
+    {
+      "name": "ROUTE admin /admin/payments",
+      "status": "PASS",
+      "milliseconds": 534
+    },
+    {
+      "name": "ROUTE admin /admin/refunds",
+      "status": "PASS",
+      "milliseconds": 544
+    },
+    {
+      "name": "ROUTE admin /admin/products",
+      "status": "PASS",
+      "milliseconds": 527
+    },
+    {
+      "name": "ROUTE admin /admin/categories",
+      "status": "PASS",
+      "milliseconds": 526
+    },
+    {
+      "name": "ROUTE admin /admin/inventory",
+      "status": "PASS",
+      "milliseconds": 519
+    },
+    {
+      "name": "ROUTE admin /admin/customers",
+      "status": "PASS",
+      "milliseconds": 560
+    },
+    {
+      "name": "ROUTE admin /admin/staff",
+      "status": "PASS",
+      "milliseconds": 532
+    },
+    {
+      "name": "ROUTE admin /admin/stores",
+      "status": "PASS",
+      "milliseconds": 527
+    },
+    {
+      "name": "ROUTE admin /admin/promotions",
+      "status": "PASS",
+      "milliseconds": 516
+    },
+    {
+      "name": "ROUTE admin /admin/discount-codes",
+      "status": "PASS",
+      "milliseconds": 521
+    },
+    {
+      "name": "ROUTE admin /admin/membership",
+      "status": "PASS",
+      "milliseconds": 520
+    },
+    {
+      "name": "ROUTE admin /admin/reviews",
+      "status": "PASS",
+      "milliseconds": 537
+    },
+    {
+      "name": "ROUTE admin /admin/profile",
+      "status": "PASS",
+      "milliseconds": 534
+    },
+    {
+      "name": "ROUTE admin /admin/notifications",
+      "status": "PASS",
+      "milliseconds": 532
+    },
+    {
+      "name": "ROUTE admin /admin/inbox",
+      "status": "PASS",
+      "milliseconds": 523
+    },
+    {
+      "name": "RESPONSIVE 390 /wallet",
+      "status": "PASS",
+      "milliseconds": 692
+    },
+    {
+      "name": "RESPONSIVE 390 /orders",
+      "status": "PASS",
+      "milliseconds": 591
+    },
+    {
+      "name": "RESPONSIVE 390 /staff/store-order",
+      "status": "PASS",
+      "milliseconds": 598
+    },
+    {
+      "name": "RESPONSIVE 390 /staff/orders",
+      "status": "PASS",
+      "milliseconds": 582
+    },
+    {
+      "name": "RESPONSIVE 390 /admin/products/6af0eadc85a77e50a09774b4/edit",
+      "status": "PASS",
+      "milliseconds": 670
+    },
+    {
+      "name": "RESPONSIVE 390 /admin/notifications",
+      "status": "PASS",
+      "milliseconds": 588
+    },
+    {
+      "name": "RESPONSIVE 768 /wallet",
+      "status": "PASS",
+      "milliseconds": 581
+    },
+    {
+      "name": "RESPONSIVE 768 /orders",
+      "status": "PASS",
+      "milliseconds": 578
+    },
+    {
+      "name": "RESPONSIVE 768 /staff/store-order",
+      "status": "PASS",
+      "milliseconds": 566
+    },
+    {
+      "name": "RESPONSIVE 768 /staff/orders",
+      "status": "PASS",
+      "milliseconds": 580
+    },
+    {
+      "name": "RESPONSIVE 768 /admin/products/6af0eadc85a77e50a09774b4/edit",
+      "status": "PASS",
+      "milliseconds": 622
+    },
+    {
+      "name": "RESPONSIVE 768 /admin/notifications",
+      "status": "PASS",
+      "milliseconds": 590
+    },
+    {
+      "name": "RESPONSIVE 1024 /wallet",
+      "status": "PASS",
+      "milliseconds": 584
+    },
+    {
+      "name": "RESPONSIVE 1024 /orders",
+      "status": "PASS",
+      "milliseconds": 580
+    },
+    {
+      "name": "RESPONSIVE 1024 /staff/store-order",
+      "status": "PASS",
+      "milliseconds": 594
+    },
+    {
+      "name": "RESPONSIVE 1024 /staff/orders",
+      "status": "PASS",
+      "milliseconds": 585
+    },
+    {
+      "name": "RESPONSIVE 1024 /admin/products/6af0eadc85a77e50a09774b4/edit",
+      "status": "PASS",
+      "milliseconds": 651
+    },
+    {
+      "name": "RESPONSIVE 1024 /admin/notifications",
+      "status": "PASS",
+      "milliseconds": 592
+    },
+    {
+      "name": "UI-10 no browser exceptions or API server errors during the browser run",
+      "status": "PASS",
+      "milliseconds": 1
+    }
+  ],
+  "browserErrors": [],
+  "serverErrors": []
+}

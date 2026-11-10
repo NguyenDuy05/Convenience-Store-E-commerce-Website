@@ -11,7 +11,7 @@ export default function StaffTopProducts({ products }) {
     return (
         <div className="staff-card">
             <div className="staff-card-header">
-                <h2 className="staff-card-title">Top Sản Phẩm</h2>
+                <h2 className="staff-card-title">Top products</h2>
             </div>
 
             <div className="staff-top-products">
@@ -20,7 +20,7 @@ export default function StaffTopProducts({ products }) {
                         <div className="staff-product-rank">{i + 1}</div>
                         <div className="staff-product-info">
                             <span className="staff-product-name">{p.name}</span>
-                            <span className="staff-product-stats">{p.sold} bán - ₫{(p.revenue / 1000000).toFixed(1)}M</span>
+                            <span className="staff-product-stats">{p.sold} sold - ₫{(p.revenue / 1000000).toFixed(1)}M</span>
                         </div>
                         <div className="staff-product-bar">
                             <div className="staff-bar-fill" style={{ width: `${(p.revenue / maxRevenue) * 100}%` }} />

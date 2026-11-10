@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import Icon from '../../components/common/Icon';
 import MemberPass from '../../components/home/MemberPass';
@@ -56,7 +56,8 @@ export default function MembershipPage() {
   const initials = name.trim().split(/\s+/).slice(-2).map((word) => word[0]).join('').toUpperCase();
   const accountLinks = [
     ['/profile', 'person', 'Profile'], ['/orders', 'inventory_2', 'My Orders'],
-    ['/reviews', 'rate_review', 'My Reviews'], ['/membership', 'loyalty', 'Membership & Points'],
+    ['/notifications', 'notifications', "Notifications"],
+    ['/wallet', 'account_balance_wallet', 'My wallet'], ['/reviews', 'rate_review', 'My Reviews'], ['/membership', 'loyalty', 'Membership & Points'],
     ['/addresses', 'location_on', 'Addresses'], ['/support', 'help_center', 'Support & FAQ'],
   ];
   const onLogout = async () => { await logout(); navigate('/login', { replace: true }); };
@@ -78,7 +79,7 @@ export default function MembershipPage() {
           <section className="membership-card" aria-label="Membership card">
             <div className="membership-card-top"><strong><span className="membership-chip"><Icon name="grid_view" /></span> QUICK MEMBER <Icon name="contactless" /></strong><span className="membership-tier-badge"><Icon name="stars" />{membership.tier?.name || 'Member'}</span></div>
             <div className="membership-card-middle"><div><p>AVAILABLE LOYALTY POINTS</p><div className="membership-balance">{number(membership.points)} <small>pts</small></div></div><div className="membership-card-name"><strong>{name}</strong><small>Lifetime points: {number(membership.lifetimePoints)}</small></div></div>
-            <div className="membership-card-bottom"><div className="membership-pass-actions"><a className="membership-show-qr" href="#member-pass"><Icon name="qr_code_2" /> Show QR Code</a><button disabled title="Phone wallet integration is not available yet"><Icon name="wallet" /> Save to Phone Wallet</button></div><a href="#point-history">View point activity <Icon name="arrow_forward" /></a></div>
+            <div className="membership-card-bottom"><div className="membership-pass-actions"><a className="membership-show-qr" href="#member-pass"><Icon name="qr_code_2" /> Show QR Code</a></div><a href="#point-history">View point activity <Icon name="arrow_forward" /></a></div>
           </section>
           <section className="membership-panel membership-tier">
             <div className="membership-tier-heading"><span className="membership-icon gold"><Icon name="workspace_premium" /></span><div><h2>{membership.tier?.name || 'Membership'} Tier Progress</h2><p>Based on your lifetime qualifying points</p></div><div className="membership-tier-total"><strong>{number(membership.lifetimePoints)}</strong>{membership.nextTier && <small> / {number(membership.nextTier.minPoints)} pts</small>}</div></div>
@@ -91,7 +92,6 @@ export default function MembershipPage() {
             <article><span className="membership-icon blue"><Icon name="history" /></span><div><h3>Point activity</h3><p>Review earned, redeemed and adjusted points, with your balance after each transaction.</p></div></article>
           </div></section>
         </>}
-        <section className="membership-rewards"><div className="membership-section-title"><div><h2>Redeem Points Catalog</h2><p>Rewards will be available here when point redemption launches.</p></div>{membership && !memberStatus.loading && !memberStatus.error && <small>{number(membership.points)} Pts Available</small>}</div><div className="membership-reward-grid">{[['confirmation_number', 'Order vouchers', 'Use points toward savings on your next order.'], ['local_cafe', 'Drink rewards', 'Discover refreshments to redeem with your points.'], ['percent', 'Member discounts', 'Explore offers designed for loyalty members.'], ['redeem', 'Store rewards', 'Find more ways to enjoy your membership.']].map(([icon, title, text]) => <article key={title}><div><span className="membership-reward-badge">Coming soon</span><Icon name={icon} /></div><h3>{title}</h3><p>{text}</p><button disabled>Not available yet</button></article>)}</div></section>
         <section className="membership-panel membership-history" id="point-history" aria-busy={historyStatus.loading}>
           <div className="membership-section-title"><h2>Recent Point Activity</h2><button className="membership-refresh" onClick={retry} disabled={memberStatus.loading || historyStatus.loading}><Icon name="refresh" /> Refresh</button></div>
           <div className="membership-filters" role="group" aria-label="Filter point activity">{[['', 'All Activity'], ...Object.entries(types)].map(([value, label]) => <button key={value} aria-pressed={type === value} className={type === value ? 'active' : ''} onClick={() => { setType(value); setPage(1); }}>{label}</button>)}</div>

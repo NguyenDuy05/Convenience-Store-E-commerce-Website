@@ -1,0 +1,227 @@
+▶ independent retail business-rule audit with HTTP and MongoDB
+  ✔ QA-01 invalid cart product IDs return a client error, not HTTP 500 (79.1041ms)
+  ✖ QA-02 locked staff tokens cannot view inactive catalog records through optional auth (41.3299ms)
+  ✖ QA-03 cancelled orders release the per-customer voucher allowance (99.6296ms)
+  ✖ QA-04 expired orders return the global voucher allocation exactly once (63.1424ms)
+  ✖ QA-05 concurrent orders cannot exceed a per-customer voucher limit (75.6495ms)
+  ✔ QA-06 concurrent payment-link requests keep one pending gateway attempt (96.0298ms)
+  ✖ QA-07 a failed stock sale journal restores batch and product quantities (13.4497ms)
+  ✖ QA-08 concurrent stock releases do not return the same stock multiple times (21.3996ms)
+  ✖ QA-09 retry after a failed release journal does not inflate inventory (19.3639ms)
+  ✖ QA-10 admin reconciliation of a cancelled captured payment credits the wallet (100.5628ms)
+  ✖ QA-11 concurrent add-to-cart requests preserve every increment (43.9979ms)
+  ✖ QA-12 a reset token can be used only once under concurrent requests (199.636ms)
+  ✔ QA-13 parallel registration returns a conflict for a duplicate email (172.2591ms)
+  ✔ QA-14 expired batches are excluded and FEFO sells the nearest valid expiry first (17.1415ms)
+  ✔ QA-15 two customers buying the last unit cannot oversell (37.5593ms)
+  ✔ QA-16 price changes block stale checkout and manual store closure blocks new orders (39.9671ms)
+✖ independent retail business-rule audit with HTTP and MongoDB (2040.903ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 6
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2544.0026
+
+✖ failing tests:
+
+test at test\business-rules.integration.test.js:57:11
+✖ QA-02 locked staff tokens cannot view inactive catalog records through optional auth (41.3299ms)
+  AssertionError [ERR_ASSERTION]: Locked staff read private product: HTTP 200
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:61:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:57:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:63:11
+✖ QA-03 cancelled orders release the per-customer voucher allowance (99.6296ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'You have reached the usage limit for this discount code'
+  - null
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:69:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:63:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'You have reached the usage limit for this discount code',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:71:11
+✖ QA-04 expired orders return the global voucher allocation exactly once (63.1424ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:77:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:71:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:79:11
+✖ QA-05 concurrent orders cannot exceed a per-customer voucher limit (75.6495ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 1
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:82:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:79:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:91:11
+✖ QA-07 a failed stock sale journal restores batch and product quantities (13.4497ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  48 !== 50
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:96:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:91:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 48,
+    expected: 50,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:99:11
+✖ QA-08 concurrent stock releases do not return the same stock multiple times (21.3996ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  54 !== 50
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:103:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:99:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 54,
+    expected: 50,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:106:11
+✖ QA-09 retry after a failed release journal does not inflate inventory (19.3639ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  52 !== 50
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:113:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:106:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 52,
+    expected: 50,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:116:11
+✖ QA-10 admin reconciliation of a cancelled captured payment credits the wallet (100.5628ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 24000
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:122:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:116:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 24000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:124:11
+✖ QA-11 concurrent add-to-cart requests preserve every increment (43.9979ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 4
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:128:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:124:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 4,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\business-rules.integration.test.js:130:11
+✖ QA-12 a reset token can be used only once under concurrent requests (199.636ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:136:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:130:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

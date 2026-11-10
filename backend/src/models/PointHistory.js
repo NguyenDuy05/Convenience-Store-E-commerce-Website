@@ -16,4 +16,5 @@ const pointHistorySchema = new Schema({
 pointHistorySchema.index({ userId: 1, createdAt: -1 });
 pointHistorySchema.index({ type: 1, createdAt: -1 });
 
+pointHistorySchema.index({ userId: 1, orderId: 1 }, { unique: true, partialFilterExpression: { type: 'earn', orderId: { $type: 'objectId' } } });
 module.exports = mongoose.model('PointHistory', pointHistorySchema);

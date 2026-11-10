@@ -1,7 +1,7 @@
 import api from './axios';
 
 // UC-08.1 Create Order. Header Idempotency-Key: gửi lại cùng khoá thì server trả lại đúng đơn cũ, không tạo đơn thứ hai.
-// data: { paymentMethod: 'cash'|'vnpay'|'momo', discountCode?, customerNote?, expectedTotal } -> { order, replayed }
+// data: { paymentMethod: 'cash'|'vnpay', discountCode?, customerNote?, expectedTotal } -> { order, replayed }
 export const createOrder = (data, idempotencyKey) =>
   api.post(`/orders`, data, idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined);
 
@@ -23,6 +23,10 @@ export const listMyOrderHistory = (params) => api.get(`/orders/my/history`, { pa
 // UC-22 Create Store Order
 export const createStoreOrder = (data) => api.post(`/orders/store`, data);
 export const quoteStoreOrder = (data) => api.post(`/orders/store/quote`, data);
+export const checkoutPosSale = (data) => api.post('/orders/store/checkout', data);
+export const listStaffOrders = (params) => api.get('/orders/staff', { params });
+export const getStaffOrder = (id) => api.get(`/orders/staff/${id}`);
+export const updateStaffOrder = (id, data) => api.patch(`/orders/staff/${id}/status`, data);
 
 // UC-34.1 View Orders + UC-34.2 Search Orders (Admin)
 // params: { q, status, source, paymentStatus, paymentMethod, from, to (ISO), hasIssue: '1', sort, page, limit }

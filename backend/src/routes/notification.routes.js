@@ -1,0 +1,15 @@
+const router = require('express').Router();
+const c = require('../controllers/notification.controller');
+const { authenticate, authorize } = require('../middlewares/auth.middleware');
+router.use(authenticate);
+router.get('/', c.listMine);
+router.patch('/read-all', c.readAll);
+router.get('/admin', authorize('admin'), c.adminList);
+router.get('/settings', authorize('admin'), c.getSettings);
+router.put('/settings', authorize('admin'), c.saveSettings);
+router.post('/admin', authorize('admin'), c.create);
+router.put('/admin/:id', authorize('admin'), c.update);
+router.patch('/admin/:id/publish', authorize('admin'), c.publish);
+router.patch('/admin/:id/archive', authorize('admin'), c.archive);
+router.patch('/:id/read', c.readOne);
+module.exports = router;

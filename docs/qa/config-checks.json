@@ -1,0 +1,10 @@
+{
+  "node": "v22.23.0",
+  "vnpayConfigured": true,
+  "vnpaySandbox": true,
+  "applicationPaymentMock": false,
+  "googleConfigured": true,
+  "googleClientIdsMatch": true,
+  "smtpConfigured": true,
+  "senderMatchesRequestedAccount": true
+}

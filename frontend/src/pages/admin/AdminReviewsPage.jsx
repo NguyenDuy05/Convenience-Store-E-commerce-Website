@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { NavLink } from 'react-router-dom';
 import { handleViolatingReview, hideReview, listReviewsAdmin } from '../../api/review.api';
 import { listStores } from '../../api/store.api';
-import useAuth from '../../hooks/useAuth';
-import { adminNav } from '../../routes/navConfig';
 import '../../styles/style.css';
 
 const HIDE_REASONS = [
@@ -15,22 +12,7 @@ const HIDE_REASONS = [
   { value: 'customer_request', label: 'Customer requested removal or review is under dispute', detail: 'Removal request submitted through the customer account' },
 ];
 
-const ADMIN_LABELS = {
-  '/admin': 'Dashboard', '/admin/customers': 'Customers', '/admin/staff': 'Staff',
-  '/admin/stores': 'Stores', '/admin/products': 'Products', '/admin/categories': 'Categories',
-  '/admin/inventory': 'Inventory', '/admin/orders': 'Orders', '/admin/transactions': 'Transactions',
-  '/admin/promotions': 'Promotions', '/admin/discount-codes': 'Discount Codes',
-};
-const NAV_GROUPS = [
-  { title: 'Main', items: [{ to: '/admin', label: 'Dashboard', icon: 'space_dashboard' }] },
-  { title: 'Management', items: adminNav.filter((item) => ['/admin/customers', '/admin/staff', '/admin/stores', '/admin/products', '/admin/categories', '/admin/inventory'].includes(item.to)).map((item) => ({ ...item, label: ADMIN_LABELS[item.to], icon: ({ '/admin/customers': 'group', '/admin/staff': 'badge', '/admin/stores': 'storefront', '/admin/products': 'inventory_2', '/admin/categories': 'category', '/admin/inventory': 'warehouse' })[item.to] })) },
-  { title: 'Operations', items: adminNav.filter((item) => ['/admin/orders', '/admin/transactions', '/admin/promotions', '/admin/discount-codes'].includes(item.to)).map((item) => ({ ...item, label: ADMIN_LABELS[item.to], icon: ({ '/admin/orders': 'shopping_bag', '/admin/transactions': 'receipt_long', '/admin/promotions': 'campaign', '/admin/discount-codes': 'sell' })[item.to] })) },
-  { title: 'Customer Programs', items: [{ to: '/admin/membership', label: 'Membership', icon: 'card_membership' }, { to: '/admin/reviews', label: 'Reviews', icon: 'star' }] },
-  { title: 'Finance', items: [{ to: '/admin/payments', label: 'Payments', icon: 'payments' }] },
-];
-
 export default function AdminReviewsPage() {
-  const { user, logout } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [stores, setStores] = useState([]);
   const [filters, setFilters] = useState({ q: '', targetType: '', rating: '', productId: '', storeId: '', date: '' });
@@ -127,17 +109,7 @@ export default function AdminReviewsPage() {
   const storeName = stores[0]?.name || 'Convenience Store';
   const setFilter = (key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPage(1); };
 
-  return <div className="review-dashboard">
-    <aside className="review-sidebar">
-      <div className="review-brand"><span className="review-brand-mark">Q</span><b>QUICK</b><small>ADMIN</small></div>
-      <nav className="review-side-nav">{NAV_GROUPS.map((group) => <section key={group.title}><h2>{group.title}</h2>{group.items.map((item) => <NavLink key={item.to} to={item.to} end={item.to === '/admin'} className={({ isActive }) => `review-nav-link${isActive ? ' active' : ''}`}><span className="review-material-icon">{item.icon}</span><span>{item.label}</span></NavLink>)}</section>)}</nav>
-      <div className="review-side-bottom"><NavLink to="/admin/profile" className="review-nav-link"><span className="review-material-icon">account_circle</span><span>Profile</span></NavLink><button className="review-nav-link review-logout" onClick={logout}><span className="review-material-icon">logout</span><span>Logout</span></button></div>
-    </aside>
-
-    <div className="review-app-area">
-      <header className="review-topbar"><div className="review-topbar-left"><button className="review-store-pill"><span className="review-material-icon">storefront</span>{storeName} (1)<span className="review-material-icon">expand_more</span></button></div><div className="review-topbar-right"><label className="review-global-search"><span className="review-material-icon">search</span><input aria-label="Search reviews" placeholder="Search reviews, customers, products…" value={filters.q} onChange={(event) => setFilter('q', event.target.value)} /></label><button className="review-top-icon" aria-label="Notifications"><span className="review-material-icon">notifications</span><i/></button><span className="review-top-divider"/><div className="review-admin-user"><div><b>{user?.fullName || 'Admin'}</b><small>Administrator</small></div><span className="review-user-avatar"><span className="review-material-icon">person</span></span></div></div></header>
-
-      <main className="review-admin-content">
+  return <div className="review-workspace">
         <section className="review-page review-admin-page">
           <div className="review-admin-page-heading"><div><div className="review-admin-eyebrow">OPERATIONS <span>•</span> <b>FEEDBACK MODERATION</b></div><h1>Customer Reviews &amp; Feedback</h1><p>Review customer ratings and comments, then manage their public visibility.</p></div><div className="review-heading-actions"><span className="review-store-context"><span className="review-material-icon">storefront</span>{storeName} · Admin workspace</span></div></div>
           {error && <p className="review-alert error" role="alert">{error}</p>}
@@ -171,8 +143,6 @@ export default function AdminReviewsPage() {
 
           <aside className="review-engine-banner"><span className="review-engine-icon"><span className="review-material-icon">smart_toy</span></span><div className="review-engine-copy"><b>Moderation tools</b><span className="engine-active"><i/>ACTIVE</span><p>Use reason codes and internal notes to keep review moderation consistent and auditable.</p></div><div className="review-engine-status"><span className="review-material-icon">verified_user</span><span>Audit logging<br/><b>Enabled</b></span></div><div className="review-engine-status"><span className="review-material-icon">bolt</span><span>Store count<br/><b>{stores.length || 1} location</b></span></div></aside>
         </section>
-      </main>
-    </div>
 
     {moderationTarget && <div className="review-modal-scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModeration(); }}><section className="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-modal-title"><div className="review-modal-accent"/><header className="review-modal-header"><div className="review-modal-icon"><span className="review-material-icon">visibility_off</span></div><div className="review-modal-title-wrap"><div className="review-modal-title-row"><h2 id="review-modal-title">{moderationTarget.action === 'violation' ? 'Confirm Review Violation' : 'Hide Customer Review'}</h2><button className="review-modal-close" aria-label="Close dialog" onClick={closeModeration}><span className="review-material-icon">close</span></button></div><p>Confirm hiding this review from public product listings and store display screens.</p></div></header><div className="review-modal-body"><div className="review-modal-summary"><div className="review-modal-summary-top"><b>{targetReview.customerId?.fullName || 'Customer'}</b><span className={`review-status ${targetReview.status}`}>{targetReview.status === 'visible' ? 'Published' : 'Hidden'}</span></div><div className="review-admin-product"><span className="review-material-icon">inventory_2</span><b>{targetReview.productId?.name || targetReview.storeId?.name || 'Store review'}</b><span className="review-admin-rating">★ {targetReview.rating.toFixed(1)}</span></div><p>“{targetReview.comment || 'No written comment.'}”</p></div><fieldset className="review-reason-fieldset"><legend>Reason for Hiding <span>*</span><small>Required for audit log</small></legend><div className="review-reason-list">{HIDE_REASONS.map((reason) => <label className={`review-reason-option ${moderationReason === reason.value ? 'selected' : ''}`} key={reason.value}><input type="radio" name="hide-reason" value={reason.value} checked={moderationReason === reason.value} onChange={() => setModerationReason(reason.value)} /><span className="review-radio-mark"/><span><b>{reason.label}</b><small>{reason.detail}</small></span></label>)}</div></fieldset><label className="review-label review-notes-label">Moderator Internal Notes <span>Optional · Max 500 chars</span><textarea maxLength={500} rows={3} placeholder="Enter internal rationale for hiding this review…" value={moderatorNotes} onChange={(event) => setModeratorNotes(event.target.value)}/></label><div className="review-impact"><span className="review-material-icon">info</span><div><b>Impact on Product Score</b><p>Hiding this review removes its rating from the public product average. The review remains preserved in the admin audit ledger.</p></div></div><label className="review-compliance"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)}/><span>I confirm that hiding this review complies with customer feedback moderation guidelines.</span></label></div><footer className="review-modal-footer"><div className="review-modal-buttons"><button className="review-button secondary" onClick={closeModeration}>Cancel</button><button className="review-button danger" disabled={!moderationReason || !confirmed || busyId === targetReview._id} onClick={confirmModeration}><span className="review-material-icon">visibility_off</span>{busyId === targetReview._id ? 'Hiding Review…' : 'Confirm & Hide Review'}</button></div><div className="review-audit-stamp"><span className="review-material-icon">verified_user</span>Action logged under your administrator account</div></footer></section></div>}
 

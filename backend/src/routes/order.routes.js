@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const c = require('../controllers/order.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const staff = require('../controllers/staffOrder.controller');
 
 // UC-08.1 Create Order (xem trước đơn rồi đặt hàng)
 router.post('/preview', authenticate, authorize('customer'), c.previewCheckout);
@@ -12,10 +13,15 @@ router.get('/my/history', authenticate, authorize('customer'), c.listMyOrderHist
 // UC-09.3 Track Order Status
 router.get('/my/:id/tracking', authenticate, authorize('customer'), c.trackMyOrder);
 // UC-09.2 View Order Details
+router.post('/my/:id/cancel', authenticate, authorize('customer'), c.cancelOrder);
 router.get('/my/:id', authenticate, authorize('customer'), c.getMyOrder);
 // UC-22 Create Store Order
 router.post('/store/quote', authenticate, authorize('staff'), c.quoteStoreOrder);
 router.post('/store', authenticate, authorize('staff'), c.createStoreOrder);
+router.post('/store/checkout', authenticate, authorize('staff'), c.checkoutStoreSale);
+router.get('/staff', authenticate, authorize('staff'), staff.list);
+router.get('/staff/:id', authenticate, authorize('staff'), staff.get);
+router.patch('/staff/:id/status', authenticate, authorize('staff'), c.updateOrderStatus);
 
 router.get('/refunds', authenticate, authorize('admin'), c.listRefunds);
 // UC-34.1 View Orders, UC-34.2 Search Orders (query: q, status, source, paymentStatus, paymentMethod, from, to, hasIssue, sort, page, limit)

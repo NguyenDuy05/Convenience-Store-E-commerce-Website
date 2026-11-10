@@ -1,3 +1,4 @@
+import '../../styles/wallet.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../../styles/qk-tokens.css';
@@ -22,7 +23,7 @@ export default function CheckoutPage() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [method, setMethod] = useState('cash');
+  const [method, setMethod] = useState('vnpay');
   const [note, setNote] = useState('');
   const [codeInput, setCodeInput] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
@@ -43,7 +44,7 @@ export default function CheckoutPage() {
     setLoading(true); setLoadError('');
     previewCheckout({ discountCode: code || undefined })
       .then((res) => setSummary(res.data))
-      .catch(async (err) => { if (!(await handleAuth(err))) setLoadError(err.response?.data?.message || 'Không tải được thông tin đơn hàng. Vui lòng thử lại.'); })
+      .catch(async (err) => { if (!(await handleAuth(err))) setLoadError(err.response?.data?.message || "Could not load checkout details. Please try again."); })
       .finally(() => setLoading(false));
   }, [handleAuth]);
 
@@ -66,53 +67,55 @@ export default function CheckoutPage() {
         paymentMethod: method,
         discountCode: appliedCode || undefined,
         customerNote: note.trim() || undefined,
-        expectedTotal: summary.totalAmount,        // để server phát hiện giá đã đổi
+        expectedTotal: summary.totalAmount,
+        expectedWalletAmount: Math.min(summary.walletBalance || 0, summary.totalAmount),        // để server phát hiện giá đã đổi
       }, keyRef.current);
       order = res.data.order;
     } catch (err) {
       if (await handleAuth(err)) return;
       const status = err.response?.status;
       const data = err.response?.data || {};
-      if (!err.response || status >= 500) {
+      if (!err.response || status >= 500 || data.code === 'CHECKOUT_PROCESSING') {
         // Không biết đơn đã tạo chưa: GIỮ nguyên khoá, bấm lại sẽ nhận đúng đơn cũ nếu đã tạo (không đặt trùng)
-        setSubmitError('Chưa nhận được phản hồi từ hệ thống. Bạn có thể bấm "Đặt hàng" lại, hệ thống sẽ không tạo đơn trùng.');
+        setSubmitError("No response received. You can select “Place order” again; duplicate orders will not be created.");
       } else {
         keyRef.current = newIdempotencyKey();
-        if (data.code === 'PRICE_CHANGED' && data.summary) { setSummary(data.summary); setNotice(data.message); }
-        else if (data.code === 'CART_ISSUES' || data.code === 'INSUFFICIENT_STOCK') { if (data.summary) setSummary(data.summary); else loadPreview(appliedCode); setNotice(data.message); }
+        if (data.code === 'PRICE_CHANGED' && data.summary) { setSummary(previous => ({ ...previous, ...data.summary, estimatedPoints: Math.floor(data.summary.totalAmount / 10000) })); setNotice(data.message); }
+        else if (data.code === 'CART_ISSUES' || data.code === 'INSUFFICIENT_STOCK') { if (data.summary) setSummary(previous => ({ ...previous, ...data.summary, estimatedPoints: Math.floor(data.summary.totalAmount / 10000) })); else loadPreview(appliedCode); setNotice(data.message); }
+        else if (data.code === 'WALLET_BALANCE_CHANGED') { setNotice(data.message); loadPreview(appliedCode); }
         else if (data.code === 'STORE_CLOSED') { setSubmitError(data.message); loadPreview(appliedCode); }
         else if (data.code === 'INVALID_DISCOUNT_CODE') { setAppliedCode(''); setNotice(data.message); loadPreview(''); }
-        else setSubmitError(data.message || 'Không đặt được hàng. Vui lòng thử lại.');
+        else setSubmitError(data.message || "Could not place your order. Please try again.");
       }
       submittingRef.current = false; setSubmitting(false);
       return;
     }
 
     // Đơn đã tạo. Tiền mặt -> xong. Online -> sang cổng thanh toán.
-    if (method === 'cash') { navigate(`/payment/result?orderId=${order._id}`, { replace: true }); return; }
+    if (order.paymentStatus === 'paid') { navigate(`/payment/result?orderId=${order._id}`, { replace: true }); return; }
     try {
       const pay = await createOnlinePayment({ orderId: order._id, method });
       window.location.href = pay.data.paymentUrl;
     } catch (err) {
       // Đơn đã giữ hàng nhưng chưa tạo được link: đưa khách tới trang thanh toán để thử lại, không mất đơn
-      navigate(`/orders/${order._id}/pay`, { replace: true, state: { error: err.response?.data?.message || 'Chưa kết nối được cổng thanh toán. Bạn có thể thử lại.' } });
+      navigate(`/orders/${order._id}/pay`, { replace: true, state: { error: err.response?.data?.message || "Could not connect to the payment gateway. You can try again." } });
     }
   };
 
   const crumb = (
     <nav className="co-crumb" aria-label="Breadcrumb">
-      <Link to="/">Trang chủ</Link><Icon name="chevron_right" size="sm" />
-      <Link to="/cart">Giỏ hàng</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Đặt hàng</span>
+      <Link to="/">Home</Link><Icon name="chevron_right" size="sm" />
+      <Link to="/cart">Cart</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Place order</span>
     </nav>
   );
 
-  if (loading && !summary) return <div className="co">{crumb}<div className="co-skeleton" aria-busy="true" aria-label="Đang tải đơn hàng" /></div>;
+  if (loading && !summary) return <div className="co">{crumb}<div className="co-skeleton" aria-busy="true" aria-label="Loading orders" /></div>;
 
   if (loadError) {
     return (
       <div className="co">{crumb}
-        <div className="co-state" role="alert"><Icon name="cloud_off" size="xl" /><h2>Chưa tải được đơn hàng</h2><p>{loadError}</p>
-          <button type="button" className="co-btn" onClick={() => loadPreview(appliedCode)}><Icon name="refresh" size="md" />Thử lại</button></div>
+        <div className="co-state" role="alert"><Icon name="cloud_off" size="xl" /><h2>Could not load the order</h2><p>{loadError}</p>
+          <button type="button" className="co-btn" onClick={() => loadPreview(appliedCode)}><Icon name="refresh" size="md" />Try again</button></div>
       </div>
     );
   }
@@ -120,38 +123,40 @@ export default function CheckoutPage() {
   if (!summary || summary.items.length === 0) {
     return (
       <div className="co">{crumb}
-        <div className="co-state"><Icon name="shopping_cart" size="xl" /><h2>Giỏ hàng đang trống</h2><p>Hãy thêm sản phẩm vào giỏ trước khi đặt hàng.</p>
-          <Link className="co-btn" to="/products"><Icon name="storefront" size="md" />Xem sản phẩm</Link></div>
+        <div className="co-state"><Icon name="shopping_cart" size="xl" /><h2>Your cart is empty</h2><p>Add products to your cart before checking out.</p>
+          <Link className="co-btn" to="/products"><Icon name="storefront" size="md" />Browse products</Link></div>
       </div>
     );
   }
 
   const store = summary.store;
-  const online = method !== 'cash';
+  const walletAmount = Math.min(summary.walletBalance || 0, summary.totalAmount);
+  const payableAmount = summary.totalAmount - walletAmount;
+  const online = payableAmount > 0;
 
   return (
     <div className="co">
       {crumb}
-      <h1 className="co-title">Xác nhận đơn hàng</h1>
+      <h1 className="co-title">Review your order</h1>
 
       {notice && (
-        <div className="co-alert warn" role="alert"><Icon name="warning" size="lg" /><div><strong>{notice}</strong><span>Thông tin bên dưới là giá và tồn kho mới nhất. Vui lòng xem lại rồi bấm "Đặt hàng" nếu đồng ý.</span></div></div>
+        <div className="co-alert warn" role="alert"><Icon name="warning" size="lg" /><div><strong>{notice}</strong><span>These prices and stock levels are up to date. Review the details, then select “Place order” to confirm.</span></div></div>
       )}
       {summary.storeClosed && (
         <div className="co-alert error" role="alert">
           <Icon name="storefront" size="lg" />
-          <div><strong>Cửa hàng đang tạm đóng cửa</strong><span>Hiện chưa nhận đơn mới. Giỏ hàng của bạn vẫn được giữ, hãy quay lại khi cửa hàng mở cửa.</span></div>
+          <div><strong>The store is temporarily closed</strong><span>New orders are currently unavailable. Your cart is saved; please return when the store opens.</span></div>
         </div>
       )}
       {summary.issues.length > 0 && (
         <div className="co-alert error" role="alert">
           <Icon name="error" size="lg" />
           <div>
-            <strong>Một số sản phẩm không thể đặt:</strong>
+            <strong>Some items cannot be ordered:</strong>
             <ul>{summary.issues.map((i) => (
-              <li key={`${i.productId}-${i.type}`}>{i.name}: {i.type === 'unavailable' ? 'không còn bán' : i.available > 0 ? `chỉ còn ${i.available} sản phẩm` : 'đã hết hàng'}</li>
+              <li key={`${i.productId}-${i.type}`}>{i.name}: {i.type === 'unavailable' ? "no longer available" : i.available > 0 ? `only available: ${i.available} items` : "out of stock"}</li>
             ))}</ul>
-            <Link to="/cart">Quay lại giỏ hàng để chỉnh sửa</Link>
+            <Link to="/cart">Return to your cart to make changes</Link>
           </div>
         </div>
       )}
@@ -159,7 +164,7 @@ export default function CheckoutPage() {
       <div className="co-grid">
         <div className="co-main">
           <section className="co-card">
-            <h2><Icon name="shopping_basket" />Sản phẩm ({summary.items.reduce((s, i) => s + i.quantity, 0)})</h2>
+            <h2><Icon name="shopping_basket" />Products ({summary.items.reduce((s, i) => s + i.quantity, 0)})</h2>
             <ul className="co-items">
               {summary.items.map((it) => (
                 <li key={it.productId}>
@@ -167,7 +172,7 @@ export default function CheckoutPage() {
                   <div className="co-item-info">
                     <b>{it.name}</b>
                     <span>{formatCurrency(it.unitPrice)}{it.unit ? ` / ${it.unit}` : ''} × {it.quantity}</span>
-                    {it.discountAmount > 0 && <em>Giảm {formatCurrency(it.discountAmount)}</em>}
+                    {it.discountAmount > 0 && <em>Discount {formatCurrency(it.discountAmount)}</em>}
                   </div>
                   <div className="co-item-total">{formatCurrency(it.lineTotal)}</div>
                 </li>
@@ -176,35 +181,38 @@ export default function CheckoutPage() {
           </section>
 
           <section className="co-card">
-            <h2><Icon name="store" />Nhận hàng tại cửa hàng</h2>
+            <h2><Icon name="store" />Store pickup</h2>
             {store ? (
               <div className="co-store"><b>{store.name}</b>
                 {store.address && <span><Icon name="location_on" size="md" />{store.address}</span>}
                 {store.phone && <span><Icon name="call" size="md" />{store.phone}</span>}
               </div>
-            ) : <p className="co-muted">Cửa hàng sẽ thông báo địa điểm nhận hàng.</p>}
-            <p className="co-muted">Đơn hàng được chuẩn bị sẵn tại quầy. Khi đến nhận, bạn đọc <b>mã đơn</b> cho nhân viên.</p>
-            <label className="co-label" htmlFor="co-note">Ghi chú cho cửa hàng (không bắt buộc)</label>
-            <textarea id="co-note" className="co-note" maxLength={500} rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: cho mình xin túi giấy" />
+            ) : <p className="co-muted">The store will provide pickup details.</p>}
+            {summary.pickupSchedule && !summary.pickupSchedule.isOpen && <p className="co-alert warn" role="status">{summary.pickupSchedule.notice}</p>}
+            <p className="co-muted">Your order will be prepared at the counter. At pickup, give your <b>order code</b> to a staff member.</p>
+            <label className="co-label" htmlFor="co-note">Note for the store (optional)</label>
+            <textarea id="co-note" className="co-note" maxLength={500} rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Example: Please include a paper bag" />
           </section>
 
           <section className="co-card">
-            <h2><Icon name="credit_card" />Phương thức thanh toán</h2>
-            <PaymentMethodPicker methods={CHECKOUT_METHODS} value={method} onChange={setMethod} disabled={submitting} />
-            {online && <p className="co-muted">Sau khi đặt hàng bạn được chuyển sang cổng thanh toán. Hàng được giữ trong 15 phút, quá hạn đơn sẽ tự hủy.</p>}
+            <h2><Icon name="credit_card" />Payment method</h2>
+            <p className="co-muted">Wallet balance: <b>{formatCurrency(summary.walletBalance || 0)}</b>. Available credit is applied first.</p>
+            {online && <PaymentMethodPicker methods={CHECKOUT_METHODS} value={method} onChange={setMethod} disabled={submitting} />}
+            {!online && <p>Your wallet covers this order in full.</p>}
+            {online && <p className="co-muted">After ordering, you will be redirected to the payment gateway. Items are reserved for 15 minutes; unpaid orders expire automatically.</p>}
           </section>
         </div>
 
         <aside className="co-side">
-          <h2>Tổng kết</h2>
+          <h2>Order summary</h2>
           <div className="co-code">
-            <label htmlFor="co-code">Mã giảm giá</label>
+            <label htmlFor="co-code">Discount code</label>
             {appliedCode && summary.discountCode ? (
-              <div className="co-code-on"><span><Icon name="sell" size="md" fill />{summary.discountCode.code}</span><button type="button" onClick={clearCode}>Bỏ mã</button></div>
+              <div className="co-code-on"><span><Icon name="sell" size="md" fill />{summary.discountCode.code}</span><button type="button" onClick={clearCode}>Remove code</button></div>
             ) : (
               <div className="co-code-row">
-                <input id="co-code" value={codeInput} onChange={(e) => setCodeInput(e.target.value)} placeholder="Nhập mã" maxLength={30} onKeyDown={(e) => { if (e.key === 'Enter') applyCode(); }} />
-                <button type="button" onClick={applyCode} disabled={!codeInput.trim() || loading}>Áp dụng</button>
+                <input id="co-code" value={codeInput} onChange={(e) => setCodeInput(e.target.value)} placeholder="Enter code" maxLength={30} onKeyDown={(e) => { if (e.key === 'Enter') applyCode(); }} />
+                <button type="button" onClick={applyCode} disabled={!codeInput.trim() || loading}>Apply</button>
               </div>
             )}
             {summary.discountError && <p className="co-code-err" role="alert">{summary.discountError}</p>}
@@ -213,12 +221,15 @@ export default function CheckoutPage() {
           <PriceSummary subtotal={summary.subtotal} appliedPromotions={summary.appliedPromotions} promotionDiscount={summary.promotionDiscount}
             discountCode={summary.discountCode} totalAmount={summary.totalAmount} />
 
+          <div className="co-wallet-line"><span>Wallet applied</span><b>{formatCurrency(walletAmount)}</b></div>
+          <div className="co-wallet-line"><span>Pay via VNPay</span><b>{formatCurrency(payableAmount)}</b></div>
+          <p className="co-policy">Earn {summary.estimatedPoints || Math.floor(summary.totalAmount / 10000)} points after pickup. Cancel before preparation starts; payments received are refunded to your <Link to="/wallet">wallet</Link>.</p>
           {submitError && <p className="co-error" role="alert"><Icon name="error" size="md" />{submitError}</p>}
           <button type="button" className="co-btn block" onClick={submit} disabled={submitting || loading || !summary.canCheckout}>
-            {submitting ? 'Đang xử lý…' : online ? 'Đặt hàng và thanh toán' : 'Đặt hàng'}
+            {submitting ? "Processing…" : online ? "Place order and pay" : "Place order"}
             {!submitting && <Icon name="arrow_forward" size="md" />}
           </button>
-          <Link className="co-link" to="/cart">Quay lại giỏ hàng</Link>
+          <Link className="co-link" to="/cart">Back to cart</Link>
         </aside>
       </div>
     </div>

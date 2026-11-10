@@ -8,8 +8,8 @@ const checkout = require('../services/checkout.service');
 const payment = require('../services/payment.service');
 
 const STATUSES = Order.schema.path('status').enumValues;
-const STORE_FIELDS = 'name address phone openingHours status';
-const NOT_FOUND = 'Không tìm thấy đơn hàng';
+const STORE_FIELDS = 'name address phone website openingHours status';
+const NOT_FOUND = "Order not found";
 // Đơn đã kết thúc (thuộc lịch sử): đã nhận hàng hoặc thanh toán lỗi
 const HISTORY_STATUSES = ['completed', 'failed', 'cancelled'];
 
@@ -46,7 +46,7 @@ const toHistory = (list) =>
 
 // Đơn chờ thanh toán quá hạn thì chuyển failed + hoàn kho ngay khi khách xem (job nền cũng làm việc này mỗi phút).
 // Lỗi ở bước này không được làm hỏng việc xem đơn.
-const expireQuietly = (customerId) => payment.expireStaleOrders({ customerId }).catch((e) => console.error('Hết hạn đơn lỗi:', e));
+const expireQuietly = (customerId) => payment.expireStaleOrders({ customerId }).catch((e) => console.error("Order expiry failed:", e));
 
 // Thông tin để giao diện biết còn thanh toán được không: hạn thanh toán + giao dịch gần nhất (không lộ dữ liệu cổng)
 const paymentInfo = async (o) => {
@@ -64,7 +64,7 @@ exports.listMyOrders = asyncHandler(async (req, res) => {
   await expireQuietly(req.user.id);
   const { page, limit } = parsePaging(req.query);
   const { status } = req.query;
-  if (status && !STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái đơn hàng không hợp lệ');
+  if (status && !STATUSES.includes(status)) throw new ApiError(400, "Invalid order status");
 
   const customerId = new mongoose.Types.ObjectId(req.user.id);
   const filter = { customerId };
@@ -125,7 +125,12 @@ exports.getMyOrder = asyncHandler(async (req, res) => {
     discountCode: o.discountCode?.code ? { code: o.discountCode.code, amount: o.discountCode.amount || 0 } : null,
     pointsUsed: o.pointsUsed || 0,
     pointsDiscount: o.pointsDiscount || 0,
+    walletAmount: o.walletAmount || 0, payableAmount: o.payableAmount ?? o.totalAmount,
+    refund: o.refund?.refundedAt ? o.refund : null,
+    canCancel: ['pending_payment', 'confirmed'].includes(o.status),
     totalAmount: o.totalAmount,
+    pickupSchedule: require('../services/pickupSchedule.service').pickupSchedule(store),
+    preparationStartsAt: o.preparationStartsAt || null,
     pointsEarned: o.pointsEarned || 0,
     paymentMethod: o.paymentMethod,
     paymentStatus: o.paymentStatus,
@@ -180,7 +185,7 @@ exports.trackMyOrder = asyncHandler(async (req, res) => {
 const parseDate = (value, label) => {
   if (value === undefined || value === '') return null;
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} không hợp lệ`);
+  if (Number.isNaN(d.getTime())) throw new ApiError(400, `${label} is invalid`);
   return d;
 };
 
@@ -191,10 +196,10 @@ const parseDate = (value, label) => {
 exports.listMyOrderHistory = asyncHandler(async (req, res) => {
   const { page, limit } = parsePaging(req.query);
   const { status } = req.query;
-  if (status && !HISTORY_STATUSES.includes(status)) throw new ApiError(400, 'Trạng thái lịch sử không hợp lệ');
-  const from = parseDate(req.query.from, 'Ngày bắt đầu');
-  const to = parseDate(req.query.to, 'Ngày kết thúc');
-  if (from && to && from > to) throw new ApiError(400, 'Ngày bắt đầu phải trước ngày kết thúc');
+  if (status && !HISTORY_STATUSES.includes(status)) throw new ApiError(400, "Invalid history status");
+  const from = parseDate(req.query.from, "Start date");
+  const to = parseDate(req.query.to, "End date");
+  if (from && to && from > to) throw new ApiError(400, "Start date must be before end date");
 
   const customerId = new mongoose.Types.ObjectId(req.user.id);
   const dateFilter = {};
@@ -248,7 +253,7 @@ exports.previewCheckout = asyncHandler(async (req, res) => {
 });
 
 // UC-08.1 Create Order (catalog tài liệu; code cũ ghi UC-09.1)
-// POST /api/orders  header Idempotency-Key  body: { paymentMethod: cash|vnpay|momo, discountCode?, customerNote?, expectedTotal }
+// POST /api/orders  header Idempotency-Key  body: { paymentMethod: vnpay, discountCode?, customerNote?, expectedTotal }
 // Tạo đơn + trừ kho + dọn giỏ trong một khối atomic. Đơn online ở trạng thái pending_payment (giữ hàng), tiếp theo gọi
 // POST /api/payments/online để lấy link thanh toán. Tiền mặt: xác nhận ngay, trả khi nhận hàng.
 exports.createOrder = asyncHandler(async (req, res) => {
@@ -262,11 +267,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
 exports.quoteStoreOrder = asyncHandler(async (req, res) => {
   const items = storeOrder.normalizeItems(req.body?.items);
   const quote = await storeOrder.buildQuote(items, req.body?.promotionId);
-  res.json({ ...quote, canCreate: quote.issues.length === 0 && quote.lines.length > 0 && quote.totalAmount > 0 });
+  res.json({ ...quote, canCreate: quote.issues.length === 0 && !quote.promoError && quote.lines.length > 0 && quote.totalAmount > 0 });
 });
 
 // POST /api/orders/store  body: { idempotencyKey, items, promotionId?, customerNote?, expectedTotal? } -> { order, idempotent }
 exports.createStoreOrder = asyncHandler(async (req, res) => {
   const out = await storeOrder.createStoreOrder(req.user.id, req.body || {});
   res.status(out.idempotent ? 200 : 201).json(out);
+});
+
+exports.checkoutStoreSale = asyncHandler(async (req, res) => {
+  const sale = await storeOrder.checkoutSale(req.user.id, { ...req.body, idempotencyKey: req.get('Idempotency-Key') || req.body?.idempotencyKey });
+  if (!sale.replayed) await require('../services/activity.service').logActivity(req, { action: 'POS_SALE', targetType: 'Order', targetId: sale.order._id, detail: { orderCode: sale.order.orderCode, method: sale.order.paymentMethod, amount: sale.order.totalAmount } });
+  res.status(sale.replayed ? 200 : 201).json(sale);
 });

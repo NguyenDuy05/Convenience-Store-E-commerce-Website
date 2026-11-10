@@ -1,0 +1,61 @@
+▶ independent retail business-rule audit with HTTP and MongoDB
+  ✔ QA-01 invalid cart product IDs return a client error, not HTTP 500 (96.7685ms)
+  ✔ QA-02 locked staff tokens cannot view inactive catalog records through optional auth (33.8645ms)
+  ✔ QA-03 cancelled orders release the per-customer voucher allowance (114.1772ms)
+  ✔ QA-04 expired orders return the global voucher allocation exactly once (71.4048ms)
+  ✔ QA-05 concurrent orders cannot exceed a per-customer voucher limit (100.671ms)
+  ✔ QA-06 concurrent payment-link requests keep one pending gateway attempt (85.8573ms)
+  ✔ QA-07 a failed stock sale journal restores batch and product quantities (19.0399ms)
+  ✔ QA-08 concurrent stock releases do not return the same stock multiple times (19.6911ms)
+  ✔ QA-09 retry after a failed release journal does not inflate inventory (32.1411ms)
+  ✔ QA-10 admin reconciliation of a cancelled captured payment credits the wallet (142.5885ms)
+  ✔ QA-11 concurrent add-to-cart requests preserve every increment (72.3815ms)
+  ✔ QA-12 a reset token can be used only once under concurrent requests (202.9091ms)
+  ✔ QA-13 parallel registration returns a conflict for a duplicate email (183.4243ms)
+  ✔ QA-14 expired batches are excluded and FEFO sells the nearest valid expiry first (22.859ms)
+  ✔ QA-15 two customers buying the last unit cannot oversell (47.1205ms)
+  ✔ QA-16 price changes block stale checkout and manual store closure blocks new orders (32.3508ms)
+  ✔ QA-17 off-hours orders show the next opening and preparation is blocked until opening (102.4689ms)
+  ✔ QA-18 checkout preserves quantities added from another tab during checkout (34.1789ms)
+  ✔ QA-19 role changes in the database immediately override old token roles (17.6158ms)
+  ✖ QA-20 interleaved payment reads cannot create multiple payable gateway links (145.8317ms)
+✖ independent retail business-rule audit with HTTP and MongoDB (2466.8215ms)
+▶ Vietnam opening hours and preorder policy
+  ✔ 06:59 accepts preorder for 07:00 (61.9709ms)
+  ✔ 07:00 allows preparation (0.1403ms)
+  ✔ 23:59 allows preparation (0.1444ms)
+  ✔ 00:00 accepts next-opening preorder (0.3238ms)
+  ✔ manual closure rejects new orders even during opening hours (0.1817ms)
+  ✔ closed days are skipped when calculating the next opening (1.0875ms)
+  ✔ no scheduled opening does not accept an unfulfillable preorder (0.218ms)
+✔ Vietnam opening hours and preorder policy (65.9365ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 27
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2915.8712
+
+✖ failing tests:
+
+test at test\business-rules.integration.test.js:203:11
+✖ QA-20 interleaved payment reads cannot create multiple payable gateway links (145.8317ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  6 !== 1
+  
+      at TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:221:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async TestContext.<anonymous> (D:\FPTU\FA26\SWD392\911\convenience-store\convenience-store\backend\test\business-rules.integration.test.js:203:3)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

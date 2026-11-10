@@ -15,10 +15,10 @@ const LIMIT = 10;
 const VALID_STATUS = HISTORY_TABS.map((t) => t.key);
 
 const PRESETS = [
-  { key: '30d', label: '30 ngày qua', from: () => daysAgoYMD(30) },
-  { key: '3m', label: '3 tháng', from: () => monthsAgoYMD(3) },
-  { key: '6m', label: '6 tháng', from: () => monthsAgoYMD(6) },
-  { key: 'all', label: 'Tất cả', from: () => '' },
+  { key: '30d', label: "Last 30 days", from: () => daysAgoYMD(30) },
+  { key: '3m', label: "3 months", from: () => monthsAgoYMD(3) },
+  { key: '6m', label: "6 months", from: () => monthsAgoYMD(6) },
+  { key: 'all', label: "All", from: () => '' },
 ];
 
 // UC-09.4 View Order History (xem lại đơn đã kết thúc, lọc theo kết quả và khoảng ngày)
@@ -61,7 +61,7 @@ export default function OrderHistoryPage() {
           navigate('/login', { state: { from: location }, replace: true });
           return;
         }
-        setError(err.response?.data?.message || 'Không tải được lịch sử đơn hàng. Vui lòng thử lại.');
+        setError(err.response?.data?.message || "Could not load order history. Please try again.");
       })
       .finally(() => { if (!ignore) setLoading(false); });
     return () => { ignore = true; };
@@ -85,17 +85,17 @@ export default function OrderHistoryPage() {
   return (
     <div className="ohist">
       <nav className="ohist-crumb" aria-label="Breadcrumb">
-        <Link to="/">Trang chủ</Link><Icon name="chevron_right" size="sm" />
-        <Link to="/orders">Đơn hàng của tôi</Link><Icon name="chevron_right" size="sm" />
-        <span aria-current="page">Lịch sử mua hàng</span>
+        <Link to="/">Home</Link><Icon name="chevron_right" size="sm" />
+        <Link to="/orders">My orders</Link><Icon name="chevron_right" size="sm" />
+        <span aria-current="page">Order history</span>
       </nav>
 
       <div className="ohist-head">
         <div>
-          <h1>Lịch sử mua hàng</h1>
-          <p>Xem lại các đơn đã hoàn tất hoặc không thành công. Thông tin sản phẩm và giá là bản ghi tại thời điểm bạn đặt hàng.</p>
+          <h1>Order history</h1>
+          <p>Review completed and unsuccessful orders. Product details and prices reflect the time each order was placed.</p>
         </div>
-        <Link className="ohist-link" to="/orders"><Icon name="receipt_long" size="md" />Đơn đang xử lý</Link>
+        <Link className="ohist-link" to="/orders"><Icon name="receipt_long" size="md" />Active orders</Link>
       </div>
 
       <div className="ohist-grid">
@@ -103,7 +103,7 @@ export default function OrderHistoryPage() {
 
         <section className="ohist-main">
           <div className="ohist-filters">
-            <div className="ohist-seg" role="tablist" aria-label="Lọc theo kết quả đơn">
+            <div className="ohist-seg" role="tablist" aria-label="Filter by order outcome">
               {HISTORY_TABS.map((t) => (
                 <button key={t.key || 'all'} type="button" role="tab" aria-selected={status === t.key}
                   className={status === t.key ? 'active' : ''} onClick={() => update({ status: t.key, page: 1 })}>
@@ -113,7 +113,7 @@ export default function OrderHistoryPage() {
             </div>
 
             <div className="ohist-range">
-              <div className="ohist-presets" role="group" aria-label="Khoảng thời gian nhanh">
+              <div className="ohist-presets" role="group" aria-label="Quick date range">
                 {PRESETS.map((p) => (
                   <button key={p.key} type="button" aria-pressed={activePreset === p.key || (p.key === 'all' && !from && !to)}
                     className={activePreset === p.key || (p.key === 'all' && !from && !to) ? 'active' : ''}
@@ -123,23 +123,23 @@ export default function OrderHistoryPage() {
                 ))}
               </div>
               <div className="ohist-dates">
-                <label>Từ ngày<input type="date" value={from} max={to || undefined} onChange={(e) => update({ from: e.target.value, page: 1 })} /></label>
-                <label>Đến ngày<input type="date" value={to} min={from || undefined} onChange={(e) => update({ to: e.target.value, page: 1 })} /></label>
+                <label>From date<input type="date" value={from} max={to || undefined} onChange={(e) => update({ from: e.target.value, page: 1 })} /></label>
+                <label>To date<input type="date" value={to} min={from || undefined} onChange={(e) => update({ to: e.target.value, page: 1 })} /></label>
               </div>
             </div>
-            {rangeInvalid && <p className="ohist-invalid" role="alert"><Icon name="error" size="md" />Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.</p>}
+            {rangeInvalid && <p className="ohist-invalid" role="alert"><Icon name="error" size="md" />The start date must be on or before the end date.</p>}
           </div>
 
           {!loading && !error && !rangeInvalid && data && (
             <div className="ohist-summary">
-              <div><span>Đơn đã nhận</span><b>{data.summary.completedCount}</b></div>
-              <div><span>Tổng chi tiêu</span><b>{formatCurrency(data.summary.totalSpent)}</b></div>
-              <div><span>Kết quả hiển thị</span><b>{data.total} đơn</b></div>
+              <div><span>Collected orders</span><b>{data.summary.completedCount}</b></div>
+              <div><span>Total spent</span><b>{formatCurrency(data.summary.totalSpent)}</b></div>
+              <div><span>Results</span><b>{data.total} orders</b></div>
             </div>
           )}
 
           {loading && !rangeInvalid && (
-            <div className="ohist-list" aria-busy="true" aria-label="Đang tải lịch sử">
+            <div className="ohist-list" aria-busy="true" aria-label="Loading history">
               {[0, 1, 2, 3].map((i) => <div className="ohist-skeleton" key={i} />)}
             </div>
           )}
@@ -147,20 +147,20 @@ export default function OrderHistoryPage() {
           {!loading && error && (
             <div className="ohist-state error" role="alert">
               <Icon name="cloud_off" size="xl" />
-              <h3>Chưa tải được lịch sử</h3>
+              <h3>Could not load history</h3>
               <p>{error}</p>
-              <button type="button" className="ohist-btn" onClick={() => setReloadKey((k) => k + 1)}><Icon name="refresh" size="md" />Thử lại</button>
+              <button type="button" className="ohist-btn" onClick={() => setReloadKey((k) => k + 1)}><Icon name="refresh" size="md" />Try again</button>
             </div>
           )}
 
           {!loading && !error && !rangeInvalid && data && data.items.length === 0 && (
             <div className="ohist-state">
               <Icon name="history" size="xl" />
-              <h3>{hasFilter ? 'Không có đơn nào phù hợp bộ lọc' : 'Bạn chưa có đơn hàng nào trong lịch sử'}</h3>
-              <p>{hasFilter ? 'Thử mở rộng khoảng thời gian hoặc bỏ bộ lọc kết quả.' : 'Các đơn đã nhận hàng sẽ xuất hiện ở đây.'}</p>
+              <h3>{hasFilter ? "No orders match these filters" : "You have no past orders yet"}</h3>
+              <p>{hasFilter ? "Try a wider date range or clear the outcome filter." : "Collected orders will appear here."}</p>
               {hasFilter
-                ? <button type="button" className="ohist-btn" onClick={() => setParams({})}>Xóa bộ lọc</button>
-                : <Link className="ohist-btn" to="/products"><Icon name="storefront" />Bắt đầu mua sắm</Link>}
+                ? <button type="button" className="ohist-btn" onClick={() => setParams({})}>Clear filters</button>
+                : <Link className="ohist-btn" to="/products"><Icon name="storefront" />Start shopping</Link>}
             </div>
           )}
 
@@ -172,7 +172,7 @@ export default function OrderHistoryPage() {
               {totalPages > 1 && (
                 <div className="ohist-pager">
                   <button type="button" disabled={page <= 1} onClick={() => { update({ page: page - 1 }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                    <Icon name="chevron_left" size="md" />Trước
+                    <Icon name="chevron_left" size="md" />Previous
                   </button>
                   <span>Trang {page} / {totalPages}</span>
                   <button type="button" disabled={page >= totalPages} onClick={() => { update({ page: page + 1 }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>

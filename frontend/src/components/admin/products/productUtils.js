@@ -1,4 +1,4 @@
-export const vnd = (n) => `₫${Number(n || 0).toLocaleString('en-US')}`;
+export const vnd = (n) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n) || 0);
 export const errMsg = (err, fallback) => err?.response?.data?.errors?.join(', ') || err?.response?.data?.message || fallback;
 
 export const MEAL_TYPES = [

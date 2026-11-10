@@ -14,8 +14,8 @@ export default function StaffSalesChart({ orders }) {
         <div className="staff-card">
             <div className="staff-card-header">
                 <div>
-                    <h2 className="staff-card-title">Doanh Thu Theo Giờ</h2>
-                    <p className="staff-card-subtitle">Tiến độ hôm nay</p>
+                    <h2 className="staff-card-title">Hourly revenue</h2>
+                    <p className="staff-card-subtitle">Today's progress</p>
                 </div>
             </div>
 
@@ -36,7 +36,7 @@ export default function StaffSalesChart({ orders }) {
                     <span className="staff-metric-value">₫36M</span>
                 </div>
                 <div className="staff-metric">
-                    <span>Trung Bình</span>
+                    <span>Average</span>
                     <span className="staff-metric-value">₫5.1M</span>
                 </div>
             </div>

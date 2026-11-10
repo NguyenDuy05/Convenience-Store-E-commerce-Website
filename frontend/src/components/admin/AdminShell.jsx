@@ -19,6 +19,8 @@ export const ADMIN_GROUPS = [
             { to: '/admin/transactions', label: 'Transactions', icon: 'receipt_long' },
             { to: '/admin/promotions', label: 'Promotions', icon: 'campaign' },
             { to: '/admin/discount-codes', label: 'Discount Codes', icon: 'sell' },
+            { to: '/admin/notifications', label: "Manage notifications", icon: 'campaign' },
+            { to: '/admin/inbox', label: "Inbox", icon: 'notifications' },
         ]
     },
     {

@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const promoService = require('../services/promotion.service');
 const { logActivity } = require('../services/activity.service');
+const notifications = require('../services/inAppNotification.service');
 
 const MAX_LINES = 100;
 const MAX_QTY = 999;
@@ -135,6 +136,7 @@ async function saveManaged(req, current, fields, action) {
     { $set: fields, $inc: { __v: 1 } }, { new: true, runValidators: true },
   );
   if (!promotion) throw new ApiError(409, 'This promotion was updated by someone else. Please refresh and try again.');
+  if (['suspended', 'deleted'].includes(promotion.status)) void notifications.withdrawOffer(promotion, 'promotion');
   await logActivity(req, { action, targetType: 'Promotion', targetId: current._id, detail: { name: promotion.name, status: promotion.status } });
   return promotion;
 }
@@ -184,7 +186,9 @@ exports.activatePromotion = asyncHandler(async (req, res) => {
   if (current.endDate <= new Date()) throw new ApiError(409, 'Expired promotions cannot be activated. Update the dates first.');
   await readPromotion({ ...current, categoryIds: (current.categoryIds || []).map(String), productIds: (current.productIds || []).map(String) });
   if (current.status === 'active') return res.json(current);
-  res.json(await saveManaged(req, current, { status: 'active' }, 'PROMOTION_ACTIVATE'));
+  const promotion = await saveManaged(req, current, { status: 'active' }, 'PROMOTION_ACTIVATE');
+  void notifications.announceOffer(promotion, 'promotion');
+  res.json(promotion);
 });
 
 exports.suspendPromotion = asyncHandler(async (req, res) => {

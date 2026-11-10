@@ -1,3 +1,4 @@
+import WalletPage from '../pages/customer/WalletPage';
 
 import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -48,6 +49,8 @@ import StaffComplaintDetailPage from '../pages/staff/StaffComplaintDetailPage';
 import StaffPromotionsPage from '../pages/staff/StaffPromotionsPage';
 import WorkShiftPage from '../pages/staff/WorkShiftPage';
 import StaffProfilePage from '../pages/staff/StaffProfilePage';
+import StaffOrdersPage from '../pages/staff/StaffOrdersPage';
+import StaffOrderDetailPage from '../pages/staff/StaffOrderDetailPage';
 
 // Admin
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
@@ -69,6 +72,8 @@ import AdminDiscountCodesPage from '../pages/admin/AdminDiscountCodesPage';
 import AdminMembershipPage from '../pages/admin/AdminMembershipPage';
 import AdminReviewsPage from '../pages/admin/AdminReviewsPage';
 import AdminProfilePage from '../pages/admin/AdminProfilePage';
+import NotificationsPage from '../pages/customer/NotificationsPage';
+import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage';
 
 const HomePage = lazy(() => import('../pages/guest/HomePage'));
 
@@ -77,7 +82,7 @@ export default function AppRouter() {
     <Routes>
       {/* Guest */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<Suspense fallback={<div className="container">Loading store…</div>}><HomePage /></Suspense>} />
+        <Route path="/" element={<Suspense fallback={<div role="status" style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#EAF6FF' }}>Loading store…</div>}><HomePage /></Suspense>} />
         <Route path="/products" element={<ProductListPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/promotions" element={<PromotionsPage />} />
@@ -107,8 +112,10 @@ export default function AppRouter() {
         <Route path="/orders/:id/tracking" element={<OrderTrackingPage />} />
         <Route path="/orders/:id/pay" element={<PayOrderPage />} />
         <Route path="/reviews" element={<MyReviewsPage />} />
+        <Route path="/wallet" element={<WalletPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Route>
 
       {/* Staff */}
@@ -122,6 +129,9 @@ export default function AppRouter() {
       >
         <Route index element={<StaffDashboardPage />} />
         <Route path="store-order" element={<StoreOrderPage />} />
+        <Route path="orders" element={<StaffOrdersPage />} />
+        <Route path="orders/history" element={<StaffOrdersPage history />} />
+        <Route path="orders/:id" element={<StaffOrderDetailPage />} />
         <Route path="payment" element={<StaffPaymentPage />} />
         <Route path="transactions" element={<StaffTransactionsPage />} />
         <Route path="products" element={<StaffProductsPage />} />
@@ -136,6 +146,7 @@ export default function AppRouter() {
         <Route path="promotions" element={<StaffPromotionsPage />} />
         <Route path="shifts" element={<WorkShiftPage />} />
         <Route path="profile" element={<StaffProfilePage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 
       {/* Admin */}
@@ -167,6 +178,8 @@ export default function AppRouter() {
         <Route path="membership" element={<AdminMembershipPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="profile" element={<AdminProfilePage />} />
+        <Route path="notifications" element={<AdminNotificationsPage />} />
+        <Route path="inbox" element={<NotificationsPage />} />
       </Route>
 
       {/* 404 */}

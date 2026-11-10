@@ -57,8 +57,14 @@ const orderSchema = new Schema({
     amount: { type: Number, default: 0 },
   },
   pointsUsed: { type: Number, default: 0, min: 0 },            // đổi điểm thành tiền giảm trực tiếp
+  discountReservationVersion: Number,
+  discountReleasedAt: Date,
   pointsDiscount: { type: Number, default: 0, min: 0 },
   totalAmount: { type: Number, required: true, min: 0 },
+  walletPolicy: { type: Boolean, default: false },
+  walletAmount: { type: Number, default: 0, min: 0 },
+  payableAmount: { type: Number, min: 0 },
+  checkoutReady: { type: Boolean, default: true },
   pointsEarned: { type: Number, default: 0, min: 0 },
 
   // pending_payment: chờ khách thanh toán online | confirmed: đã xác nhận (đã trả, hoặc chọn trả tiền mặt khi nhận)
@@ -73,9 +79,10 @@ const orderSchema = new Schema({
   },
   statusHistory: [statusHistorySchema],
 
-  paymentMethod: { type: String, enum: ['cash', 'card', 'vnpay', 'momo'] },
+  paymentMethod: { type: String, enum: ['cash', 'card', 'vnpay', 'wallet'] },
   paymentStatus: { type: String, enum: ['unpaid', 'paid', 'failed', 'refunded'], default: 'unpaid' },
   paidAt: Date,
+  paidTransactionId: { type: Schema.Types.ObjectId, ref: 'Transaction' },
   cancelledAt: Date,
   cancelReason: String,
   refund: {                                                    // Manage Refunds: hoàn tiền khi hủy đơn đã thanh toán
@@ -88,7 +95,9 @@ const orderSchema = new Schema({
 
   customerNote: String,
   idempotencyKey: String,                                      // khoá chống đặt trùng khi khách bấm 2 lần / gửi lại do lỗi mạng (UC-08.1)
+  checkoutHash: String,
   readyAt: Date,
+  preparationStartsAt: Date,
   pickedUpAt: Date,
   issues: [issueSchema],
 }, { timestamps: true });

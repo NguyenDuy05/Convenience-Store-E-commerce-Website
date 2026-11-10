@@ -1,0 +1,47 @@
+.staff-orders-page { max-width: 1280px; margin: auto; }
+.staff-order-tabs { margin-bottom: 20px; }
+.staff-order-tabs button > span { display: inline-block; font-size: 10px; border-radius: 14px; padding: 1px 6px; background: #e5edf9; color: #526079; }
+.staff-order-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 22px; padding: 18px; }
+.staff-order-toolbar form { display: flex; gap: 10px; align-items: end; margin-right: auto; }
+.staff-order-toolbar label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: #64748b; }
+.staff-order-toolbar input, .staff-order-toolbar select { min-height: 42px; width: 100%; min-width: 0; }
+.staff-order-list { display: grid; gap: 16px; }
+.staff-order-card { padding: 22px; }
+.staff-order-card > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.staff-order-card h2 { font-size: 17px; margin: 0 0 4px; }
+.staff-order-card > header span, .staff-order-card > p { color: #64748b; font-size: 12px; }
+.staff-order-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; margin: 18px 0 8px; font-size: 12px; }
+.staff-order-summary > span { display: inline-flex; align-items: center; gap: 6px; }
+.staff-order-summary > strong { color: #0058bc; font-size: 16px; margin-left: auto; }
+.staff-order-summary .staff-paid { color: #35703d; }
+.staff-order-card footer { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.staff-order-back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 22px; }
+.staff-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; align-items: start; }
+.staff-detail-grid h2 { margin: 0 0 20px; font-size: 19px; }
+.staff-pick-items > article { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid #edf1f7; }
+.staff-item-qty { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: #eaf1ff; color: #0058bc; font-weight: 700; flex-shrink: 0; }
+.staff-pick-items > article > div { flex: 1; min-width: 0; }
+.staff-pick-items > article b { display: block; font-size: 13px; line-height: 1.7; }
+.staff-pick-items > article small { display: block; color: #64748b; font-size: 11px; margin-top: 4px; }
+.staff-pick-items > article > strong { font-size: 13px; }
+.staff-customer-note { margin-top: 20px; padding: 16px; border-radius: 10px; background: #fffaeb; color: #775d22; font-size: 12px; }
+.staff-customer-note p { margin: 7px 0 0; white-space: pre-wrap; }
+.staff-timeline { margin-top: 22px; }
+.staff-fulfillment { position: sticky; top: 96px; }
+.staff-fulfillment > p { color: #64748b; font-size: 13px; line-height: 1.8; }
+.staff-fulfillment .staff-payment-status { display: inline-block; margin-top: 0; border-radius: 18px; padding: 6px 10px; background: #edf4ff; color: #0058bc; font-size: 11px; }
+.staff-ready-note { padding: 18px; background: #eef8e7; color: #40682b; border-radius: 12px; font-size: 13px; }
+.staff-ready-note p { margin: 10px 0; }
+.staff-ready-note > strong { font-size: 18px; }
+.staff-next { width: 100%; margin-top: 20px; }
+.staff-pickup-location { margin-top: 24px; border-top: 1px solid #edf1f7; padding-top: 20px; font-size: 12px; color: #64748b; }
+.staff-pickup-location p { margin: 5px 0; }
+.staff-pickup-location small { display: block; margin-top: 12px; font-size: 11px; }
+.staff-cash-pickup { margin-top: 20px; display: grid; gap: 12px; }
+.staff-cash-pickup label { display: grid; gap: 7px; font-size: 12px; }
+.staff-cash-pickup input[type=number] { min-width: 0; width: 100%; min-height: 42px; }
+.staff-cash-pickup > span { font-size: 12px; color: #40682b; }
+.staff-cash-pickup .staff-cash-check { display: flex; align-items: flex-start; gap: 8px; line-height: 1.7; }
+.staff-cash-check input { margin-top: 4px; accent-color: #0058bc; }
+@media (max-width: 1100px) { .staff-detail-grid { grid-template-columns: 1fr; } .staff-fulfillment { position: static; } }
+@media (max-width: 600px) { .staff-order-toolbar form { width: 100%; margin: 0; } .staff-order-toolbar form label { flex: 1; min-width: 0; } .staff-order-toolbar form button { flex-shrink: 0; } .staff-order-summary > strong { margin-left: 0; } .staff-order-card { padding: 18px; } .staff-pick-items > article { gap: 10px; flex-wrap: wrap; } .staff-pick-items > article > strong { margin-left: auto; } }

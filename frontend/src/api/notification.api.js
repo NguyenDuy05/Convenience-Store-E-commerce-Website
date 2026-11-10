@@ -1,0 +1,11 @@
+import api from './axios';
+export const listNotifications = (params) => api.get('/notifications', { params });
+export const readNotification = (id) => api.patch(`/notifications/${id}/read`);
+export const readAllNotifications = () => api.patch('/notifications/read-all');
+export const listManagedNotifications = (params) => api.get('/notifications/admin', { params });
+export const createNotification = (body) => api.post('/notifications/admin', body);
+export const updateNotification = (id, body) => api.put(`/notifications/admin/${id}`, body);
+export const publishNotification = (id) => api.patch(`/notifications/admin/${id}/publish`);
+export const archiveNotification = (id) => api.patch(`/notifications/admin/${id}/archive`);
+export const getNotificationSettings = () => api.get('/notifications/settings');
+export const saveNotificationSettings = (body) => api.put('/notifications/settings', body);

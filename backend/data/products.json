@@ -9,7 +9,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000001"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP001-snack-khoai-tay.png"
+    ],
     "unit": "gói",
     "price": 12000,
     "priceHistory": [],
@@ -37,7 +39,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000001"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP002-banh-quy-bo.jpg"
+    ],
     "unit": "gói",
     "price": 18000,
     "priceHistory": [],
@@ -65,7 +69,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000003"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP003-chocopie-6-cai.jpg"
+    ],
     "unit": "hộp",
     "price": 36000,
     "priceHistory": [],
@@ -93,7 +99,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000003"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP004-banh-bong-lan-cuon.jpg"
+    ],
     "unit": "cái",
     "price": 15000,
     "priceHistory": [],
@@ -121,7 +129,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000002"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP005-mi-ly-bo-ham.png"
+    ],
     "unit": "ly",
     "price": 15000,
     "priceHistory": [],
@@ -149,7 +159,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000002"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP006-mi-cha-ca-han-quoc.jpg"
+    ],
     "unit": "ly",
     "price": 32000,
     "priceHistory": [],
@@ -177,7 +189,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000007"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP007-xuc-xich.jpg"
+    ],
     "unit": "cây",
     "price": 8000,
     "priceHistory": [],
@@ -205,7 +219,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000007"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP008-banh-mi-thit-nguoi.webp"
+    ],
     "unit": "cái",
     "price": 20000,
     "priceHistory": [],
@@ -233,7 +249,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000006"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP009-com-nam-ca-hoi.jpg"
+    ],
     "unit": "cái",
     "price": 22000,
     "priceHistory": [],
@@ -261,7 +279,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000006"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP010-com-ga-teriyaki.png"
+    ],
     "unit": "hộp",
     "price": 35000,
     "priceHistory": [],
@@ -289,7 +309,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000004"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP011-nuoc-500ml.jpg"
+    ],
     "unit": "chai",
     "price": 6000,
     "priceHistory": [],
@@ -317,7 +339,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000004"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP012-nuoc-ngot-330ml.webp"
+    ],
     "unit": "lon",
     "price": 10000,
     "priceHistory": [],
@@ -345,7 +369,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000004"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP013-tra-dao.jpg"
+    ],
     "unit": "chai",
     "price": 12000,
     "priceHistory": [],
@@ -373,7 +399,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000005"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP014-sua-tuoi-180ml.png"
+    ],
     "unit": "hộp",
     "price": 9000,
     "priceHistory": [],
@@ -401,7 +429,9 @@
     "categoryId": {
       "$oid": "a40000000000000000000005"
     },
-    "images": [],
+    "images": [
+      "/api/products/images/file/SP015-sua-chua-uong.png"
+    ],
     "unit": "chai",
     "price": 8000,
     "priceHistory": [],

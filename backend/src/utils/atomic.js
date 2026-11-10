@@ -34,7 +34,7 @@ async function runAtomic(work) {
     return await work({ session: null, onRollback: (fn) => undo.push(fn) });
   } catch (err) {
     for (const fn of undo.reverse()) {
-      try { await fn(); } catch (e) { console.error('Hoàn tác thất bại:', e); }
+      try { await fn(); } catch (e) { console.error("Rollback failed:", e); }
     }
     throw err;
   }

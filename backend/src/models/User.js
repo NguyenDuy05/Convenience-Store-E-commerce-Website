@@ -36,6 +36,7 @@ const userSchema = new Schema({
   // --- chỉ dùng cho customer ---
   addresses: [addressSchema],
   membership: {                                                     // UC-12, UC-39
+    earnedOrders: { type: [{ orderId: Schema.Types.ObjectId, points: Number, balanceAfter: Number, _id: false }], default: [], select: false },
     tierId: { type: Schema.Types.ObjectId, ref: 'MembershipTier' },
     points: { type: Number, default: 0, min: 0 },                   // điểm hiện có (dùng để đổi)
     lifetimePoints: { type: Number, default: 0, min: 0 },           // tổng điểm tích lũy (dùng xét hạng)

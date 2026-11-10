@@ -12,31 +12,31 @@ export default function StaffKPICards({ stats }) {
     return (
         <div className="staff-kpi-grid">
             <Card
-                label="Doanh Thu Hôm Nay"
+                label="Today's revenue"
                 value={`₫${(stats.todaySales / 1000000).toFixed(1)}M`}
                 icon="trending_up"
                 color="#10B981"
             />
             <Card
-                label="Đơn Hàng"
+                label="Orders"
                 value={stats.todayOrders}
                 icon="shopping_cart"
                 color="#3B82F6"
             />
             <Card
-                label="Sẵn Sàng Lấy Hàng"
+                label="Ready for pickup"
                 value={stats.readyPickup}
                 icon="check_circle"
                 color="#8B5CF6"
             />
             <Card
-                label="Hàng Còn Ít"
+                label="Low-stock items"
                 value={stats.lowStock}
                 icon="warning"
                 color="#F59E0B"
             />
             <Card
-                label="Khách Hôm Nay"
+                label="Customers today"
                 value={stats.customersToday}
                 icon="people"
                 color="#EC4899"

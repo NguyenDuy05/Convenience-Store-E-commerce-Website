@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-11-08T21:36:45.063Z",
+  "environment": "VNPay sandbox",
+  "livePaymentCompleted": false,
+  "publicIpnVerified": false,
+  "signedUrlCreated": true,
+  "status": "NETWORK_OR_GATEWAY_BLOCKED",
+  "error": "page.goto: net::ERR_NETWORK_ACCESS_DENIED at [gateway URL]"
+}

@@ -6,6 +6,7 @@ router.use('/addresses', require('./address.routes'));
 router.use('/products', require('./product.routes'));
 router.use('/categories', require('./category.routes'));
 router.use('/inventory', require('./inventory.routes'));
+router.use('/wallet', require('./wallet.routes'));
 router.use('/cart', require('./cart.routes'));
 router.use('/orders', require('./order.routes'));
 router.use('/payments', require('./payment.routes'));
@@ -20,5 +21,6 @@ router.use('/staff', require('./staff.routes'));
 router.use('/stores', require('./store.routes'));
 router.use('/work-shifts', require('./workShift.routes'));
 router.use('/dashboard', require('./dashboard.routes'));
+router.use('/notifications', require('./notification.routes'));
 
 module.exports = router;

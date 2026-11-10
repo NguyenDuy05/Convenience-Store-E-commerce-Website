@@ -42,13 +42,12 @@ export default function ProductStoreSection({
   const [displayedCategory, setDisplayedCategory] = useState(categoryId || ALL);
   const [displayedProducts, setDisplayedProducts] = useState(products);
   const [columns, setColumns] = useState(4);
-  const [shelfRows, setShelfRows] = useState(3);
+  const [shelfRows, setShelfRows] = useState(2);
   const [morePages, setMorePages] = useState(0);
   const cameraRef = useRef(null);
   const frameRef = useRef(null);
   const pointerRef = useRef(null);
   const draggingRef = useRef(false);
-  const wheelRef = useRef({ amount: 0, timer: 0 });
   const latestRef = useRef({ categoryId, products });
   latestRef.current = { categoryId: categoryId || ALL, products };
 
@@ -63,7 +62,7 @@ export default function ProductStoreSection({
   useEffect(() => {
     const updateColumns = () => {
       setColumns(window.innerWidth <= 700 ? 2 : window.innerWidth <= 1100 ? 3 : 4);
-      setShelfRows(window.innerWidth <= 700 ? 2 : 3);
+      setShelfRows(2);
     };
     updateColumns();
     window.addEventListener('resize', updateColumns, { passive: true });
@@ -106,10 +105,10 @@ export default function ProductStoreSection({
       gsap.set(chars, { clearProps: 'transform,opacity' });
       return undefined;
     }
-    gsap.fromTo(chars, { yPercent: 115, rotateX: -65, opacity: 0 }, {
+    const tween = gsap.fromTo(chars, { yPercent: 115, rotateX: -65, opacity: 0 }, {
       yPercent: 0, rotateX: 0, opacity: 1, duration: 0.55, stagger: 0.016, ease: 'power3.out',
     });
-    return undefined;
+    return () => tween.revert();
   }, [displayedCategory]);
 
   const moveTo = useCallback((index) => {
@@ -118,34 +117,18 @@ export default function ProductStoreSection({
     if (id !== undefined) onChooseCategory(id === ALL ? '' : id);
   }, [categoryEntries, onChooseCategory]);
 
-  useEffect(() => {
-    const frame = frameRef.current;
-    if (!frame) return undefined;
-    const onWheel = (event) => {
-      if (Math.abs(event.deltaX) < Math.abs(event.deltaY) * 1.15) return;
-      event.preventDefault();
-      wheelRef.current.amount += event.deltaX;
-      window.clearTimeout(wheelRef.current.timer);
-      if (Math.abs(wheelRef.current.amount) >= 65) {
-        const direction = wheelRef.current.amount > 0 ? 1 : -1;
-        wheelRef.current.amount = 0;
-        moveTo(selectedIndex + direction);
-      } else wheelRef.current.timer = window.setTimeout(() => { wheelRef.current.amount = 0; }, 180);
-    };
-    frame.addEventListener('wheel', onWheel, { passive: false });
-    return () => { frame.removeEventListener('wheel', onWheel); window.clearTimeout(wheelRef.current.timer); };
-  }, [moveTo, selectedIndex]);
+  useEffect(() => () => { if (cameraRef.current) gsap.killTweensOf(cameraRef.current); }, []);
 
   const pointerDown = (event) => {
-    if (event.button !== 0 || event.target.closest('button, a, input, select, textarea')) return;
-    pointerRef.current = { x: event.clientX, pointerId: event.pointerId };
+    if (event.button !== 0 || event.target.closest('input, select, textarea')) return;
+    pointerRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
     draggingRef.current = false;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
   const pointerMove = (event) => {
     if (!pointerRef.current || pointerRef.current.pointerId !== event.pointerId) return;
     const delta = event.clientX - pointerRef.current.x;
-    if (Math.abs(delta) > 7) draggingRef.current = true;
+    if (!draggingRef.current && Math.abs(event.clientY - pointerRef.current.y) > Math.abs(delta) + 8) { pointerRef.current = null; return; }
+    if (Math.abs(delta) > 10) { draggingRef.current = true; event.currentTarget.setPointerCapture?.(event.pointerId); }
     if (draggingRef.current && cameraRef.current) gsap.set(cameraRef.current, { x: delta * 0.24, rotateY: gsap.utils.clamp(-7, 7, delta * -0.017) });
   };
   const pointerUp = (event) => {
@@ -174,19 +157,19 @@ export default function ProductStoreSection({
           </div>
         </header>
 
-        <div className="aisle-category-navigation"><div className="aisle-tabs" role="tablist" aria-label="Product aisles">
-          {categoryEntries.map((category, index) => <button type="button" role="tab" aria-selected={selectedIndex === index} className={selectedIndex === index ? 'active' : ''} key={category._id} onClick={() => moveTo(index)}><span><Icon name={category._id === ALL ? 'apps' : catMeta(category.slug).icon} />{category.name}</span><small>{categoryCount(category._id)}</small></button>)}
+        <div className="aisle-category-navigation"><div className="aisle-tabs" role="group" aria-label="Product aisles">
+          {categoryEntries.map((category, index) => <button type="button" aria-pressed={selectedIndex === index} className={selectedIndex === index ? 'active' : ''} key={category._id} onClick={() => moveTo(index)}><span><Icon name={category._id === ALL ? 'apps' : catMeta(category.slug).icon} />{category.name}</span><small>{categoryCount(category._id)}</small></button>)}
         </div><div className="aisle-navigation-arrows"><button type="button" aria-label="Previous aisle" disabled={selectedIndex <= 0} onClick={() => moveTo(selectedIndex - 1)}><ChevronLeft size={17} /></button><button type="button" aria-label="Next aisle" disabled={selectedIndex >= categoryEntries.length - 1} onClick={() => moveTo(selectedIndex + 1)}><ChevronRight size={17} /></button></div></div>
 
         <div className="aisle-status-line"><span className="aisle-status-led" /><span>STORE FLOOR</span><i /><b>{displayedProducts.length} products on this shelf</b><span className="aisle-filter-actions"><button type="button" className={onlyStock ? 'selected' : ''} onClick={() => setOnlyStock(!onlyStock)}><span />In stock</button><button type="button" className={onlyDeal ? 'selected' : ''} onClick={() => setOnlyDeal(!onlyDeal)}><Sparkles size={13} />On sale</button>{hasFilter && <button type="button" className="aisle-reset" onClick={onReset}>Clear filters</button>}</span></div>
 
-        <div className="aisle-scene" ref={frameRef} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
+        <div className="aisle-scene" ref={frameRef} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { pointerRef.current = null; draggingRef.current = false; if (cameraRef.current) gsap.set(cameraRef.current, { x: 0, rotateY: 0 }); }} onClickCapture={(event) => { if (draggingRef.current) { event.preventDefault(); event.stopPropagation(); } }}>
           <div className="aisle-scene-light" /><div className="aisle-title-plaque"><div className="aisle-plaque-meta"><span>NOW BROWSING</span><span>{String(categoryIndex + 1).padStart(2, '0')} / {String(categoryEntries.length).padStart(2, '0')}</span></div><h3 aria-label={title}>{letters.map((letter, index) => <span className="aisle-kinetic-mask" key={`${displayedCategory}-${index}`}><span className="aisle-kinetic-letter">{letter === ' ' ? '\u00a0' : letter}</span></span>)}</h3><p>{activeCategory?._id === ALL ? 'A little bit of everything, ready for your day.' : `A curated stop in ${activeCategory?.name || 'the store'}.`}</p></div>
           <div className="aisle-frame-edge aisle-edge-left" aria-hidden="true" /><div className="aisle-frame-edge aisle-edge-right" aria-hidden="true" />
           <div className="aisle-camera" ref={cameraRef}><div className="aisle-shelf-scene">
             <div className="aisle-backboard"><span className="aisle-backboard-label">QUICK PICKS <i>·</i> EVERYDAY GOODS</span><span className="aisle-backboard-icon"><Icon name={meta.icon} /></span></div>
-            {error ? <div className="aisle-empty-state"><b>{error}</b><button type="button" onClick={onRetry}>Try again</button></div>
-              : loading ? <div className="aisle-empty-state"><span className="aisle-loading-ring" /><b>Loading the shelves...</b></div>
+            {error ? <div className="aisle-empty-state" role="alert"><b>{error}</b><button type="button" onClick={onRetry}>Try again</button></div>
+              : loading ? <div className="aisle-empty-state" role="status"><span className="aisle-loading-ring" /><b>Loading the shelves...</b></div>
               : rows.length ? <div className="aisle-shelf-stack">{rows.map((row, rowIndex) => <div className={`aisle-shelf-row shelf-row-${rowIndex + 1}`} key={`${displayedCategory}-row-${rowIndex}`}><span className="aisle-row-number">{String(rowIndex + 1).padStart(2, '0')}</span><div className="aisle-row-products" style={{ '--aisle-columns': columns }}>{row.map((product) => <ShelfProduct key={product._id} product={product} category={product.categoryId || activeCategory} deal={deals[product._id]} onOpen={onOpen} />)}</div><div className="aisle-shelf-plank"><i /><i /><i /></div></div>)}</div>
                 : <div className="aisle-empty-state"><span className="aisle-empty-icon"><Icon name={meta.icon} /></span><b>{categoryCount(displayedCategory) ? 'No products match these filters.' : 'This aisle is waiting for new stock.'}</b><span>Try another aisle or clear a filter.</span>{hasFilter && <button type="button" onClick={onReset}>Clear filters</button>}</div>}
             <div className="aisle-shelf-base"><span>{BRAND_NAME}</span><span><i /> PICK UP IN STORE</span></div>

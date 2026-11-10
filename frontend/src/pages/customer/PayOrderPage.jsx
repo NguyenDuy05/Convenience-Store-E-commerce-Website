@@ -12,7 +12,7 @@ import { CHECKOUT_METHODS } from '../../utils/orderMeta';
 
 const ONLINE_METHODS = CHECKOUT_METHODS.filter((m) => m.key !== 'cash');
 
-// UC-08.2 Make Payment: thanh toán (hoặc thanh toán lại) một đơn đang chờ thanh toán bằng VNPay / MoMo.
+// UC-08.2 Make Payment: thanh toán (hoặc thanh toán lại) một đơn đang chờ thanh toán bằng VNPay.
 export default function PayOrderPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -41,12 +41,12 @@ export default function PayOrderPage() {
       .then((res) => {
         setOrder(res.data);
         const last = res.data.latestPayment;
-        if (last && ['vnpay', 'momo'].includes(last.method)) setMethod(last.method);
+        if (last && ['vnpay'].includes(last.method)) setMethod(last.method);
       })
       .catch(async (err) => {
         if (await handleAuth(err)) return;
         const notFound = err.response?.status === 404;
-        setError({ notFound, message: notFound ? 'Đơn hàng không tồn tại hoặc bạn không có quyền xem đơn này.' : (err.response?.data?.message || 'Không tải được đơn hàng. Vui lòng thử lại.') });
+        setError({ notFound, message: notFound ? "This order does not exist or you do not have permission to view it." : (err.response?.data?.message || "Could not load the order. Please try again.") });
       })
       .finally(() => setLoading(false));
   }, [id, handleAuth]);
@@ -72,7 +72,7 @@ export default function PayOrderPage() {
     } catch (err) {
       if (await handleAuth(err)) return;
       const data = err.response?.data || {};
-      setPayError(data.message || 'Không kết nối được cổng thanh toán. Chưa có khoản tiền nào bị trừ, bạn có thể thử lại.');
+      setPayError(data.message || "Could not connect to the payment gateway. No payment was charged; you can try again.");
       if (data.code === 'ORDER_EXPIRED' || data.code === 'NOT_PAYABLE') load();
       payingRef.current = false; setPaying(false);
     }
@@ -80,19 +80,19 @@ export default function PayOrderPage() {
 
   const crumb = (
     <nav className="pay-crumb" aria-label="Breadcrumb">
-      <Link to="/">Trang chủ</Link><Icon name="chevron_right" size="sm" />
-      <Link to="/orders">Đơn hàng của tôi</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Thanh toán</span>
+      <Link to="/">Home</Link><Icon name="chevron_right" size="sm" />
+      <Link to="/orders">My orders</Link><Icon name="chevron_right" size="sm" /><span aria-current="page">Payment</span>
     </nav>
   );
 
-  if (loading && !order) return <div className="pay">{crumb}<div className="pay-skeleton" aria-busy="true" aria-label="Đang tải đơn hàng" /></div>;
+  if (loading && !order) return <div className="pay">{crumb}<div className="pay-skeleton" aria-busy="true" aria-label="Loading orders" /></div>;
 
   if (error) {
     return (
       <div className="pay">{crumb}
-        <div className="pay-state" role="alert"><Icon name={error.notFound ? 'search_off' : 'cloud_off'} size="xl" /><h2>{error.notFound ? 'Không tìm thấy đơn hàng' : 'Chưa tải được đơn hàng'}</h2><p>{error.message}</p>
-          <div className="pay-actions">{!error.notFound && <button type="button" className="pay-btn" onClick={load}><Icon name="refresh" size="md" />Thử lại</button>}
-            <Link className="pay-btn ghost" to="/orders">Về danh sách đơn</Link></div></div>
+        <div className="pay-state" role="alert"><Icon name={error.notFound ? 'search_off' : 'cloud_off'} size="xl" /><h2>{error.notFound ? "Order not found" : "Could not load the order"}</h2><p>{error.message}</p>
+          <div className="pay-actions">{!error.notFound && <button type="button" className="pay-btn" onClick={load}><Icon name="refresh" size="md" />Try again</button>}
+            <Link className="pay-btn ghost" to="/orders">Back to orders</Link></div></div>
       </div>
     );
   }
@@ -105,11 +105,11 @@ export default function PayOrderPage() {
       <div className="pay">{crumb}
         <div className="pay-state">
           <Icon name={expired ? 'timer_off' : 'check_circle'} size="xl" />
-          <h2>{expired ? 'Đơn đã hết hạn thanh toán' : paid ? 'Đơn này không cần thanh toán thêm' : 'Không thể thanh toán đơn này'}</h2>
-          <p>{expired ? 'Hàng đã được trả lại kho. Bạn có thể đặt lại từ giỏ hàng.' : 'Bạn có thể xem chi tiết hoặc theo dõi trạng thái đơn hàng.'}</p>
+          <h2>{expired ? "Order payment expired" : paid ? "This order does not need another payment" : "This order cannot be paid"}</h2>
+          <p>{expired ? "The items have been returned to stock. You can place another order from your cart." : "You can view the details or track this order."}</p>
           <div className="pay-actions">
-            <Link className="pay-btn" to={`/orders/${order._id}`}>Xem đơn #{order.orderCode}</Link>
-            {expired && <Link className="pay-btn ghost" to="/products">Tiếp tục mua sắm</Link>}
+            <Link className="pay-btn" to={`/orders/${order._id}`}>View order #{order.orderCode}</Link>
+            {expired && <Link className="pay-btn ghost" to="/products">Continue shopping</Link>}
           </div>
         </div>
       </div>
@@ -125,41 +125,42 @@ export default function PayOrderPage() {
   return (
     <div className="pay">
       {crumb}
-      <h1 className="pay-title">Thanh toán đơn #{order.orderCode}</h1>
+      <h1 className="pay-title">Pay for order #{order.orderCode}</h1>
 
       <div className="pay-grid">
         <section className="pay-card">
           <div className="pay-timer" role="timer" aria-live="off">
             <Icon name="timer" size="lg" />
-            <div><strong>Còn {mm}:{ss} để thanh toán</strong><span>Hàng được giữ đến {formatTime(order.expiresAt)}. Quá hạn đơn sẽ tự hủy và hàng trả về kho.</span></div>
+            <div><strong>Available: {mm}:{ss} to pay</strong><span>Items are reserved until {formatTime(order.expiresAt)}. After this time, the order expires and items return to stock.</span></div>
           </div>
 
           {lastFailed && !pendingMethod && (
-            <div className="pay-alert warn" role="status"><Icon name="warning" size="lg" /><span>Lần thanh toán gần nhất chưa thành công. Bạn có thể thử lại hoặc chọn cổng khác.</span></div>
+            <div className="pay-alert warn" role="status"><Icon name="warning" size="lg" /><span>Your last payment was unsuccessful. You can retry your VNPay payment.</span></div>
           )}
           {pendingMethod && (
             <div className="pay-alert warn" role="status"><Icon name="hourglass_top" size="lg" />
-              <span>Đang có một giao dịch {pendingMethod === 'vnpay' ? 'VNPay' : 'MoMo'} chờ kết quả. Để tránh bị trừ tiền hai lần, bạn chỉ tiếp tục được với cổng này (cùng một giao dịch) hoặc đợi hết hạn.</span></div>
+              <span>There is already a {'VNPay'} transaction awaiting a result. Continue with the same gateway and transaction or wait until it expires to avoid a duplicate charge.</span></div>
           )}
 
-          <h2>Chọn cổng thanh toán</h2>
+          <h2>Pay with VNPay</h2>
           <PaymentMethodPicker methods={ONLINE_METHODS} value={method} onChange={setMethod} disabled={paying}
             disabledKeys={pendingMethod ? ONLINE_METHODS.map((m) => m.key).filter((k) => k !== pendingMethod) : []} />
 
           {payError && <p className="pay-error" role="alert"><Icon name="error" size="md" />{payError}</p>}
           <button type="button" className="pay-btn block" onClick={pay} disabled={paying || left <= 0}>
-            {paying ? 'Đang chuyển tới cổng thanh toán…' : `Thanh toán ${formatCurrency(order.totalAmount)}`}
+            {paying ? "Redirecting to payment gateway…" : `Payment ${formatCurrency(order.payableAmount ?? order.totalAmount)}`}
             {!paying && <Icon name="arrow_forward" size="md" />}
           </button>
         </section>
 
         <aside className="pay-side">
-          <h2>Đơn hàng</h2>
+          <h2>Orders</h2>
           <ul>
             {order.items.map((it, i) => <li key={`${it.name}-${i}`}><span>{it.name} × {it.quantity}</span><b>{formatCurrency(it.lineTotal)}</b></li>)}
           </ul>
-          <div className="pay-total"><span>Tổng thanh toán</span><b>{formatCurrency(order.totalAmount)}</b></div>
-          <Link className="pay-link" to={`/orders/${order._id}`}>Xem chi tiết đơn</Link>
+          <div className="pay-total"><span>Remaining via VNPay</span><b>{formatCurrency(order.totalAmount)}</b></div>
+          {order.walletAmount > 0 && <p>Wallet applied: {formatCurrency(order.walletAmount)}</p>}
+          <Link className="pay-link" to={`/orders/${order._id}`}>View order details</Link>
         </aside>
       </div>
     </div>

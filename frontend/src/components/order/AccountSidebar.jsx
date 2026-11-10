@@ -5,13 +5,15 @@ import Icon from '../common/Icon';
 import useAuth from '../../hooks/useAuth';
 
 const links = [
-  { to: '/profile', label: 'Hồ sơ cá nhân', icon: 'person' },
-  { to: '/orders', label: 'Đơn hàng của tôi', icon: 'receipt_long', badge: true, end: true },
-  { to: '/orders/history', label: 'Lịch sử mua hàng', icon: 'history' },
-  { to: '/addresses', label: 'Địa chỉ', icon: 'location_on' },
-  { to: '/reviews', label: 'Đánh giá của tôi', icon: 'rate_review' },
-  { to: '/membership', label: 'Thành viên & điểm', icon: 'stars' },
-  { to: '/support', label: 'Hỗ trợ', icon: 'help_center' },
+  { to: '/profile', label: "Profile", icon: 'person' },
+  { to: '/orders', label: "My orders", icon: 'receipt_long', badge: true, end: true },
+  { to: '/orders/history', label: "Order history", icon: 'history' },
+  { to: '/notifications', label: "Notifications", icon: 'notifications' },
+  { to: '/addresses', label: "Addresses", icon: 'location_on' },
+  { to: '/reviews', label: "My reviews", icon: 'rate_review' },
+  { to: '/wallet', label: 'My wallet', icon: 'account_balance_wallet' },
+  { to: '/membership', label: "Membership & points", icon: 'stars' },
+  { to: '/support', label: "Support", icon: 'help_center' },
 ];
 
 const initials = (name = '') =>
@@ -37,14 +39,14 @@ export default function AccountSidebar({ activeCount = 0 }) {
             <p title={user?.email}>{user?.email}</p>
           </div>
         </div>
-        <nav className="aside-nav" aria-label="Menu tài khoản">
+        <nav className="aside-nav" aria-label="Account navigation">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `aside-link ${isActive ? 'active' : ''}`}>
               {({ isActive }) => (
                 <>
                   <span className="aside-link-label"><Icon name={l.icon} fill={isActive} />{l.label}</span>
                   {l.badge && activeCount > 0
-                    ? <span className="aside-badge">{activeCount} đang xử lý</span>
+                    ? <span className="aside-badge">{activeCount} in progress</span>
                     : <Icon name="chevron_right" size="md" />}
                 </>
               )}
@@ -52,17 +54,17 @@ export default function AccountSidebar({ activeCount = 0 }) {
           ))}
           <div className="aside-sep" />
           <button type="button" className="aside-logout" onClick={onLogout}>
-            <Icon name="logout" />Đăng xuất
+            <Icon name="logout" />Log out
           </button>
         </nav>
       </div>
 
       <div className="aside-help">
-        <div className="aside-help-title"><Icon name="electric_bolt" size="lg" /><h4>Nhận hàng tại cửa hàng</h4></div>
+        <div className="aside-help-title"><Icon name="electric_bolt" size="lg" /><h4>Store pickup</h4></div>
         <ol>
-          <li>Đặt hàng và thanh toán online hoặc chọn trả tiền mặt.</li>
-          <li>Chờ đơn chuyển sang <b>Sẵn sàng nhận hàng</b>.</li>
-          <li>Đến cửa hàng, đọc <b>mã đơn</b> cho nhân viên để nhận hàng.</li>
+          <li>Place your order using wallet credit and VNPay.</li>
+          <li>Wait until the order is <b>Ready for pickup</b>.</li>
+          <li>Visit the store and give your <b>order code</b> to a staff member to collect your order.</li>
         </ol>
       </div>
     </aside>

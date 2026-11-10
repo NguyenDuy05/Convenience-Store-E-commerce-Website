@@ -2,6 +2,9 @@ const router = require('express').Router();
 const c = require('../controllers/product.controller');
 const { optionalAuth, authenticate, authorize } = require('../middlewares/auth.middleware');
 
+const images = require('../services/productImages.service');
+router.get('/image-library', authenticate, authorize('staff', 'admin'), (req, res) => res.json({ items: images.list() }));
+router.use('/images/file', require('express').static(images.directory, { dotfiles: 'deny', setHeaders: res => res.setHeader('X-Content-Type-Options', 'nosniff') }));
 // UC-02.1/02.3, 18.1/18.2, 32.1/32.2 View / Search Products
 router.get('/', optionalAuth, c.listProducts);
 // UC-02.2, 18.3, 32.3 View Product Details

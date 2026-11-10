@@ -1,5 +1,6 @@
 module.exports = {
   User: require('./User'),
+  Wallet: require('./Wallet'),
   Store: require('./Store'),
   Category: require('./Category'),
   Product: require('./Product'),
@@ -18,4 +19,7 @@ module.exports = {
   SupportRequest: require('./SupportRequest'),
   WorkShift: require('./WorkShift'),
   ActivityLog: require('./ActivityLog'),
+  Notification: require('./Notification'),
+  NotificationReceipt: require('./NotificationReceipt'),
+  NotificationSettings: require('./NotificationSettings'),
 };

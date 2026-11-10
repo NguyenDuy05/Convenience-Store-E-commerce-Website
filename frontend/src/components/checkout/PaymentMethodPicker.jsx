@@ -5,7 +5,7 @@ import Icon from '../common/Icon';
 // Chọn phương thức thanh toán. methods: [{ key, label, desc, icon }]; disabledKeys: các cổng tạm khoá (vd. đang có giao dịch chờ).
 export default function PaymentMethodPicker({ methods, value, onChange, disabledKeys = [], disabled = false }) {
   return (
-    <div className="pmp" role="radiogroup" aria-label="Phương thức thanh toán">
+    <div className="pmp" role="radiogroup" aria-label="Payment method">
       {methods.map((m) => {
         const off = disabled || disabledKeys.includes(m.key);
         const on = value === m.key;

@@ -9,12 +9,13 @@ const transactionSchema = new Schema({
   customerId: { type: Schema.Types.ObjectId, ref: 'User' },
   processedBy: { type: Schema.Types.ObjectId, ref: 'User' },   // staff xử lý (tiền mặt / thẻ tại quầy)
 
-  method: { type: String, enum: ['cash', 'card', 'vnpay', 'momo'], required: true },
+  method: { type: String, enum: ['cash', 'card', 'vnpay', 'wallet'], required: true },
   amount: { type: Number, required: true, min: 0 },
   status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending', index: true },
 
   txnRef: { type: String, unique: true, sparse: true },        // mã tham chiếu gửi sang cổng thanh toán
   paymentUrl: String,                                          // link thanh toán đã tạo (dùng lại nếu khách quay lại trước khi hết hạn)
+  onlineAttempt: { type: Boolean, default: false },
   gateway: {                                                   // dữ liệu cổng trả về (callback/IPN)
     provider: String,
     transactionNo: String,
@@ -35,5 +36,9 @@ const transactionSchema = new Schema({
 }, { timestamps: true });
 
 transactionSchema.index({ status: 1, createdAt: -1 });         // UC-41.2 Failed, UC-41.3 Pending
+transactionSchema.index({ orderId: 1, onlineAttempt: 1 }, { unique: true, partialFilterExpression: { status: 'pending', onlineAttempt: true } });
 
+transactionSchema.index({ 'gateway.provider': 1, 'gateway.transactionNo': 1 }, {
+  unique: true, partialFilterExpression: { 'gateway.provider': 'pos', 'gateway.transactionNo': { $type: 'string' }, status: 'success' },
+});
 module.exports = mongoose.model('Transaction', transactionSchema);

@@ -1,4 +1,4 @@
-// Cổng thanh toán GIẢ LẬP để test luồng thanh toán khi chưa có tài khoản sandbox VNPay/MoMo.
+// Cổng thanh toán GIẢ LẬP để test luồng thanh toán khi chưa có tài khoản sandbox VNPay.
 // Chỉ bật khi PAYMENT_MOCK=true và không chạy production. Kết quả vẫn đi qua đúng hàm xử lý như cổng thật.
 const crypto = require('crypto');
 

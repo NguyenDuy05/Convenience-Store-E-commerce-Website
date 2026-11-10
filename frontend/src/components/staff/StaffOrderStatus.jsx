@@ -5,15 +5,15 @@ export default function StaffOrderStatus({ orders }) {
     const total = orders.length || 1;
 
     const items = [
-        { label: 'Đang Chuẩn Bị', count: preparing, pct: Math.round((preparing / total) * 100), color: '#FDE68A' },
-        { label: 'Sẵn Sàng Lấy', count: ready, pct: Math.round((ready / total) * 100), color: '#A7E8C3' },
-        { label: 'Hoàn Thành', count: completed, pct: Math.round((completed / total) * 100), color: '#60A5FA' },
+        { label: "Preparing", count: preparing, pct: Math.round((preparing / total) * 100), color: '#FDE68A' },
+        { label: "Ready for pickup", count: ready, pct: Math.round((ready / total) * 100), color: '#A7E8C3' },
+        { label: "Completed", count: completed, pct: Math.round((completed / total) * 100), color: '#60A5FA' },
     ];
 
     return (
         <div className="staff-card">
             <div className="staff-card-header">
-                <h2 className="staff-card-title">Trạng Thái Đơn Hàng</h2>
+                <h2 className="staff-card-title">Order status</h2>
             </div>
 
             <div className="staff-donut">
@@ -40,7 +40,7 @@ export default function StaffOrderStatus({ orders }) {
                 </svg>
                 <div className="staff-donut-center">
                     <div className="staff-donut-value">{total}</div>
-                    <div className="staff-donut-label">Đơn Hàng</div>
+                    <div className="staff-donut-label">Orders</div>
                 </div>
             </div>
 

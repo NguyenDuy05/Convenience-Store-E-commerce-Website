@@ -1,12 +1,12 @@
 export default function StaffOrdersByDay({ orders }) {
     const data = [
-        { day: 'Thứ Hai', count: 24 },
-        { day: 'Thứ Ba', count: 32 },
-        { day: 'Thứ Tư', count: 28 },
-        { day: 'Thứ Năm', count: 35 },
-        { day: 'Thứ Sáu', count: 42 },
-        { day: 'Thứ Bảy', count: 48 },
-        { day: 'Chủ Nhật', count: 38 },
+        { day: "Monday", count: 24 },
+        { day: "Tuesday", count: 32 },
+        { day: "Wednesday", count: 28 },
+        { day: "Thursday", count: 35 },
+        { day: "Friday", count: 42 },
+        { day: "Saturday", count: 48 },
+        { day: "Sunday", count: 38 },
     ];
     const maxCount = Math.max(...data.map(d => d.count));
 
@@ -14,8 +14,8 @@ export default function StaffOrdersByDay({ orders }) {
         <div className="staff-card">
             <div className="staff-card-header">
                 <div>
-                    <h2 className="staff-card-title">Đơn Hàng Theo Ngày</h2>
-                    <p className="staff-card-subtitle">Tuần này</p>
+                    <h2 className="staff-card-title">Orders by day</h2>
+                    <p className="staff-card-subtitle">This week</p>
                 </div>
             </div>
 

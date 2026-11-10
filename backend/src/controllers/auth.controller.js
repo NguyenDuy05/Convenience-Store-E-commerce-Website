@@ -14,6 +14,7 @@ const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
 const publicUser = (u) => ({ id: u._id, fullName: u.fullName, email: u.email, role: u.role });
+const escapeHtml = value => String(value || '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 
 // Tạo tài khoản customer (dùng chung cho Register và Google)
@@ -150,7 +151,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 
   const link = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
   const text = `Hi ${user.fullName},\n\nWe received a request to reset your password. Open the link below to choose a new one (valid for ${RESET_MINUTES} minutes):\n\n${link}\n\nIf you did not request this, you can ignore this email.`;
-  const html = `<p>Hi ${user.fullName},</p><p>We received a request to reset your password. Click the button below to choose a new one (valid for ${RESET_MINUTES} minutes).</p><p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#0058bc;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p><p style="color:#666;font-size:13px">Or copy this link: ${link}<br/>If you did not request this, you can ignore this email.</p>`;
+  const html = `<p>Hi ${escapeHtml(user.fullName)},</p><p>We received a request to reset your password. Click the button below to choose a new one (valid for ${RESET_MINUTES} minutes).</p><p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#0058bc;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p><p style="color:#666;font-size:13px">Or copy this link: ${link}<br/>If you did not request this, you can ignore this email.</p>`;
   try {
     await sendMail({ to: user.email, subject: 'Reset your password', text, html });
   } catch (e) {
@@ -172,10 +173,14 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   });
   if (!user) throw new ApiError(400, 'This reset link is invalid or has expired. Please request a new one');
 
-  user.passwordHash = await bcrypt.hash(password, 10);
-  user.passwordReset = undefined;
-  user.failedLoginCount = 0;
-  user.lockedUntil = undefined;
-  await user.save();
+  const passwordHash = await bcrypt.hash(password, 10);
+  const updated = await User.findOneAndUpdate({
+    _id: user._id, status: 'active',
+    'passwordReset.tokenHash': sha256(token), 'passwordReset.expiresAt': { $gt: new Date() },
+  }, {
+    $set: { passwordHash, failedLoginCount: 0 },
+    $unset: { passwordReset: '', lockedUntil: '' },
+  });
+  if (!updated) throw new ApiError(400, 'This reset link is invalid or has expired. Please request a new one');
   res.json({ message: 'Your password has been updated. You can now log in.' });
 });
