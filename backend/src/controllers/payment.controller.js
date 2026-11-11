@@ -215,7 +215,7 @@ function paymentView(t) {
   const g = t.gateway || {};
   return {
     _id: t._id, method: t.method, amount: t.amount, status: t.status, txnRef: t.txnRef, createdAt: t.createdAt, paidAt: t.paidAt,
-    failureReason: t.failureReason, errorHandling: t.errorHandling || null,
+    failureReason: t.failureReason, errorHandling: t.errorHandling || null, refund: t.refund?.refundedAt ? t.refund : null,
     gateway: { provider: g.provider, transactionNo: g.transactionNo, responseCode: g.responseCode },
     order: t.orderId && t.orderId._id ? t.orderId : null,
     customer: t.customerId && t.customerId._id ? t.customerId : null,
@@ -230,7 +230,7 @@ async function listByStatus(req, res, forcedStatus) {
   const filter = {};
   if (forcedStatus) filter.status = forcedStatus;
   else if (req.query.status) {
-    if (!['pending', 'success', 'failed'].includes(req.query.status)) throw new ApiError(400, "Invalid status");
+    if (!['pending', 'success', 'failed', 'refunded'].includes(req.query.status)) throw new ApiError(400, "Invalid status");
     filter.status = req.query.status;
   }
   if (req.query.method) {
@@ -249,9 +249,12 @@ async function listByStatus(req, res, forcedStatus) {
   const [docs, total, agg] = await Promise.all([
     Transaction.find(filter).populate(POP).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
     Transaction.countDocuments(filter),
-    Transaction.aggregate([{ $match: filter }, { $group: { _id: null, amount: { $sum: '$amount' } } }]),
+    Transaction.aggregate([{ $match: filter }, { $group: { _id: '$status', amount: { $sum: '$amount' } } }]),
   ]);
-  res.json({ items: docs.map(paymentView), total, page, limit, summary: { totalAmount: agg[0]?.amount || 0 } });
+  // Tách tiền đã thu (success) và tiền đã hoàn vào ví (refunded); giao dịch lỗi/đang chờ không tính là tiền
+  const sumOf = (s) => agg.find((g) => g._id === s)?.amount || 0;
+  const collected = sumOf('success') + sumOf('refunded'), refunded = sumOf('refunded');
+  res.json({ items: docs.map(paymentView), total, page, limit, summary: { totalAmount: collected, collectedAmount: collected, refundedAmount: refunded, netAmount: collected - refunded } });
 }
 
 exports.listPayments = asyncHandler((req, res) => listByStatus(req, res, null));          // UC-41.1
@@ -269,6 +272,7 @@ exports.handlePaymentError = asyncHandler(async (req, res) => {
   let txn = await Transaction.findById(id);
   if (!txn) throw new ApiError(404, "Transaction not found");
   if (txn.errorHandling?.handledAt) throw new ApiError(409, "This transaction has already been resolved", { code: 'ALREADY_HANDLED' });
+  if (txn.status === 'refunded') throw new ApiError(409, "This payment was already refunded to the customer's wallet", { code: 'ALREADY_REFUNDED' });
   const now = new Date();
 
   if (action === 'confirm_paid') {

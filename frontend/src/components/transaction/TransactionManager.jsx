@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listTransactions, getTransaction } from '../../api/transaction.api';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency, formatDateTime } from '../../utils/format';
 import Receipt from '../staff/Receipt';
 import '../../styles/admin-transactions.css';
 
 const LIMIT = 10;
-const STATUS_LABEL = { pending: "Pending", success: "Successful", failed: "Failed" };
+const STATUS_LABEL = { pending: "Pending", success: "Successful", failed: "Failed", refunded: "Refunded" };
 const METHOD_LABEL = { cash: "Cash", card: "Card", vnpay: 'VNPay', wallet: 'Wallet' };
 const dt = (d) => (d ? new Date(d).toLocaleString('en-GB') : '—');
 const EMPTY = { q: '', status: '', method: '', from: '', to: '' };
@@ -102,7 +102,8 @@ export default function TransactionManager({ homePath, homeLabel, subtitle }) {
             <div className="atx-banner">
               <div><strong>{data.total}</strong><span>Total transactions</span></div>
               <div><strong>{data.summary.successCount}</strong><span>Successful transactions</span></div>
-              <div><strong>{formatCurrency(data.summary.successAmount)}</strong><span>Successful payment total</span></div>
+              {data.summary.successAmount !== undefined && <div><strong>{formatCurrency(data.summary.successAmount)}</strong><span>Successful payment total</span></div>}
+              {data.summary.today && <div><strong>{formatCurrency(data.summary.today.amount)}</strong><span>Collected today ({data.summary.today.count} payment{data.summary.today.count === 1 ? '' : 's'}) · resets at 00:00</span></div>}
             </div>
           )}
           <div className="atx-card atx-table-wrap">
@@ -149,6 +150,9 @@ export default function TransactionManager({ homePath, homeLabel, subtitle }) {
               <button type="button" className="atx-btn ghost" onClick={() => setDetail(null)}>Close</button>
             </div>
           </div>
+          {detail.status === 'refunded' && detail.refund && (
+            <p className="atx-refund-note">Refunded {formatCurrency(detail.refund.amount)} to the customer's wallet on {formatDateTime(detail.refund.refundedAt)}{detail.refund.reason ? ` · Reason: ${detail.refund.reason}` : ''}.</p>
+          )}
           {detail.status === 'failed' && detail.failureReason && (
             <div className="atx-banner error"><div><strong>Payment failed</strong><span>{detail.failureReason}</span></div></div>
           )}

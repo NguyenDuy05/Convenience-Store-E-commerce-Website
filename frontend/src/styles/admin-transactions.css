@@ -129,3 +129,6 @@
 .atx-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48px 24px; color: var(--atx-text-variant); }
 .atx-state h3 { margin: 0 0 4px; font-family: var(--atx-font-display); font-size: 20px; color: var(--atx-text); }
 .atx-state p { margin: 0 0 16px; max-width: 380px; font-size: 14px; line-height: 20px; }
+
+.atx-chip.refunded { background: #e4e7ff; color: #424754; }
+.atx-refund-note { margin: 8px 0 12px; padding: 10px 12px; border-radius: 10px; background: #f3f2ff; color: #0c1842; font-size: 13px; }

@@ -58,10 +58,10 @@ export default function AdminPaymentsPage() {
           <button type="submit">Search</button>
         </form>
         <label>Method<select value={method} onChange={(e) => { setMethod(e.target.value); setPage(1); }}><option value="">All methods</option>{Object.entries(METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
-        {tab === 'all' && <label>Status<select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">All statuses</option><option value="success">Success</option><option value="failed">Failed</option><option value="pending">Pending</option></select></label>}
+        {tab === 'all' && <label>Status<select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">All statuses</option><option value="success">Success</option><option value="failed">Failed</option><option value="pending">Pending</option><option value="refunded">Refunded</option></select></label>}
       </div>
       {loading ? <p role="status">Loading payments...</p> : error ? <p className="pm-error" role="alert">{error}</p> : <>
-        <div className="pm-stats"><Stat label="Transactions" value={data.total} /><Stat label="Total amount" value={money(data.summary?.totalAmount)} /></div>
+        <div className="pm-stats"><Stat label="Transactions" value={data.total} /><Stat label="Collected" value={money(data.summary?.collectedAmount)} /><Stat label="Refunded to wallets" value={money(data.summary?.refundedAmount)} /><Stat label="Net received" value={money(data.summary?.netAmount)} /></div>
         {!items.length ? <div className="pm-empty"><h2>No payments found</h2><p>Nothing matches these filters.</p></div> :
           <div className="pm-table-wrap"><table><thead><tr><th>Order</th><th>Method</th><th className="pm-num">Amount</th><th>Reference</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead><tbody>
             {items.map((t) => <tr key={t._id}>

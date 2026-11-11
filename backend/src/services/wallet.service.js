@@ -42,13 +42,20 @@ async function settleClosedOrder(orderId) {
   let refunded = 0;
   const debit = await Wallet.findOne({ userId: order.customerId, 'entries.key': `pay:${order._id}` }).select({ entries: { $elemMatch: { key: `pay:${order._id}` } } }).lean();
   const used = -(debit?.entries.find(e => e.key === `pay:${order._id}`)?.amount || 0);
+  const reason = order.cancelReason || 'Payment deadline expired / late payment';
+  // Giao dịch đã hoàn tiền -> chuyển trạng thái 'refunded' để trang Giao dịch không còn tính là tiền đã thu
+  const markRefunded = (filter, amount) => Transaction.updateMany({ ...filter, orderId, status: 'success' }, {
+    $set: { status: 'refunded', refund: { amount, method: 'wallet', reason, refundedAt: new Date() } },
+  });
   if (used > 0) {
     await move(order.customerId, { key: `return:${order._id}`, amount: used, orderId: order._id, orderCode: order.orderCode, description: 'Wallet payment returned' });
+    await markRefunded({ method: 'wallet' }, used);
     refunded += used;
   }
   const txns = await Transaction.find({ orderId, status: 'success', method: { $ne: 'wallet' } }).lean();
   for (const txn of txns) {
     await move(order.customerId, { key: `refund:${txn._id}`, amount: txn.amount, orderId: order._id, orderCode: order.orderCode, description: 'Order refund to wallet' });
+    await markRefunded({ _id: txn._id }, txn.amount);
     refunded += txn.amount;
   }
   if (refunded) await Order.updateOne({ _id: orderId, status: { $in: ['cancelled', 'failed'] } }, { $set: {

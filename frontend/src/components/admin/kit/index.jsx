@@ -92,4 +92,4 @@ export function Confirm({ title, children, confirmLabel = 'Confirm', danger, bus
 }
 
 export const Badge = ({ tone = '', children }) => <span className={`pm-badge pm-tone-${tone}`}>{children}</span>;
-export const STATUS_TONE = { active: 'ok', open: 'ok', success: 'ok', in: 'ok', locked: 'warn', closed: 'warn', pending: 'warn', low: 'warn', suspended: 'warn', inactive: 'muted', deleted: 'bad', failed: 'bad', out: 'bad', expired: 'bad' };
+export const STATUS_TONE = { active: 'ok', open: 'ok', success: 'ok', in: 'ok', locked: 'warn', closed: 'warn', pending: 'warn', low: 'warn', suspended: 'warn', inactive: 'muted', deleted: 'bad', failed: 'bad', out: 'bad', expired: 'bad', refunded: 'muted' };

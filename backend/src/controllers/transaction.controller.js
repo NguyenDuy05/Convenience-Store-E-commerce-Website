@@ -3,7 +3,7 @@ const { Transaction, Order } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 
-const STATUSES = ['pending', 'success', 'failed'];
+const STATUSES = ['pending', 'success', 'failed', 'refunded'];
 const METHODS = ['cash', 'card', 'vnpay', 'wallet'];
 const MAX_RANGE_DAYS = 366;   // giới hạn khoảng ngày tìm kiếm (UC-23.0.E2)
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -44,6 +44,7 @@ function serialize(t, role = 'admin') {
     gateway: { provider: g.provider, transactionNo: isStaff ? maskTail(g.transactionNo) : g.transactionNo, responseCode: g.responseCode, bankCode: g.bankCode, payDate: g.payDate },
     cash: o.cash,
     paidAt: o.paidAt,
+    refund: o.refund?.refundedAt ? o.refund : null,
     failureReason: o.failureReason,
     errorHandling: o.errorHandling,
     createdAt: o.createdAt,
@@ -57,6 +58,15 @@ function parseDate(value, name, endOfDay) {
   if (Number.isNaN(d.getTime())) throw new ApiError(400, `Date "${name}" is invalid`);
   if (endOfDay && /^\d{4}-\d{2}-\d{2}$/.test(value)) d.setHours(23, 59, 59, 999);
   return d;
+}
+
+// Tiền đã thu trong hôm nay (giờ VN): giao dịch thành công có thời điểm thanh toán từ 00:00 hôm nay.
+// Giao dịch đã hoàn tiền (refunded) không tính.
+const VN_OFFSET = 7 * 3600 * 1000, DAY = 86400000;
+async function collectedToday(now = new Date()) {
+  const start = new Date(Math.floor((now.getTime() + VN_OFFSET) / DAY) * DAY - VN_OFFSET);
+  const rows = await Transaction.find({ status: 'success', $or: [{ paidAt: { $gte: start } }, { paidAt: { $exists: false }, createdAt: { $gte: start } }] }).select('amount').lean();
+  return { amount: rows.reduce((s, t) => s + t.amount, 0), count: rows.length, since: start };
 }
 
 // UC-35.1 View Transactions (tìm theo mã giao dịch / mã đơn, trạng thái, phương thức, khoảng ngày)
@@ -96,7 +106,12 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   res.json({
     items: items.map((t) => serialize(t, req.user.role)),
     total, page, limit,
-    summary: { successAmount: agg.reduce((s, t) => s + t.amount, 0), successCount: agg.length },
+    // Staff chỉ xem tiền thu được TRONG HÔM NAY (từ 00:00 giờ VN, qua ngày về 0); tổng theo bộ lọc chỉ admin thấy
+    summary: {
+      ...(req.user.role === 'admin' ? { successAmount: agg.reduce((s, t) => s + t.amount, 0) } : {}),
+      successCount: agg.length,
+      ...(req.user.role === 'staff' ? { today: await collectedToday() } : {}),
+    },
   });
 });
 

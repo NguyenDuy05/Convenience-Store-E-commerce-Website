@@ -11,7 +11,8 @@ const transactionSchema = new Schema({
 
   method: { type: String, enum: ['cash', 'card', 'vnpay', 'wallet'], required: true },
   amount: { type: Number, required: true, min: 0 },
-  status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending', index: true },
+  // refunded: đã thanh toán nhưng đơn bị hủy/hết hạn -> tiền đã hoàn vào ví khách (không còn tính là tiền thu được)
+  status: { type: String, enum: ['pending', 'success', 'failed', 'refunded'], default: 'pending', index: true },
 
   txnRef: { type: String, unique: true, sparse: true },        // mã tham chiếu gửi sang cổng thanh toán
   paymentUrl: String,                                          // link thanh toán đã tạo (dùng lại nếu khách quay lại trước khi hết hạn)
@@ -27,6 +28,7 @@ const transactionSchema = new Schema({
   cash: { received: Number, change: Number },                  // UC-23.1
 
   paidAt: Date,
+  refund: { amount: Number, method: String, reason: String, refundedAt: Date },
   failureReason: String,
   errorHandling: {                                             // UC-41.4 Handle Payment Error
     handledBy: { type: Schema.Types.ObjectId, ref: 'User' },
