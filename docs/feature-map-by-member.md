@@ -1,5 +1,7 @@
 # Bản đồ code theo thành viên (ôn interview project)
 
+> **Số dòng (L…) trong file này có thể đã lệch sau các lần sửa code.** Tra cứu chính xác từng hàm ở [code-map.md](code-map.md) (sinh tự động từ code).
+
 Mỗi thành viên có một mục riêng: chức năng được giao theo Backlog → file nào cần đọc → các ý nên nắm khi bị hỏi.
 
 **Cách đọc một chức năng từ đầu đến cuối** (áp dụng cho mọi người):
