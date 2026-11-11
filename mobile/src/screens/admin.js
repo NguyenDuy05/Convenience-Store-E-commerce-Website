@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as A from '../api';
 import { useDebounced, useLoad } from '../components/hooks';
@@ -11,8 +11,14 @@ import { ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS } from '../utils/orderMeta
 import { StatusBadge } from './orders';
 import { Grid, MoreScreen, Stat } from './staff';
 
-const NEXT = { confirmed: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
-const NEXT_LABEL = { preparing: 'Bắt đầu chuẩn bị', ready_for_pickup: 'Đánh dấu sẵn sàng', completed: 'Khách đã nhận hàng' };
+const NEXT_LABEL = { preparing: 'Xác nhận & bắt đầu chuẩn bị', ready_for_pickup: 'Đánh dấu sẵn sàng', completed: 'Xác nhận khách đã nhận' };
+// Giải thích khi đơn không còn bước tiếp theo (giống web)
+const WAIT_TEXT = {
+  pending_payment: 'Đang chờ khách thanh toán online. Đơn được xác nhận khi thanh toán thành công hoặc tự đóng khi hết hạn.',
+  completed: 'Đơn đã hoàn thành, không thể đổi trạng thái nữa.',
+  cancelled: 'Đơn đã hủy, không thể xử lý.',
+  failed: 'Đơn thất bại hoặc hết hạn, không thể xử lý.',
+};
 const CANCELLABLE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 const STEP_VI = {
   'Created the counter sale': 'Tạo bill tại quầy', 'Created the order': 'Tạo đơn', 'Confirmed the order': 'Xác nhận đơn', 'Started preparing': 'Bắt đầu chuẩn bị',
@@ -138,14 +144,20 @@ export function AdminOrderDetailScreen({ route, navigation }) {
   const { id } = route.params;
   const d = useLoad(async () => (await A.admin.order(id)).data, [id], { reloadOnFocus: true });
   const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  const [cash, setCash] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   if (d.loading && !d.data) return <Loading />;
   if (d.error && !d.data) return <ErrorView message={d.error} onRetry={d.reload} />;
   const o = d.data;
-  const next = o.source === 'online' && o.paymentStatus === 'paid' ? NEXT[o.status] : null;
+  // Bước tiếp theo do backend quyết định (giống web)
+  const next = o.nextTransition;
+  const closed = next?.to === 'preparing' && o.pickupSchedule?.isOpen === false;
   const advance = async () => {
+    if (busy) return;
     setBusy(true);
-    try { await A.admin.advance(o._id, { status: next }); d.refresh(); } catch (e) { Alert.alert('Không cập nhật được', errMsg(e)); d.refresh(); } finally { setBusy(false); }
+    try { await A.admin.advance(o._id, { status: next.to, note: note.trim() || undefined, cashCollected: next.needsCashConfirm ? cash : undefined }); setNote(''); setCash(false); d.refresh(); }
+    catch (e) { Alert.alert('Không cập nhật được', errMsg(e)); d.refresh(); } finally { setBusy(false); }
   };
   return (
     <Screen onRefresh={d.refresh} refreshing={d.refreshing}>
@@ -201,7 +213,19 @@ export function AdminOrderDetailScreen({ route, navigation }) {
         {o.statusHistory.map((h, i) => <Muted key={i}>• {ORDER_STATUS[h.status]?.label || h.status} · {formatDateTime(h.changedAt)} · {h.changedBy || 'Hệ thống'}{h.note ? ` · ${h.note}` : ''}</Muted>)}
       </Card>
 
-      {next ? <Button title={NEXT_LABEL[next]} icon="arrow-forward-circle-outline" loading={busy} onPress={advance} /> : null}
+      {next ? (
+        <Card>
+          <H>Bước tiếp theo: {ORDER_STATUS[next.to]?.label || next.to}</H>
+          <Muted>Khách theo dõi được trạng thái này trong đơn của mình.</Muted>
+          {closed ? <Banner tone="warn" icon="time-outline" text={o.pickupSchedule.notice} /> : null}
+          {next.needsCashConfirm ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ flex: 1, color: colors.text }}>Đã thu đủ tiền mặt (ghi nhận giao dịch tiền mặt cho đơn)</Text>
+              <Switch value={cash} onValueChange={setCash} disabled={busy} />
+            </View>) : null}
+          <Field label="Ghi chú (không bắt buộc, lưu vào lịch sử đơn)" value={note} onChangeText={setNote} maxLength={300} placeholder="Ghi chú…" />
+          <Button title={NEXT_LABEL[next.to]} icon="arrow-forward-circle-outline" loading={busy} disabled={closed || (next.needsCashConfirm && !cash)} onPress={advance} />
+        </Card>) : <Banner tone="neutral" icon="information-circle-outline" text={WAIT_TEXT[o.status] || 'Đơn này không có bước chuyển trạng thái nào.'} />}
       {CANCELLABLE.includes(o.status) ? <Button title="Hủy đơn" icon="close-circle-outline" variant="ghost" onPress={() => setCancelOpen(true)} /> : null}
       <CancelSheet visible={cancelOpen} order={o} mode="staff" onSubmit={(body) => A.admin.cancel(o._id, body)} onClose={(ok) => { setCancelOpen(false); if (ok) d.refresh(); }} />
     </Screen>
@@ -316,7 +340,7 @@ function SlotForm({ form, setForm, onDone }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   if (!form) return null;
-  const set = (k) => (v) => { setForm({ ...form, [k]: v }); setErr(''); };
+  const set = (k) => (v) => { setForm((cur) => ({ ...cur, [k]: v })); setErr(''); };
   const save = async () => {
     const re = /^\d{4}-\d{2}-\d{2}$/;
     if (!re.test(form.from) || !re.test(form.to) || form.from > form.to) return setErr('Ngày theo dạng YYYY-MM-DD, ngày bắt đầu trước ngày kết thúc.');
