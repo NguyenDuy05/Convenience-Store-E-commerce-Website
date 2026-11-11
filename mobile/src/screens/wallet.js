@@ -34,7 +34,7 @@ export function WalletScreen({ navigation }) {
   if (w.loading && !w.data) return <Loading />;
   if (w.error && !w.data) return <ErrorView message={w.error} onRetry={w.reload} />;
   const data = w.data;
-  const set = (k) => (v) => { setF({ ...f, [k]: v }); setError(''); };
+  const set = (k) => (v) => { setF((cur) => ({ ...cur, [k]: v })); setError(''); };
   const submit = async () => {
     const amount = Number(String(f.amount).replace(/\D/g, ''));
     if (!amount || amount < MIN_WITHDRAW) return setError(`Rút tối thiểu ${formatCurrency(MIN_WITHDRAW)}.`);
@@ -67,7 +67,7 @@ export function WalletScreen({ navigation }) {
         {open ? (
           <View style={{ gap: 10 }}>
             <Field label="Số tiền (VND)" value={f.amount} onChangeText={set('amount')} keyboardType="number-pad" placeholder={`${formatCurrency(MIN_WITHDRAW)} – ${formatCurrency(data.balance)}`} />
-            <Pressable onPress={() => setF({ ...f, amount: String(data.balance) })}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>Rút toàn bộ</Text></Pressable>
+            <Pressable onPress={() => setF((cur) => ({ ...cur, amount: String(data.balance) }))}><Text style={{ color: colors.primary, fontWeight: '700', fontSize: 13 }}>Rút toàn bộ</Text></Pressable>
             <Field label="Ngân hàng" value={f.bankName} onChangeText={set('bankName')} placeholder="Vietcombank" maxLength={100} />
             <Field label="Số tài khoản" value={f.accountNumber} onChangeText={set('accountNumber')} keyboardType="number-pad" placeholder="0123456789" maxLength={24} />
             <Field label="Tên chủ tài khoản" value={f.accountName} onChangeText={set('accountName')} autoCapitalize="characters" placeholder="NGUYEN VAN A" maxLength={100} />
