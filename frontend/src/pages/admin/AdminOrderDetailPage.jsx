@@ -141,6 +141,22 @@ export default function AdminOrderDetailPage() {
           </section>
 
           <section className="aod-card">
+            <h2><Icon name="badge" />Handled by</h2>
+            {!order.handledBy?.length ? <p className="aod-muted">No staff has handled this order yet.</p> : (
+              <ul className="aod-handlers">
+                {order.handledBy.map((h) => (
+                  <li key={h._id}>
+                    {h.role === 'staff'
+                      ? <Link className="aord-customer-link" to={`/admin/staff?view=${h._id}`} title="View staff details"><b>{h.fullName}</b><Icon name="open_in_new" size="sm" /></Link>
+                      : <b>{h.fullName} <small className="aod-muted">(admin)</small></b>}
+                    <ul>{h.steps.map((st, i) => <li key={i}><span>{st.label}</span><small>{formatDateTime(st.at)}</small></li>)}</ul>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="aod-card">
             <h2><Icon name="credit_card" />Payment</h2>
             <div className="aod-rows">
               <div><span>Method</span><b>{PAYMENT_METHOD[order.paymentMethod] || '—'}</b></div>
@@ -171,7 +187,7 @@ export default function AdminOrderDetailPage() {
               {order.statusHistory.map((h, i) => (
                 <li key={`${h.status}-${i}`}>
                   <b>{ORDER_STATUS[h.status]?.label || h.status}</b>
-                  <span>{formatDateTime(h.changedAt)} • {h.changedBy || "System"}</span>
+                  <span>{formatDateTime(h.changedAt)} • {h.changedByRef?.role === 'staff' ? <Link to={`/admin/staff?view=${h.changedByRef._id}`}>{h.changedBy}</Link> : (h.changedBy || "System")}</span>
                   {h.note && <em>{h.note}</em>}
                 </li>
               ))}

@@ -85,3 +85,9 @@
 .aord-customer-link { display: inline-flex; align-items: center; gap: 4px; color: #0058bc; text-decoration: none; }
 .aord-customer-link:hover { text-decoration: underline; }
 .aod-txn-st.refunded { background: #e4e7ff; color: #424754; }
+.aod-handlers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.aod-handlers > li { padding-bottom: 12px; border-bottom: 1px solid var(--qk-outline-variant); }
+.aod-handlers > li:last-child { padding-bottom: 0; border-bottom: 0; }
+.aod-handlers ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.aod-handlers ul li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--qk-text); }
+.aod-handlers ul small { color: var(--qk-text-variant); white-space: nowrap; }

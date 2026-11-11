@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { addStaff, getStaffActivity, listStaff, lockStaff, unlockStaff, updateStaff } from '../../api/staff.api';
-import { Badge, Confirm, Notice, Pager, STATUS_TONE, Tabs, d, dt, useAction, useFetch } from '../../components/admin/kit';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { addStaff, getStaff, getStaffActivity, getStaffOrders, listStaff, lockStaff, unlockStaff, updateStaff } from '../../api/staff.api';
+import { Badge, Confirm, Notice, Pager, STATUS_TONE, Stat, Tabs, d, dt, money, useAction, useFetch } from '../../components/admin/kit';
 
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -45,18 +46,81 @@ function StaffEditor({ staff, busy, error, onSave, onCancel }) {
   </section>;
 }
 
-// Nhật ký thao tác của một nhân viên
-function Activity({ staff, onClose }) {
+const ACTION_LABEL = {
+  ORDER_STATUS_CHANGE: 'Updated order status', ORDER_CANCEL: 'Cancelled an order', ORDER_ISSUE_CREATE: 'Reported an order issue', ORDER_ISSUE_RESOLVE: 'Resolved an order issue',
+  POS_SALE: 'Counter sale', PAYMENT_CASH: 'Collected cash payment', PAYMENT_CARD: 'Collected card payment', PAYMENT_ERROR_HANDLE: 'Handled a payment error', PAYMENT_FAILED: 'Recorded a failed payment',
+  SHIFT_CLOCK_IN: 'Checked in to a shift', SHIFT_CLOCK_OUT: 'Checked out of a shift', SHIFT_CLAIM: 'Took a shift', SHIFT_RELEASE: 'Released a shift',
+  STOCK_RECEIVE: 'Received stock', STOCK_ADJUST: 'Adjusted stock', STOCKTAKE_CREATE: 'Started a stocktake', STOCKTAKE_COMPLETE: 'Completed a stocktake',
+  CUSTOMER_REGISTER_COUNTER: 'Registered a member at the counter', CUSTOMER_VIEW: 'Viewed a customer', CUSTOMER_UPDATE: 'Updated a customer',
+  PROFILE_UPDATE: 'Updated own profile', PASSWORD_CHANGE: 'Changed password', PROMOTION_CREATE: 'Created a promotion',
+};
+const STATUS_TEXT = { pending_payment: 'Pending payment', confirmed: 'Confirmed', preparing: 'Preparing', ready_for_pickup: 'Ready for pickup', completed: 'Completed', cancelled: 'Cancelled', failed: 'Failed' };
+// Đổi mã thao tác sang chữ dễ đọc (mã lạ thì viết thường, bỏ gạch dưới)
+const actionText = (a) => ACTION_LABEL[a] || a.charAt(0) + a.slice(1).toLowerCase().replace(/_/g, ' ');
+// Tóm tắt chi tiết thao tác thành một dòng chữ
+function detailText(a) {
+  const x = a.detail || {};
+  const parts = [];
+  if (x.from && x.to) parts.push(`${STATUS_TEXT[x.from] || x.from} → ${STATUS_TEXT[x.to] || x.to}`);
+  if (x.reason) parts.push(`Reason: ${x.reason}`);
+  if (x.fault) parts.push(x.fault === 'store' ? 'store side' : 'customer side');
+  if (x.voucher) parts.push(`voucher ${x.voucher}`);
+  if (x.amount != null) parts.push(money(x.amount));
+  if (x.total != null) parts.push(money(x.total));
+  if (x.note && !x.reason) parts.push(x.note);
+  return parts.join(' · ');
+}
+
+// Chi tiết một nhân viên: thông tin, số liệu, đơn đã xử lý và nhật ký thao tác
+function StaffDetail({ staffId, onClose }) {
+  const [tab, setTab] = useState('orders');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
-  const { data, loading, error } = useFetch((p) => getStaffActivity(staff._id, p), { page, limit: 10 });
-  return <section className="pm-card" aria-label="Staff activity">
-    <div className="pm-toolbar"><h2 style={{ margin: 0 }}>Activity history · {staff.fullName}</h2><button onClick={onClose}>Close</button></div>
-    {loading ? <p role="status">Loading...</p> : error ? <p className="pm-error" role="alert">{error}</p> : !data.items.length ? <p className="pm-note">No recorded activity yet.</p> : <>
-      <div className="pm-table-wrap"><table><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>
-        {data.items.map((a) => <tr key={a._id}><td>{dt(a.createdAt)}</td><td>{a.action}</td><td>{a.targetType || '—'}</td><td><small>{a.detail ? JSON.stringify(a.detail) : ''}</small></td></tr>)}
-      </tbody></table></div>
-      <Pager page={page} total={data.total} limit={data.limit} onPage={setPage} />
+  const range = { from: from || undefined, to: to || undefined };
+  const dateError = from && to && from > to ? 'The start date must be before the end date.' : '';
+  const info = useFetch((p) => getStaff(staffId, p), dateError ? {} : range);
+  const orders = useFetch((p) => (tab === 'orders' ? getStaffOrders(staffId, p) : Promise.resolve({ data: null })), { ...(dateError ? {} : range), page, limit: 10, tab });
+  const log = useFetch((p) => (tab === 'activity' ? getStaffActivity(staffId, p) : Promise.resolve({ data: null })), { page, limit: 10, tab });
+  const st = info.data?.staff;
+  const n = info.data?.stats;
+  return <section className="pm-card" aria-label="Staff details">
+    <div className="pm-toolbar sd-head"><h2 style={{ margin: 0 }}>{st ? st.fullName : 'Staff details'}</h2><button onClick={onClose}>Close</button></div>
+    {info.loading && !info.data ? <p role="status">Loading...</p> : info.error ? <p className="pm-error" role="alert">{info.error}</p> : st && <>
+      <p className="pm-note">{st.employeeCode || '—'} · {st.position || 'No position'} · {st.email}{st.phone ? ` · ${st.phone}` : ''} · hired {d(st.hiredAt)} · last login {dt(st.lastLoginAt)} · <Badge tone={STATUS_TONE[st.status]}>{st.status}</Badge></p>
+      <div className="pm-search-row">
+        <label>From<input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} /></label>
+        <label>To<input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} /></label>
+        {(from || to) && <button type="button" onClick={() => { setFrom(''); setTo(''); setPage(1); }}>All time</button>}
+      </div>
+      {dateError && <p className="pm-error" role="alert">{dateError}</p>}
+      {n && <div className="pm-stats sd-stats">
+        <Stat label="Orders handled" value={n.handled} /><Stat label="Started preparing" value={n.prepared} /><Stat label="Handed over" value={n.handedOver} tone="ok" />
+        <Stat label="Cancelled" value={n.cancelled} tone={n.cancelled ? 'warn' : ''} /><Stat label="Counter sales" value={n.counterSales} /><Stat label="Payments collected" value={money(n.collected)} />
+      </div>}
     </>}
+    <Tabs value={tab} onChange={(k) => { setTab(k); setPage(1); }} tabs={[{ key: 'orders', label: 'Orders handled' }, { key: 'activity', label: 'Activity log' }]} />
+    {tab === 'orders' ? (orders.loading ? <p role="status">Loading orders...</p> : orders.error ? <p className="pm-error" role="alert">{orders.error}</p> : !orders.data?.items.length ? <p className="pm-note">No orders handled in this period.</p> : <>
+      <div className="pm-table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Status now</th><th className="pm-num">Total</th><th>What this staff did</th></tr></thead><tbody>
+        {orders.data.items.map((o) => <tr key={o._id}>
+          <td><Link to={`/admin/orders/${o._id}`}><strong>{o.orderCode}</strong></Link><small>{o.source === 'store' ? 'Counter' : 'Online'}</small></td>
+          <td>{o.customer || 'Walk-in'}</td>
+          <td>{STATUS_TEXT[o.status] || o.status}</td>
+          <td className="pm-num">{money(o.totalAmount)}</td>
+          <td>{o.steps.map((x, i) => <small key={i}>{dt(x.at)} · {x.label}{x.amount ? ` (${money(x.amount)})` : ''}{x.note && x.action === 'cancelled' ? ` — ${x.note}` : ''}</small>)}</td>
+        </tr>)}
+      </tbody></table></div>
+      <Pager page={page} total={orders.data.total} limit={orders.data.limit} onPage={setPage} />
+    </>) : (log.loading ? <p role="status">Loading activity...</p> : log.error ? <p className="pm-error" role="alert">{log.error}</p> : !log.data?.items.length ? <p className="pm-note">No recorded activity yet.</p> : <>
+      <div className="pm-table-wrap"><table><thead><tr><th>When</th><th>Action</th><th>Order / target</th><th>Detail</th></tr></thead><tbody>
+        {log.data.items.map((a) => <tr key={a._id}>
+          <td>{dt(a.createdAt)}</td><td>{actionText(a.action)}</td>
+          <td>{a.targetType === 'Order' && a.targetId ? <Link to={`/admin/orders/${a.targetId}`}>{a.detail?.orderCode || 'View order'}</Link> : (a.detail?.orderCode || a.targetType || '—')}</td>
+          <td><small>{detailText(a) || '—'}</small></td>
+        </tr>)}
+      </tbody></table></div>
+      <Pager page={page} total={log.data.total} limit={log.data.limit} onPage={setPage} />
+    </>)}
   </section>;
 }
 
@@ -67,6 +131,10 @@ export default function AdminStaffPage() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [panel, setPanel] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const viewId = params.get('view');
+  // Mở chi tiết nhân viên khi vào bằng link /admin/staff?view=<id> (vd từ trang chi tiết đơn)
+  useEffect(() => { if (viewId) setPanel({ type: 'detail', staffId: viewId }); }, [viewId]);
   const { data, loading, error, reload } = useFetch(listStaff, { status: status || undefined, q: q || undefined, page, limit: 10 });
   const act = useAction(reload);
   const items = data?.items || [];
@@ -84,7 +152,7 @@ export default function AdminStaffPage() {
       <p><strong>{panel.staff.fullName}</strong> will not be able to sign in until the account is unlocked.</p></Confirm>}
     {panel?.type === 'unlock' && <Confirm title="Unlock account?" confirmLabel="Unlock" busy={act.busy} error={act.error} onCancel={() => setPanel(null)} onConfirm={() => run(() => unlockStaff(panel.staff._id, {}), 'Account unlocked.')}>
       <p><strong>{panel.staff.fullName}</strong> will be able to sign in again.</p></Confirm>}
-    {panel?.type === 'activity' && <Activity staff={panel.staff} onClose={() => setPanel(null)} />}
+    {panel?.type === 'detail' && <StaffDetail key={panel.staffId} staffId={panel.staffId} onClose={() => { setPanel(null); if (viewId) setParams({}); }} />}
 
     <section className="pm-card" aria-label="Staff list">
       <Tabs tabs={TABS} value={status} onChange={(k) => { setStatus(k); setPage(1); }} />
@@ -102,7 +170,7 @@ export default function AdminStaffPage() {
               <td><Badge tone={STATUS_TONE[s.status]}>{s.status}</Badge></td>
               <td><div className="pm-row-actions">
                 <button onClick={() => open('edit', s)}>Update</button>
-                <button onClick={() => open('activity', s)}>Activity</button>
+                <button onClick={() => { act.setError(''); act.setSuccess(''); setPanel({ type: 'detail', staffId: s._id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Details</button>
                 {s.status === 'locked' ? <button onClick={() => open('unlock', s)}>Unlock</button> : <button className="pm-delete" onClick={() => open('lock', s)}>Lock</button>}
               </div></td>
             </tr>)}

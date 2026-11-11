@@ -17,3 +17,9 @@ export const unlockStaff = (id, data) => api.patch(`/staff/${id}/unlock`, data);
 
 // Gọi API: nhật ký thao tác nhân viên (UC-30.6)
 export const getStaffActivity = (id, params) => api.get(`/staff/${id}/activity`, { params });
+
+// Gọi API: chi tiết nhân viên + số liệu xử lý đơn
+export const getStaff = (id, params) => api.get(`/staff/${id}`, { params });
+
+// Gọi API: các đơn nhân viên đã xử lý
+export const getStaffOrders = (id, params) => api.get(`/staff/${id}/orders`, { params });

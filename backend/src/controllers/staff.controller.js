@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { User, ActivityLog } = require('../models');
+const { User, ActivityLog, Order, Transaction } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { logActivity } = require('../services/activity.service');
@@ -143,4 +143,87 @@ exports.getStaffActivity = asyncHandler(async (req, res) => {
     ActivityLog.countDocuments(filter),
   ]);
   res.json({ staff: { _id: u._id, fullName: u.fullName }, items, total, page, limit });
+});
+
+// Tên việc nhân viên đã làm với đơn, theo trạng thái mới của đơn
+const STEP_LABEL = {
+  confirmed: 'Confirmed the order', preparing: 'Started preparing', ready_for_pickup: 'Marked ready for pickup',
+  completed: 'Handed over to the customer', cancelled: 'Cancelled the order', failed: 'Marked as failed', pending_payment: 'Created the order',
+};
+const METHOD_LABEL = { cash: 'cash', card: 'card', vnpay: 'VNPay QR', wallet: 'wallet' };
+
+// Khoảng ngày từ query (from / to dạng YYYY-MM-DD, to tính hết ngày)
+function rangeOf(q) {
+  const at = (v, end) => {
+    if (!v) return null;
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) throw new ApiError(400, 'Invalid date');
+    if (end && /^\d{4}-\d{2}-\d{2}$/.test(v)) d.setHours(23, 59, 59, 999);
+    return d;
+  };
+  const from = at(q.from), to = at(q.to, true);
+  if (from && to && from > to) throw new ApiError(400, 'The start date must be before the end date');
+  return from || to ? { ...(from && { $gte: from }), ...(to && { $lte: to }) } : null;
+}
+
+// Các việc một nhân viên đã làm với một đơn (đổi trạng thái, tạo bill tại quầy, thu tiền)
+function stepsOf(order, staffId, txns) {
+  const me = String(staffId);
+  const steps = (order.statusHistory || []).filter((h) => String(h.changedBy) === me)
+    .map((h) => ({ action: h.status, label: STEP_LABEL[h.status] || h.status, at: h.changedAt, note: h.note || null }));
+  if (String(order.createdBy) === me && order.source === 'store' && !steps.some((x) => x.action === 'pending_payment')) steps.push({ action: 'counter_sale', label: 'Created the counter sale', at: order.createdAt });
+  txns.filter((t) => String(t.orderId) === String(order._id))
+    .forEach((t) => steps.push({ action: 'payment', label: `Collected ${METHOD_LABEL[t.method] || t.method} payment`, at: t.paidAt || t.createdAt, amount: t.amount }));
+  // Tạo bill tại quầy luôn là bước đầu tiên
+  return steps.sort((a, b) => (b.action === 'counter_sale') - (a.action === 'counter_sale') || new Date(a.at) - new Date(b.at));
+}
+
+// Admin xem chi tiết một nhân viên: thông tin + số liệu xử lý đơn (lọc theo khoảng ngày)
+exports.getStaff = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  const range = rangeOf(req.query);
+  const id = u._id;
+  const txns = await Transaction.find({ processedBy: id, status: { $in: ['success', 'refunded'] }, ...(range && { createdAt: range }) }).select('orderId amount method status').lean();
+  const step = (status) => Order.countDocuments({ statusHistory: { $elemMatch: { changedBy: id, status, ...(range && { changedAt: range }) } } });
+  const [handled, prepared, handedOver, cancelled, counterSales] = await Promise.all([
+    Order.countDocuments(handledFilter(id, range, txns)),
+    step('preparing'), step('completed'), step('cancelled'),
+    Order.countDocuments({ createdBy: id, source: 'store', status: 'completed', ...(range && { createdAt: range }) }),
+  ]);
+  res.json({
+    staff: view(u),
+    stats: { handled, prepared, handedOver, cancelled, counterSales, collected: txns.filter((t) => t.status === 'success').reduce((n, t) => n + t.amount, 0) },
+  });
+});
+
+// Điều kiện tìm các đơn có nhân viên tham gia xử lý
+function handledFilter(id, range, txns) {
+  return { $or: [
+    { statusHistory: { $elemMatch: { changedBy: id, ...(range && { changedAt: range }) } } },
+    { createdBy: id, ...(range && { createdAt: range }) },
+    { _id: { $in: [...new Set(txns.map((t) => String(t.orderId)))] } },
+  ] };
+}
+
+// Admin xem danh sách đơn một nhân viên đã xử lý, kèm từng việc đã làm
+exports.getStaffOrders = asyncHandler(async (req, res) => {
+  const u = await loadStaff(req.params.id);
+  const range = rangeOf(req.query);
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+  const txns = await Transaction.find({ processedBy: u._id, ...(range && { createdAt: range }) }).select('orderId amount method paidAt createdAt').lean();
+  const filter = handledFilter(u._id, range, txns);
+  const [orders, total] = await Promise.all([
+    Order.find(filter).populate('customerId', 'fullName').select('orderCode source status totalAmount customerId createdBy createdAt updatedAt statusHistory')
+      .sort({ updatedAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Order.countDocuments(filter),
+  ]);
+  res.json({
+    items: orders.map((o) => {
+      const steps = stepsOf(o, u._id, txns);
+      return { _id: o._id, orderCode: o.orderCode, source: o.source, status: o.status, totalAmount: o.totalAmount,
+        customer: o.customerId ? o.customerId.fullName : null, steps, lastAt: steps.length ? steps[steps.length - 1].at : o.updatedAt };
+    }),
+    total, page, limit,
+  });
 });
