@@ -8,7 +8,7 @@ import { getMyOrder } from '../../api/order.api';
 import useAuth from '../../hooks/useAuth';
 import Icon from '../../components/common/Icon';
 import OrderStatusBadge from '../../components/order/OrderStatusBadge';
-import { formatCurrency, formatDateTime } from '../../utils/format';
+import { formatCurrency, formatDate, formatDateTime } from '../../utils/format';
 import { PAYMENT_METHOD, PAYMENT_STATUS, SHOW_PICKUP_CODE, statusMessage } from '../../utils/orderMeta';
 
 // Giờ mở cửa hôm nay của cửa hàng
@@ -133,7 +133,10 @@ export default function OrderDetailPage() {
 
       {order.status === 'confirmed' && order.pickupSchedule && !order.pickupSchedule.isOpen && <div className="odetail-banner warn"><div><strong>Scheduled preparation</strong><span>{order.pickupSchedule.notice}</span></div></div>}
       <CustomerCancelOrder order={order} onChanged={() => setReloadKey(k => k + 1)} />
-      {order.refund && <div className="odetail-banner success"><div><strong>{formatCurrency(order.refund.amount)} refunded to wallet</strong><Link to="/wallet">View your wallet</Link></div></div>}
+      {order.refund && <div className="odetail-banner success"><div><strong>{formatCurrency(order.refund.amount)} refunded to wallet</strong>
+        <span>Use this balance on your next order or withdraw it to your bank account.</span><Link to="/wallet">View your wallet</Link></div></div>}
+      {order.compensation?.code && <div className="odetail-banner info"><span className="odetail-banner-icon"><Icon name="redeem" size="lg" /></span><div><strong>Sorry for the inconvenience — here is a voucher: {order.compensation.code}</strong>
+        <span>{order.compensation.percent}% off your next order, up to {formatCurrency(order.compensation.maxDiscount)}. One use, only for your account{order.compensation.expiresAt ? `, valid until ${formatDate(order.compensation.expiresAt)}` : ''}. Enter the code at checkout.</span></div></div>}
       <div className="odetail-grid">
         <section className="odetail-card odetail-items">
           <h2>Order items</h2>

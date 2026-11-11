@@ -58,7 +58,8 @@ function parseBody(body = {}, { partial } = {}) {
 exports.validateDiscountCode = asyncHandler(async (req, res) => {
   const text = typeof req.body?.code === 'string' ? req.body.code.trim().toUpperCase() : '';
   if (!text) throw new ApiError(400, 'Enter a discount code');
-  const code = await DiscountCode.findOne({ code: text, status: 'active' }).lean();
+  const found = await DiscountCode.findOne({ code: text, status: 'active' }).lean();
+  const code = found && found.assignedTo && String(found.assignedTo) !== String(req.user.id) ? null : found;   // mã tặng riêng chỉ chủ mã dùng được
   const used = code ? await Order.countDocuments({ customerId: req.user.id, 'discountCode.codeId': code._id, status: { $ne: 'failed' } }) : 0;
   const amount = Number(req.body?.amount) || Infinity;
   try {
@@ -68,6 +69,27 @@ exports.validateDiscountCode = asyncHandler(async (req, res) => {
     throw err;
   }
   res.json({ valid: true, code: code.code, type: code.type, value: code.value, maxDiscount: code.maxDiscount ?? null, minOrderAmount: code.minOrderAmount });
+});
+
+// Khách xem kho voucher: mã đang chạy, còn lượt cho mình (kể cả mã tặng riêng như voucher xin lỗi)
+exports.listAvailableDiscountCodes = asyncHandler(async (req, res) => {
+  const now = new Date();
+  const codes = await DiscountCode.find({
+    status: 'active', startDate: { $lte: now }, endDate: { $gte: now },
+    $or: [{ assignedTo: { $exists: false } }, { assignedTo: null }, { assignedTo: req.user.id }],
+    $expr: { $lt: [{ $ifNull: ['$usedCount', 0] }, { $ifNull: ['$usageLimit', Number.MAX_SAFE_INTEGER] }] },
+  }).sort({ endDate: 1 }).limit(50).lean();
+  const used = await Order.aggregate([
+    { $match: { customerId: new (require('mongoose').Types.ObjectId)(String(req.user.id)), 'discountCode.codeId': { $in: codes.map((c) => c._id) }, status: { $ne: 'failed' } } },
+    { $group: { _id: '$discountCode.codeId', n: { $sum: 1 } } },
+  ]);
+  const usedMap = new Map(used.map((u) => [String(u._id), u.n]));
+  const items = codes
+    .map((c) => ({ _id: c._id, code: c.code, description: c.description || '', type: c.type, value: c.value, maxDiscount: c.maxDiscount ?? null, minOrderAmount: c.minOrderAmount || 0,
+      startDate: c.startDate, endDate: c.endDate, personal: !!c.assignedTo, remainingUses: (c.perUserLimit || 1) - (usedMap.get(String(c._id)) || 0) }))
+    .filter((c) => c.remainingUses > 0)
+    .sort((a, b) => Number(b.personal) - Number(a.personal));
+  res.json({ items });
 });
 
 // UC-38.1 Admin xem / tìm mã giảm giá

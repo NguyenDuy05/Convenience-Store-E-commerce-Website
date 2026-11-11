@@ -16,6 +16,7 @@ const discountCodeSchema = new Schema({
   endDate: { type: Date, required: true },
   status: { type: String, enum: ['inactive', 'active', 'suspended', 'deleted'], default: 'inactive', index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  assignedTo: { type: Schema.Types.ObjectId, ref: 'User', index: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('DiscountCode', discountCodeSchema);

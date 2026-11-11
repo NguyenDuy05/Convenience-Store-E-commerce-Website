@@ -9,13 +9,17 @@ export const CANCEL_REASONS = {
     'The pickup time is too long',
     'I found a better price elsewhere',
   ],
-  store: [
-    'Item out of stock or damaged',
+  customerSide: [
     'Customer requested the cancellation',
     'Customer did not pick up in time',
-    'Store cannot prepare the order (closed / understaffed)',
-    'Payment problem',
+    'Customer ordered the wrong items',
     'Suspected fake or duplicate order',
+  ],
+  store: [
+    'Item out of stock or damaged',
+    'Store cannot prepare the order (closed / understaffed)',
+    'Payment or system problem',
+    'Wrong price or product information',
   ],
 };
 export const OTHER = '__other__';
@@ -24,12 +28,12 @@ export const OTHER = '__other__';
 export const reasonText = ({ choice, other }) => (choice === OTHER ? other.trim() : choice || '');
 
 // Danh sách lý do hủy đơn có sẵn + mục Other để tự nhập
-export default function CancelReasonPicker({ kind = 'customer', value, onChange, disabled, name = 'cancel-reason' }) {
+export default function CancelReasonPicker({ kind = 'customer', value, onChange, disabled, name = 'cancel-reason', legend = 'Why are you cancelling?' }) {
   const options = CANCEL_REASONS[kind] || CANCEL_REASONS.customer;
   const pick = (choice) => onChange({ ...value, choice });
   return (
     <fieldset className="crp" disabled={disabled}>
-      <legend>Why are you cancelling? <span>*</span></legend>
+      <legend>{legend} <span>*</span></legend>
       <div className="crp-list">
         {options.map((label) => (
           <label key={label} className={`crp-opt ${value.choice === label ? 'on' : ''}`}>

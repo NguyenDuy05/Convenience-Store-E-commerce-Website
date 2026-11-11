@@ -14,3 +14,11 @@
 .asa-btn { align-self: flex-start; padding: 11px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: var(--qk-shadow-sm); }
 .asa-btn:hover:not(:disabled) { background: var(--qk-primary-dark); }
 .asa-btn:disabled { background: var(--qk-outline-variant); cursor: not-allowed; box-shadow: none; }
+.aco-faults { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.aco-fault { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid #dde1ff; border-radius: 12px; background: #fff; color: #0c1842; cursor: pointer; transition: border-color .15s, background .15s; }
+.aco-fault:hover { border-color: #b4c5ff; }
+.aco-fault.on { border-color: #0058bc; background: #f3f2ff; }
+.aco-fault input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: #0058bc; flex-shrink: 0; }
+.aco-fault > span { display: flex; flex-direction: column; gap: 2px; }
+.aco-fault strong { font-size: 14px; }
+.aco-fault small { font-size: 12px; color: var(--qk-text-variant); }

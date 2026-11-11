@@ -42,7 +42,7 @@ exports.get = asyncHandler(async (req, res) => {
     customer: customerOf(customer), items: order.items.map(toItem), store, createdAt: order.createdAt,
     pickupSchedule: require('../services/pickupSchedule.service').pickupSchedule(store), preparationStartsAt: order.preparationStartsAt || null,
     readyAt: order.readyAt, pickedUpAt: order.pickedUpAt,
-    cancelledAt: order.cancelledAt || null, cancelReason: order.cancelReason || '', refund: order.refund?.refundedAt ? { amount: order.refund.amount, refundedAt: order.refund.refundedAt } : null,
+    cancelledAt: order.cancelledAt || null, cancelReason: order.cancelReason || '', refund: order.refund?.refundedAt ? { amount: order.refund.amount, refundedAt: order.refund.refundedAt } : null, cancelFault: order.cancelFault || null, compensation: order.compensation?.code ? order.compensation : null,
     statusHistory: (order.statusHistory || []).map(({ status, changedAt }) => ({ status, changedAt })),
     nextTransition: order.source === 'online' && NEXT[order.status] ? { to: NEXT[order.status], needsCashConfirm: NEXT[order.status] === 'completed' && order.paymentStatus !== 'paid' } : null,
   });

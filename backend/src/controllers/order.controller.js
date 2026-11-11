@@ -120,6 +120,7 @@ exports.getMyOrder = asyncHandler(async (req, res) => {
     pointsDiscount: o.pointsDiscount || 0,
     walletAmount: o.walletAmount || 0, payableAmount: o.payableAmount ?? o.totalAmount,
     refund: o.refund?.refundedAt ? o.refund : null,
+    cancelReason: o.cancelReason || null, cancelFault: o.cancelFault || null, compensation: o.compensation?.code ? o.compensation : null,
     canCancel: ['pending_payment', 'confirmed'].includes(o.status),
     totalAmount: o.totalAmount,
     pickupSchedule: require('../services/pickupSchedule.service').pickupSchedule(store),

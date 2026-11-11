@@ -76,6 +76,8 @@ const orderSchema = new Schema({
   paidTransactionId: { type: Schema.Types.ObjectId, ref: 'Transaction' },
   cancelledAt: Date,
   cancelReason: String,
+  cancelFault: { type: String, enum: ['customer', 'store'] },
+  compensation: { code: String, discountCodeId: { type: Schema.Types.ObjectId, ref: 'DiscountCode' }, percent: Number, maxDiscount: Number, expiresAt: Date },
   refund: {
     amount: Number,
     method: String,

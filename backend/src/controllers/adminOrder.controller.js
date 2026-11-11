@@ -144,6 +144,20 @@ exports.getOrder = asyncHandler(async (req, res) => {
   const uMap = new Map(users.map((u) => [String(u._id), u]));
   const name = (uid) => (uid && uMap.get(String(uid)) ? uMap.get(String(uid)).fullName : null);
   const customer = o.customerId ? uMap.get(String(o.customerId)) : null;
+  const ref = (uid) => { const u = uid && uMap.get(String(uid)); return u ? { _id: u._id, fullName: u.fullName, role: u.role } : null; };
+  // Nhân viên / admin đã xử lý đơn và từng việc họ đã làm
+  const handlers = new Map();
+  const addStep = (uid, label, at) => {
+    const u = ref(uid);
+    if (!u || u.role === 'customer') return;
+    const h = handlers.get(String(u._id)) || { ...u, steps: [] };
+    h.steps.push({ label, at }); handlers.set(String(u._id), h);
+  };
+  const STEP = { confirmed: 'Confirmed the order', preparing: 'Started preparing', ready_for_pickup: 'Marked ready for pickup', completed: 'Handed over to the customer', cancelled: 'Cancelled the order', failed: 'Marked as failed' };
+  if (o.source === 'store') addStep(o.createdBy, 'Created the counter sale', o.createdAt);
+  (o.statusHistory || []).forEach((h) => { if (STEP[h.status]) addStep(h.changedBy, STEP[h.status], h.changedAt); });
+  txns.forEach((t) => { if (t.status === 'success' || t.status === 'refunded') addStep(t.processedBy, `Collected ${({ cash: 'cash', card: 'card', vnpay: 'VNPay QR' })[t.method] || t.method} payment`, t.paidAt || t.createdAt); });
+  (o.issues || []).forEach((i) => { addStep(i.reportedBy, 'Reported an issue', i.createdAt); if (i.handledBy) addStep(i.handledBy, 'Resolved an issue', i.resolvedAt); });
 
   res.json({
     _id: o._id,
@@ -168,12 +182,14 @@ exports.getOrder = asyncHandler(async (req, res) => {
     cancelledAt: o.cancelledAt || null,
     cancelReason: o.cancelReason || null,
     refund: o.refund?.refundedAt ? { amount: o.refund.amount, method: o.refund.method, reason: o.refund.reason, refundedAt: o.refund.refundedAt } : null,
+    cancelFault: o.cancelFault || null, compensation: o.compensation?.code ? o.compensation : null,
     customerNote: o.customerNote,
     readyAt: o.readyAt,
     pickedUpAt: o.pickedUpAt,
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
-    statusHistory: (o.statusHistory || []).map((h) => ({ status: h.status, changedAt: h.changedAt, note: h.note || null, changedBy: name(h.changedBy) }))
+    handledBy: [...handlers.values()].map((h) => ({ ...h, steps: h.steps.sort((x, y) => (y.label === 'Created the counter sale') - (x.label === 'Created the counter sale') || new Date(x.at) - new Date(y.at)) })),
+    statusHistory: (o.statusHistory || []).map((h) => ({ status: h.status, changedAt: h.changedAt, note: h.note || null, changedBy: name(h.changedBy), changedByRef: ref(h.changedBy) }))
       .sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt)),
     transactions: txns.map((t) => ({
       _id: t._id, method: t.method, amount: t.amount, status: t.status, txnRef: t.txnRef, paidAt: t.paidAt, createdAt: t.createdAt,
@@ -301,6 +317,9 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
   const reason = text(req.body?.reason, "Cancellation reason", 3, 500);
+  // Bên có lỗi: khách tự hủy luôn là 'customer'; staff/admin phải chọn 'customer' hoặc 'store'
+  const fault = req.user.role === 'customer' ? 'customer' : req.body?.fault;
+  if (!['customer', 'store'].includes(fault)) throw new ApiError(400, 'Choose whether the cancellation is requested by the customer or caused by the store');
   const o = await Order.findOne({ _id: id, ...(req.user.role === 'customer' ? { customerId: req.user.id, source: 'online' } : {}) });
   if (!o) throw new ApiError(404, NOT_FOUND);
   const allowed = req.user.role === 'customer' ? ['pending_payment', 'confirmed'] : ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
@@ -309,7 +328,7 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   const now = new Date();
   const wasPaid = o.paymentStatus === 'paid';
   const upd = await Order.findOneAndUpdate({ _id: id, status: o.status }, {
-    $set: { status: 'cancelled', cancelledAt: now, cancelReason: reason, walletPolicy: true },
+    $set: { status: 'cancelled', cancelledAt: now, cancelReason: reason, cancelFault: fault, walletPolicy: true },
     $push: { statusHistory: { status: 'cancelled', changedAt: now, changedBy: req.user.id, note: reason } },
   }, { new: true });
   if (!upd) throw new ApiError(409, 'The order status changed. Please refresh and try again.', { code: 'STALE_STATUS' });
@@ -318,18 +337,40 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   catch (e) { console.error('Stock return failed for cancelled order:', String(o._id), e); }
   await require('../services/discountReservation.service').release(o);
   await require('../services/wallet.service').settleClosedOrder(o._id);
+  // Lỗi phía cửa hàng: tặng voucher 10% (tối đa 10.000đ) riêng cho khách, hạn 30 ngày
+  const compensation = fault === 'store' && o.customerId && req.body?.compensate !== false ? await giveApologyVoucher(o, req.user.id) : null;
   const settled = await Order.findById(id).lean();
   void notifyOrder(settled, 'status_updated');
+  if (compensation) void require('../services/inAppNotification.service').orderEvent(settled, 'compensation', 'A gift for the inconvenience',
+    `We are sorry we had to cancel your order (${reason}). Use code ${compensation.code} for ${compensation.percent}% off your next order (up to ${compensation.maxDiscount.toLocaleString('vi-VN')}đ), valid until ${compensation.expiresAt.toLocaleDateString('en-GB')}.`, compensation.code);
 
-  await logActivity(req, { action: 'ORDER_CANCEL', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, reason, refunded: wasPaid ? o.totalAmount : 0 } });
-  res.json({ _id: upd._id, status: upd.status, paymentStatus: settled.paymentStatus, refund: settled.refund?.refundedAt ? settled.refund : null });
+  await logActivity(req, { action: 'ORDER_CANCEL', targetType: 'Order', targetId: o._id, detail: { orderCode: o.orderCode, reason, fault, refunded: wasPaid ? o.totalAmount : 0, voucher: compensation?.code } });
+  res.json({ _id: upd._id, status: upd.status, cancelFault: fault, paymentStatus: settled.paymentStatus, refund: settled.refund?.refundedAt ? settled.refund : null, compensation });
 });
+
+// Tạo voucher xin lỗi riêng cho khách khi cửa hàng hủy đơn: giảm 10%, tối đa 10.000đ, 1 lần, hạn 30 ngày
+async function giveApologyVoucher(order, byUserId) {
+  const { DiscountCode } = require('../models');
+  const expiresAt = new Date(Date.now() + 30 * 86400000);
+  for (let i = 0; i < 5; i += 1) {
+    const code = `SORRY-${require('crypto').randomBytes(3).toString('hex').toUpperCase()}`;
+    try {
+      const d = await DiscountCode.create({ code, description: `Apology voucher for cancelled order ${order.orderCode}`, type: 'percent', value: 10, maxDiscount: 10000, minOrderAmount: 0,
+        usageLimit: 1, perUserLimit: 1, startDate: new Date(), endDate: expiresAt, status: 'active', assignedTo: order.customerId, createdBy: byUserId });
+      const compensation = { code, discountCodeId: d._id, percent: 10, maxDiscount: 10000, expiresAt };
+      await Order.updateOne({ _id: order._id }, { $set: { compensation } });
+      return compensation;
+    } catch (e) { if (e.code !== 11000) throw e; }
+  }
+  return null;
+}
 
 // Admin xem lịch sử hoàn tiền (lọc theo mã đơn, khoảng ngày)
 exports.listRefunds = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const filter = { 'refund.refundedAt': { $exists: true } };
+  if (['customer', 'store'].includes(req.query.fault)) filter.cancelFault = req.query.fault;
   const from = parseDate(req.query.from, "From date");
   const to = parseDate(req.query.to, "To date");
   if (to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to)) to.setHours(23, 59, 59, 999);
@@ -339,7 +380,7 @@ exports.listRefunds = asyncHandler(async (req, res) => {
 
   const [docs, total, agg] = await Promise.all([
     Order.find(filter).populate('customerId', 'fullName email').populate('refund.refundedBy', 'fullName')
-      .select('orderCode source customerId totalAmount paymentMethod refund cancelledAt').sort({ 'refund.refundedAt': -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      .select('orderCode source customerId totalAmount paymentMethod refund cancelledAt cancelFault compensation').sort({ 'refund.refundedAt': -1 }).skip((page - 1) * limit).limit(limit).lean(),
     Order.countDocuments(filter),
     Order.aggregate([{ $match: filter }, { $group: { _id: null, amount: { $sum: '$refund.amount' } } }]),
   ]);
@@ -348,6 +389,7 @@ exports.listRefunds = asyncHandler(async (req, res) => {
       _id: o._id, orderCode: o.orderCode, source: o.source,
       customer: o.customerId ? { _id: o.customerId._id, fullName: o.customerId.fullName, email: o.customerId.email } : null,
       amount: o.refund.amount, method: o.refund.method, reason: o.refund.reason, refundedAt: o.refund.refundedAt,
+      fault: o.cancelFault || null, voucher: o.compensation?.code || null, cancelledAt: o.cancelledAt,
       refundedBy: o.refund.refundedBy ? o.refund.refundedBy.fullName : null,
     })),
     total, page, limit, summary: { totalAmount: agg[0]?.amount || 0 },

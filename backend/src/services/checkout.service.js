@@ -44,6 +44,7 @@ async function loadDiscount(userId, input) {
   const text = typeof input === 'string' ? input.trim().toUpperCase() : '';
   if (!text) return { discountCode: null, userUsedCount: 0 };
   const discountCode = await DiscountCode.findOne({ code: text, status: 'active' }).lean();
+  if (discountCode?.assignedTo && String(discountCode.assignedTo) !== String(userId)) throw new DiscountCodeError("This discount code does not exist or is unavailable");
   if (!discountCode) throw new DiscountCodeError("This discount code does not exist or is unavailable");
   const userUsedCount = await Order.countDocuments({ customerId: userId, 'discountCode.codeId': discountCode._id, status: { $nin: ['failed', 'cancelled'] } });
   return { discountCode, userUsedCount };

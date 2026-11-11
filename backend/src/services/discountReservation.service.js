@@ -12,6 +12,7 @@ async function reserve(codeId, userId, orderId, { session } = {}) {
   const now = new Date();
   const code = await DiscountCode.findOneAndUpdate({
     _id: codeId, status: 'active', startDate: { $lte: now }, endDate: { $gte: now },
+    $or: [{ assignedTo: { $exists: false } }, { assignedTo: null }, { assignedTo: customerId }],
     'allocations.orderId': { $ne: orderId },
     $expr: { $and: [
       { $lt: [{ $ifNull: ['$usedCount', 0] }, { $ifNull: ['$usageLimit', Number.MAX_SAFE_INTEGER] }] },

@@ -50,7 +50,7 @@ export const ORDER_STATUS_MESSAGE = {
   ready_for_pickup: { tone: 'success', icon: 'storefront', title: "Your order is ready for pickup", text: "Give your order code to a staff member at pickup." },
   completed: { tone: 'neutral', icon: 'check_circle', title: "Order collected", text: "Thank you for shopping with us." },
   failed: { tone: 'error', icon: 'error', title: "Payment unsuccessful", text: "This order was not confirmed. You can place a new order from your cart." },
-  cancelled: { tone: 'error', icon: 'cancel', title: "Order cancelled", text: "This order was cancelled. Payments received are returned to your wallet for a future purchase." },
+  cancelled: { tone: 'error', icon: 'cancel', title: "Order cancelled", text: "This order was cancelled. Any refund for this order is shown below." },
 };
 
 export const SHOW_PICKUP_CODE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
@@ -67,6 +67,7 @@ export function statusMessage(order) {
   if (order.status === 'pending_payment' && order.paymentStatus === 'failed') {
     return { tone: 'warn', icon: 'payments', title: "Payment not completed", text: "Your items remain reserved until the deadline. You can retry your VNPay payment." };
   }
+  if (order.status === 'cancelled') return { ...ORDER_STATUS_MESSAGE.cancelled, text: order.refund ? 'This order was cancelled. The refund details are shown below.' : 'This order was cancelled. No payment was taken.' };
   return ORDER_STATUS_MESSAGE[order.status];
 }
 
