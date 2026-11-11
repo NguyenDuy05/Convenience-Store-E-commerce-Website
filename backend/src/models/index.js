@@ -18,6 +18,7 @@ module.exports = {
   Review: require('./Review'),
   SupportRequest: require('./SupportRequest'),
   WorkShift: require('./WorkShift'),
+  ShiftSlot: require('./ShiftSlot'),
   ActivityLog: require('./ActivityLog'),
   Notification: require('./Notification'),
   NotificationReceipt: require('./NotificationReceipt'),

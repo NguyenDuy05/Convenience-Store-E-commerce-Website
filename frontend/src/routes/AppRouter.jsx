@@ -66,6 +66,7 @@ import AdminCategoriesPage from '../pages/admin/AdminCategoriesPage';
 import AdminInventoryPage from '../pages/admin/AdminInventoryPage';
 import AdminCustomersPage from '../pages/admin/AdminCustomersPage';
 import AdminStaffPage from '../pages/admin/AdminStaffPage';
+import AdminWorkShiftsPage from '../pages/admin/AdminWorkShiftsPage';
 import AdminStoresPage from '../pages/admin/AdminStoresPage';
 import AdminPromotionsPage from '../pages/admin/AdminPromotionsPage';
 import AdminDiscountCodesPage from '../pages/admin/AdminDiscountCodesPage';
@@ -172,6 +173,7 @@ export default function AppRouter() {
         <Route path="inventory" element={<AdminInventoryPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />
         <Route path="staff" element={<AdminStaffPage />} />
+        <Route path="shifts" element={<AdminWorkShiftsPage />} />
         <Route path="stores" element={<AdminStoresPage />} />
         <Route path="promotions" element={<AdminPromotionsPage />} />
         <Route path="discount-codes" element={<AdminDiscountCodesPage />} />

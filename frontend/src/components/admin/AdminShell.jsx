@@ -7,6 +7,7 @@ export const ADMIN_GROUPS = [
         title: 'Management', items: [
             { to: '/admin/customers', label: 'Customers', icon: 'group' },
             { to: '/admin/staff', label: 'Staff', icon: 'badge' },
+            { to: '/admin/shifts', label: 'Work Shifts', icon: 'schedule' },
             { to: '/admin/stores', label: 'Stores', icon: 'storefront' },
             { to: '/admin/products', label: 'Products', icon: 'inventory_2' },
             { to: '/admin/categories', label: 'Categories', icon: 'category' },

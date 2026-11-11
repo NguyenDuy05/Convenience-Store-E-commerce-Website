@@ -1,0 +1,71 @@
+/* Admin › Work Shifts */
+.ws-toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin-bottom: 18px; }
+.ws-toolbar > label { display: grid; gap: 6px; min-width: 180px; font-size: 12px; font-weight: 600; }
+.ws-week { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.ws-week b { min-width: 230px; text-align: center; color: #0c1842; }
+.ws-week button { min-height: 38px; padding: 0 12px; border: 1px solid #dde1ff; border-radius: 10px; background: #fff; color: #0c1842; font-weight: 600; cursor: pointer; }
+.ws-week button:hover { background: #f3f2ff; }
+
+.ws-week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
+.ws-day { min-height: 140px; padding: 10px; border: 1px solid #e1e7ef; border-radius: 14px; background: #fff; display: grid; align-content: start; gap: 8px; }
+.ws-day.today { border-color: #0058bc; box-shadow: 0 0 0 2px #d8e2ff; }
+.ws-day header { display: flex; justify-content: space-between; align-items: baseline; color: #0c1842; font-size: 13px; }
+.ws-day header span { color: #727785; font-size: 12px; }
+.ws-empty { margin: 0; color: #9aa1b2; font-size: 12px; }
+.ws-shift { display: grid; gap: 3px; padding: 8px; border-radius: 10px; background: #f3f2ff; border-left: 3px solid #0058bc; font-size: 12px; }
+.ws-shift b { color: #0c1842; font-size: 13px; }
+.ws-shift span { color: #424754; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-shift .pm-badge { justify-self: start; padding: 2px 8px; font-size: 10px; }
+.ws-shift.completed { border-left-color: #356b0a; background: #f1f9ec; }
+.ws-shift.in_progress { border-left-color: #b26b00; background: #fff8e6; }
+.ws-shift.missed { border-left-color: #ba1a1a; background: #fff1ef; }
+.ws-flag { display: block; color: #8c5800; font-size: 11px; font-weight: 600; }
+.ws-flag.bad { color: #a61c14; }
+
+.ws-days { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 12px; }
+.ws-days label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid #dde1ff; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ws-days label.on { border-color: #0058bc; background: #f3f2ff; color: #0058bc; }
+.ws-days input { width: 14px; height: 14px; margin: 0; }
+.ws-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.ws-presets button { padding: 7px 12px; border: 1px dashed #b4c5ff; border-radius: 10px; background: #fff; color: #0c1842; font-size: 12px; font-weight: 600; cursor: pointer; }
+.ws-presets button.on { border-style: solid; border-color: #0058bc; background: #f3f2ff; color: #0058bc; }
+
+.pm-page td small { display: block; color: #727785; font-size: 11px; }
+.ws-actions { white-space: nowrap; }
+.ws-actions button { margin-right: 6px; }
+
+@media (max-width: 1100px) { .ws-week-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .ws-week-grid { grid-template-columns: 1fr 1fr; } .ws-week b { min-width: 0; } }
+
+/* Bảng chấm công gọn: ghi chú xuống dòng, nút thao tác nhỏ để không bị tràn ngang */
+.ws-note { max-width: 170px; white-space: normal; }
+.pm-page .ws-actions button { min-height: 32px; padding: 4px 10px; font-size: 12px; margin: 0 4px 4px 0; }
+.pm-page .ws-table td, .pm-page .ws-table th { min-width: 0; padding: 14px 10px; }
+.pm-page .ws-table td:first-child { white-space: nowrap; }
+.ws-hint { margin-top: 4px; color: #727785; font-size: 11px; font-weight: 400; }
+
+/* Ca trống (slot) trong lịch tuần */
+.ws-slot { display: grid; gap: 6px; padding: 9px; border-radius: 10px; background: #fff8e6; border-left: 3px solid #b26b00; font-size: 12px; }
+.ws-slot.full { background: #f1f9ec; border-left-color: #356b0a; }
+.ws-slot.past { background: #f6f8fb; border-left-color: #9aa1b2; }
+.ws-slot-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.ws-slot-top b { color: #0c1842; font-size: 13px; }
+.ws-seats { padding: 1px 7px; border-radius: 999px; background: #fff; color: #0c1842; font-weight: 700; font-size: 11px; }
+.ws-slot small { color: #59657a; font-size: 11px; }
+.ws-bar { height: 4px; border-radius: 4px; background: #00000012; overflow: hidden; }
+.ws-bar i { display: block; height: 100%; background: #0058bc; }
+.ws-slot.full .ws-bar i { background: #356b0a; }
+.ws-slot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.ws-slot li { display: flex; align-items: center; gap: 6px; color: #0c1842; min-width: 0; }
+.ws-slot li.ws-open { color: #8c5800; font-weight: 600; }
+.ws-dot { width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; background: #9aa1b2; }
+.ws-dot.in_progress { background: #b26b00; } .ws-dot.completed { background: #356b0a; } .ws-dot.missed { background: #ba1a1a; }
+.pm-page .ws-x { margin-left: auto; min-height: 0; padding: 0 6px; border: 0; background: none; color: #a61c14; font-size: 15px; line-height: 1; cursor: pointer; }
+.ws-slot-actions { display: flex; gap: 6px; }
+.pm-page .ws-slot-actions button { min-height: 28px; padding: 2px 9px; font-size: 11px; }
+.ws-card-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.ws-card-head h2 { margin: 0; }
+.ws-filters { display: flex; gap: 12px; flex-wrap: wrap; }
+.ws-filters label { display: grid; gap: 6px; min-width: 170px; font-size: 12px; font-weight: 600; }
+.ws-presets > span { align-self: center; min-width: 52px; color: #727785; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.ws-rates { margin: 6px 0 0; padding: 8px 12px; border-radius: 10px; background: #f3f2ff; color: #0c1842 !important; font-size: 13px; }

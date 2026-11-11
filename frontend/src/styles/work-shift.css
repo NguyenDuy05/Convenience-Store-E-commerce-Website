@@ -93,3 +93,23 @@
 .wsp-state { text-align: center; padding: 28px 16px; color: var(--wsp-text-variant); font-size: 14px; }
 .wsp-state h3 { margin: 0 0 4px; font-family: var(--wsp-font-display); color: var(--wsp-text); }
 @media (max-width: 640px) { .wsp-head h1 { font-size: 24px; line-height: 30px; } .wsp-now { text-align: left; } .wsp-filters input, .wsp-filters select { min-width: 0; width: 100%; } .wsp-filters label { flex: 1 1 45%; } }
+
+/* Ca trống nhân viên tự nhận */
+.wsp-section small { color: #727785; font-size: 13px; font-weight: 400; }
+.wsp-open { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.wsp-slot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid #dde1ff; border-radius: 14px; background: #fff; }
+.wsp-slot > div:first-child { display: grid; gap: 3px; min-width: 0; }
+.wsp-slot b { color: #0c1842; font-size: 16px; }
+.wsp-slot.mine { border-color: #356b0a; background: #f1f9ec; }
+.wsp-slot.off { opacity: .65; }
+.wsp-seats { color: #0058bc; font-size: 12px; font-weight: 600; }
+.wsp-slot-act { display: grid; gap: 6px; justify-items: end; text-align: right; }
+.wsp-slot-act small { color: #727785; font-size: 11px; max-width: 140px; }
+.wsp-btn.sm { padding: 6px 12px; font-size: 13px; }
+.wsp-earn { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 4px 0 18px; padding: 16px 20px; border-radius: 16px; background: linear-gradient(135deg, #0058bc, #1c71e4); color: #fff; }
+.wsp-earn > div { display: grid; gap: 2px; }
+.wsp-earn span { font-size: 12px; opacity: .85; text-transform: uppercase; letter-spacing: .05em; }
+.wsp-earn strong { font-size: 28px; }
+.wsp-earn small { font-size: 12px; opacity: .9; }
+.wsp-earn p { margin: 0; max-width: 460px; font-size: 13px; line-height: 1.5; opacity: .95; }
+.wsp-pay { color: #356b0a; font-size: 12px; font-weight: 600; }
