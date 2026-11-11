@@ -5,6 +5,8 @@ import '../../styles/style.css';           // style khung (review-*) dùng chung
 import '../../styles/admin-products.css';
 import '../../styles/dashboard.css';
 import NotificationBell from '../common/NotificationBell';
+import PortalUserMenu from './PortalUserMenu';
+import { BRAND_NAME, LOGO_IMAGE } from '../home/homeConfig';
 
 // Khung giao diện QUICK dùng chung cho Admin và Staff: sidebar + topbar giống trang /admin/products.
 // Lồng nhau an toàn: nếu trang con lại bọc <AdminShell> thì chỉ render nội dung (không tạo khung thứ hai).
@@ -23,7 +25,7 @@ function autoCrumbs(groups, pathname) {
 
 export default function PortalShell({ tag, roleLabel, groups, profilePath, crumbs, children }) {
     const nested = useContext(ShellContext);
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const { pathname } = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     useEffect(() => { setMenuOpen(false); }, [pathname]);
@@ -45,7 +47,8 @@ export default function PortalShell({ tag, roleLabel, groups, profilePath, crumb
                 <a className="ui-skip-link" href="#portal-content">Skip to main content</a>
                 {menuOpen && <button className="portal-overlay" aria-label="Close menu" onClick={() => setMenuOpen(false)} />}
                 <aside id="portal-menu" className="review-sidebar">
-                    <div className="review-brand"><span className="review-brand-mark">Q</span><b>QUICK</b><small>{tag}</small></div>
+                    {/* Logo giống bên khách hàng; bấm vào để về trang chủ cửa hàng (thay nút "Visit store") */}
+                    <Link to="/" className="review-brand" aria-label={`${BRAND_NAME} home`} title="Go to store home"><span className="review-brand-mark">{LOGO_IMAGE ? <img src={LOGO_IMAGE} alt="" /> : <span className="review-material-icon">storefront</span>}</span><b>{BRAND_NAME}</b><small>{tag}</small></Link>
                     <button className="portal-menu-close" aria-label="Close menu" onClick={() => setMenuOpen(false)}><span className="review-material-icon">close</span></button>
                     <nav className="review-side-nav">
                         {groups.map((group) => (
@@ -75,9 +78,10 @@ export default function PortalShell({ tag, roleLabel, groups, profilePath, crumb
                             </div>
                         </div>
                         <div className="review-topbar-right">
-                            <Link className="portal-store-link" to="/">Visit store</Link>
+                            {/* Về trang Dashboard (mục đầu tiên của menu) từ bất kỳ trang quản lý nào */}
+                            <NavLink to={groups[0].items[0].to} end className={({ isActive }) => `dash-trigger${isActive ? ' on' : ''}`} aria-label="Dashboard" title="Dashboard"><span className="review-material-icon">space_dashboard</span></NavLink>
                             <NotificationBell />
-                            <Link to={profilePath} className="review-admin-user"><div><b>{user?.fullName || roleLabel}</b><small>{roleLabel}</small></div><span className="review-user-avatar"><span className="review-material-icon">person</span></span></Link>
+                            <PortalUserMenu profilePath={profilePath} roleLabel={roleLabel} />
                         </div>
                     </header>
                     <main id="portal-content" tabIndex={-1} className="review-admin-content">{children}</main>

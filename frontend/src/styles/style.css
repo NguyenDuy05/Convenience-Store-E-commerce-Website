@@ -423,3 +423,25 @@
   .review-engine-copy { flex-basis: calc(100% - 60px); }
   .review-engine-status { margin-left: 6px; }
 }
+
+/* Avatar + menu tài khoản trên topbar Admin/Staff (giống header phía khách) */
+.portal-user { position: relative; }
+.portal-avatar-btn { all: unset; box-sizing: border-box; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #0c1842; cursor: pointer; transition: color .2s; }
+.portal-avatar-btn:hover, .portal-avatar-btn.on { color: #0058bc; }
+.portal-avatar-btn:focus-visible { outline: 3px solid #1c71e4; outline-offset: 2px; }
+.portal-user-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; display: flex; flex-direction: column; gap: 2px; width: 240px; padding: 8px; border: 1px solid #e4e7ff; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(25, 36, 78, .16); }
+.portal-user-head { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 12px; margin-bottom: 4px; border-bottom: 1px solid #e4e7ff; }
+.portal-user-head b { color: #0c1842; font: 600 14px/20px Inter, sans-serif; }
+.portal-user-head small { overflow: hidden; color: #424754; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.portal-user-head span { align-self: flex-start; margin-top: 6px; padding: 2px 8px; border-radius: 999px; background: #d8e2ff; color: #0058bc; font: 600 11px/16px Inter, sans-serif; }
+.portal-user-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; color: #0c1842; font: 500 14px/20px Inter, sans-serif; cursor: pointer; }
+.portal-user-item .review-material-icon { font-size: 19px; }
+.portal-user-item:hover { background: #f3f2ff; }
+.portal-user-item.out { margin-top: 4px; border-top: 1px solid #e4e7ff; border-radius: 0 0 12px 12px; color: #ba1a1a; }
+
+/* Logo sidebar staff/admin = logo cửa hàng phía khách (icon cửa hàng, chữ xanh), bấm về trang chủ */
+a.review-brand { color: #0058bc; text-decoration: none; cursor: pointer; }
+a.review-brand:hover .review-brand-mark { filter: brightness(1.08); }
+.review-brand-mark { width: 40px; height: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 12px -6px rgba(0, 88, 188, .7); }
+.review-brand-mark .review-material-icon { color: #fff; font-size: 26px; }
+.review-brand-mark img { width: 100%; height: 100%; object-fit: cover; }

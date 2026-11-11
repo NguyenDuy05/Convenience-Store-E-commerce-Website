@@ -6,9 +6,22 @@ import ProductSearchInput from './ProductSearchInput';
 import { BRAND_NAME, LOGO_IMAGE } from './homeConfig';
 import NotificationBell from '../common/NotificationBell';
 import { getCart } from '../../api/cart.api';
+import CartIcon from '../common/CartIcon';
+import UserAvatarIcon from '../common/UserAvatarIcon';
 
 const NAV = [['top', "Home"], ['products', "Products"], ['promotions', "Offers"], ['store', "Store"]];
 const roleHome = { customer: '/profile', staff: '/staff', admin: '/admin' };
+// Menu tài khoản mở ra khi bấm avatar (header chỉ còn icon, gọn hơn)
+const ACCOUNT_LINKS = [
+    ['/profile', 'person', 'My profile'],
+    ['/orders', 'receipt_long', 'My orders'],
+    ['/wallet', 'account_balance_wallet', 'My wallet'],
+    ['/addresses', 'location_on', 'Addresses'],
+    ['/reviews', 'reviews', 'My reviews'],
+    ['/membership', 'loyalty', 'Membership'],
+    ['/notifications', 'notifications', 'Notifications'],
+    ['/support', 'support_agent', 'Support'],
+];
 
 // Header: top info bar + main bar (logo, menu, search, cart, account)
 export default function HomeHeader({ store, info, q, setQ, active, onNav, onSearch, products = [] }) {
@@ -16,6 +29,7 @@ export default function HomeHeader({ store, info, q, setQ, active, onNav, onSear
     const navigate = useNavigate();
     const location = useLocation();
     const [open, setOpen] = useState(false);
+    const [menu, setMenu] = useState(false);
     const [cartCount, setCartCount] = useState(null);
     useEffect(() => {
         let alive = true, changed = false;
@@ -29,7 +43,6 @@ export default function HomeHeader({ store, info, q, setQ, active, onNav, onSear
     const nav = (id) => { setOpen(false); onNav(id); };
     const visit = (path) => { setOpen(false); navigate(path); };
     const currentPage = location.pathname === '/promotions' ? 'promotions' : location.pathname.startsWith('/products') ? 'products' : active;
-    const name = user?.fullName?.trim().split(/\s+/).pop() || 'Account';
 
     const search = (cls) => (
         <form className={cls} onSubmit={(e) => { setOpen(false); onSearch(e); }}>
@@ -70,14 +83,25 @@ export default function HomeHeader({ store, info, q, setQ, active, onNav, onSear
                 {search('hp-hsearch')}
 
                 <div className="hp-actions">
-                    {(!user || user.role === 'customer') && <Link to="/cart" className="hp-icobtn hp-cart-indicator" aria-label={cartCount === null ? 'Cart' : `Cart (${cartCount} items)`}><Icon name="shopping_bag" size="lg" />{cartCount > 0 && <span className="hp-cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>}
+                    {(!user || user.role === 'customer') && <Link to="/cart" className="hp-icobtn hp-cart-indicator" aria-label={cartCount === null ? 'Cart' : `Cart (${cartCount} items)`}><CartIcon size={24} strokeWidth={1.9} />{cartCount > 0 && <span className="hp-cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>}
                     {user?.role === 'customer' && <Link to="/wallet" className="hp-icobtn" aria-label="My wallet"><Icon name="account_balance_wallet" size="lg" /></Link>}
+                    {(user?.role === 'staff' || user?.role === 'admin') && <Link to={roleHome[user.role]} className="dash-trigger" aria-label={`${user.role === 'admin' ? 'Admin' : 'Staff'} dashboard`} title={`${user.role === 'admin' ? 'Admin' : 'Staff'} dashboard`}><Icon name="space_dashboard" size="lg" /></Link>}
                     <NotificationBell />
                     {user ? (
-                        <>
-                            <Link to={roleHome[user.role] || '/profile'} className="hp-user"><span className="hp-avatar">{name[0]?.toUpperCase()}</span><span className="hp-user-name">{name}</span></Link>
-                            <button type="button" className="hp-b hp-hbtn" onClick={logout}>Log out</button>
-                        </>
+                        <div className="hp-acct" onMouseLeave={() => setMenu(false)}>
+                            <button type="button" className={`hp-b hp-avatar-btn ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} aria-label="Account menu" aria-haspopup="menu" aria-expanded={menu}>
+                                <UserAvatarIcon size={34} />
+                            </button>
+                            {menu && (
+                                <div className="hp-acct-menu" role="menu">
+                                    <div className="hp-acct-head"><b>{user.fullName}</b><small>{user.email}</small></div>
+                                    {(user.role === 'customer' ? ACCOUNT_LINKS : [[roleHome[user.role], 'dashboard', 'Dashboard']]).map(([to, icon, label]) => (
+                                        <Link key={to} to={to} role="menuitem" className={`hp-acct-item ${location.pathname.startsWith(to) ? 'on' : ''}`} onClick={() => setMenu(false)}><Icon name={icon} size="md" />{label}</Link>
+                                    ))}
+                                    <button type="button" role="menuitem" className="hp-b hp-acct-item out" onClick={() => { setMenu(false); logout(); navigate('/'); }}><Icon name="logout" size="md" />Log out</button>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <>
                             <Link to="/login" className="hp-hbtn">Log in</Link>

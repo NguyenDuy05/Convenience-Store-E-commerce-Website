@@ -121,3 +121,8 @@ button:disabled { cursor: not-allowed; }
 
 .storefront-contact { width: 100%; border-top: 1px solid #edf1f7; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; color: #64748b; font-size: 12px; font-style: normal; }
 .storefront-contact > span:first-child { flex: 1; min-width: 220px; }
+
+/* Nút về Dashboard trên header (staff/admin) — cùng kiểu với nút chuông thông báo */
+.dash-trigger { position: relative; display: inline-grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; border: 1px solid #e2e7f0; background: #fff; color: #344866; text-decoration: none; transition: background .15s, color .15s; }
+.dash-trigger:hover, .dash-trigger.on { background: #eaf1ff; color: #0058bc; }
+.dash-trigger .review-material-icon, .dash-trigger .hp-icon { font-size: 22px; }

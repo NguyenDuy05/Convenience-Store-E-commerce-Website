@@ -7,6 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import Icon from '../../components/common/Icon';
 import QuantityStepper from '../../components/cart/QuantityStepper';
 import { formatCurrency } from '../../utils/format';
+import CartIcon from '../../components/common/CartIcon';
 
 const ISSUE_TEXT = {
   unavailable: "This product is no longer available. Please remove it from your cart",
@@ -79,7 +80,7 @@ export default function CartPage() {
     return (
       <div className="cart">{crumb}
         <div className="cart-state">
-          <Icon name="shopping_cart" size="xl" /><h2>Your cart is empty</h2><p>Choose a few favorites, then return here to place your order.</p>
+          <CartIcon size={40} strokeWidth={1.6} /><h2>Your cart is empty</h2><p>Choose a few favorites, then return here to place your order.</p>
           <Link className="cart-btn" to="/products"><Icon name="storefront" size="md" />Browse products</Link>
         </div>
       </div>

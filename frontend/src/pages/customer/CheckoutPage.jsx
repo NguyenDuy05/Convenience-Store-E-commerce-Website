@@ -12,6 +12,7 @@ import PaymentMethodPicker from '../../components/checkout/PaymentMethodPicker';
 import { newIdempotencyKey } from '../../utils/idempotency';
 import { formatCurrency } from '../../utils/format';
 import { CHECKOUT_METHODS } from '../../utils/orderMeta';
+import CartIcon from '../../components/common/CartIcon';
 
 // UC-08.1 Create Order: xem lại đơn (giá/khuyến mãi tính ở server), chọn cách thanh toán, đặt hàng.
 // Đơn online: sau khi tạo đơn chuyển sang cổng thanh toán (UC-08.2). Tiền mặt: xác nhận ngay.
@@ -123,7 +124,7 @@ export default function CheckoutPage() {
   if (!summary || summary.items.length === 0) {
     return (
       <div className="co">{crumb}
-        <div className="co-state"><Icon name="shopping_cart" size="xl" /><h2>Your cart is empty</h2><p>Add products to your cart before checking out.</p>
+        <div className="co-state"><CartIcon size={40} strokeWidth={1.6} /><h2>Your cart is empty</h2><p>Add products to your cart before checking out.</p>
           <Link className="co-btn" to="/products"><Icon name="storefront" size="md" />Browse products</Link></div>
       </div>
     );

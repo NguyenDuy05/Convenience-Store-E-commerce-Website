@@ -6,6 +6,7 @@ import Icon from '../common/Icon';
 import QuantityStepper from './QuantityStepper';
 import useAuth from '../../hooks/useAuth';
 import { addCartItem } from '../../api/cart.api';
+import CartIcon from '../common/CartIcon';
 
 // Khối "Thêm vào giỏ" trên trang chi tiết sản phẩm (UC-07.2). Chỉ tài khoản khách hàng mới mua được.
 export default function AddToCart({ product }) {
@@ -46,7 +47,7 @@ export default function AddToCart({ product }) {
       <div className="atc-row">
         <QuantityStepper value={qty} max={Math.min(stock, 99)} onChange={(v) => setQty(Math.max(1, Math.min(v, stock, 99)))} disabled={busy} />
         <button type="button" className="atc-btn" onClick={add} disabled={busy}>
-          <Icon name="add_shopping_cart" size="md" />{busy ? "Adding…" : "Add to cart"}
+          <CartIcon size={18} strokeWidth={2} />{busy ? "Adding…" : "Add to cart"}
         </button>
       </div>
       {added && (

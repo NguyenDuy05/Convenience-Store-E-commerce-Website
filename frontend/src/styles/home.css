@@ -1475,13 +1475,13 @@ body:has(.hp) .navbar {
     width: 44px;
     height: 44px;
     border-radius: .75rem;
-    background: var(--secondary-c);
-    color: #3b7112;
-    transition: filter .2s;
+    background: transparent;
+    color: var(--on-surface);
+    transition: color .2s;
 }
 
 .hp-icobtn:hover {
-    filter: brightness(.96);
+    color: var(--primary);
 }
 
 .hp-hbtn {
@@ -1576,6 +1576,91 @@ body:has(.hp) .navbar {
 .hp-mnav.on {
     background: var(--primary-fixed);
     color: var(--primary);
+}
+
+/* ===== Avatar + menu tài khoản ===== */
+.hp-acct {
+    position: relative;
+}
+
+.hp-avatar-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: var(--on-surface);
+    transition: color .2s;
+}
+
+.hp-avatar-btn:hover,
+.hp-avatar-btn.on {
+    color: var(--primary);
+}
+
+.hp-acct-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 240px;
+    padding: 8px;
+    border: 1px solid var(--surface-high);
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(25, 36, 78, .16);
+}
+
+.hp-acct-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--surface-high);
+    font: 600 14px/20px Inter, sans-serif;
+    color: var(--on-surface);
+}
+
+.hp-acct-head small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--on-variant);
+}
+
+.hp-acct-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: .75rem;
+    font: 500 14px/20px Inter, sans-serif;
+    color: var(--on-surface);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.hp-acct-item:hover {
+    background: var(--surface-low);
+}
+
+.hp-acct-item.on {
+    background: var(--primary-fixed);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.hp-acct-item.out {
+    margin-top: 4px;
+    border-top: 1px solid var(--surface-high);
+    border-radius: 0 0 .75rem .75rem;
+    color: #ba1a1a;
 }
 
 /* ===== Footer ===== */
