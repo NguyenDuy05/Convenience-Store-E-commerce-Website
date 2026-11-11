@@ -6,6 +6,7 @@ import { Badge, Confirm, Notice, Pager, STATUS_TONE, Tabs, d, dt, money, useActi
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const TABS = [{ key: '', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'locked', label: 'Locked' }];
 
+// Form admin sửa thông tin khách
 function CustomerEditor({ customer, busy, error, onSave, onCancel }) {
   const [form, setForm] = useState({ fullName: customer.fullName || '', phone: customer.phone || '' });
   const [err, setErr] = useState('');
@@ -30,6 +31,7 @@ function CustomerEditor({ customer, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// Khung chi tiết khách (thông tin, hạng, đơn gần đây)
 function CustomerDetail({ id, onClose }) {
   const { data, loading, error } = useFetch(getCustomer, id);
   return <section className="pm-card" aria-label="Customer details">
@@ -54,14 +56,14 @@ function CustomerDetail({ id, onClose }) {
   </section>;
 }
 
+// UC-29 Admin quản lý khách hàng (mở sẵn chi tiết khi có ?view=id)
 export default function AdminCustomersPage() {
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [params, setParams] = useSearchParams();
-  // Mở sẵn chi tiết khách khi đi từ trang đơn hàng: /admin/customers?view=<customerId>
-  const [panel, setPanel] = useState(() => (params.get('view') ? { type: 'view', customer: { _id: params.get('view') } } : null)); // { type: 'view'|'edit'|'unlock'|'delete', customer }
+  const [panel, setPanel] = useState(() => (params.get('view') ? { type: 'view', customer: { _id: params.get('view') } } : null));
   const [searchError, setSearchError] = useState('');
   const { data, loading, error, reload } = useFetch(listCustomers, { status: status || undefined, q: q || undefined, page, limit: 10 });
   const act = useAction(reload);

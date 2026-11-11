@@ -29,7 +29,6 @@
 
 .ocard-body { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 16px; }
 
-/* ----- Khối nổi bật theo trạng thái ----- */
 .ocard-callout {
     display: flex;
     align-items: center;
@@ -81,7 +80,6 @@
 
 @media (prefers-reduced-motion: reduce) { .ocard-progress i { animation: none; width: 66%; } }
 
-/* ----- Sản phẩm + tổng tiền ----- */
 .ocard-items-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
 .ocard-items { flex: 1 1 260px; min-width: 0; }
 .ocard-thumbs { display: flex; align-items: center; gap: 12px; padding-top: 6px; overflow-x: auto; padding-bottom: 4px; }
@@ -140,7 +138,6 @@
     .ocard-progress { width: 100%; }
 }
 
-/* ----- Chân thẻ ----- */
 .ocard-foot {
     display: flex;
     flex-wrap: wrap;

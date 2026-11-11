@@ -6,8 +6,7 @@ import '../../styles/member-picker.css';
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Form đăng ký thành viên tại quầy: họ tên + email (bắt buộc), số điện thoại (tùy chọn).
-// onDone(member) khi tạo xong hoặc khi chọn thành viên đã tồn tại.
+// Form đăng ký thành viên tại quầy (họ tên, email bắt buộc, SĐT tùy chọn)
 export default function RegisterMemberForm({ initial = {}, onDone, onCancel }) {
   const [form, setForm] = useState({ fullName: initial.fullName || '', phone: initial.phone || '', email: initial.email || '' });
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [existing, setExisting] = useState(null);

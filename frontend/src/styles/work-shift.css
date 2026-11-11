@@ -1,5 +1,3 @@
-/* Trang Staff > Ca làm việc (UC-24). Cùng ngôn ngữ thiết kế với trang "Chi tiết đơn hàng" (odetail-).
-   Class bắt đầu bằng "wsp-". Dùng biến --qk-* của dự án; nếu chưa khai báo thì dùng giá trị dự phòng. */
 .wsp {
     --wsp-primary: var(--qk-primary, #0058bc);
     --wsp-primary-dark: var(--qk-primary-dark, #004494);
@@ -94,7 +92,6 @@
 .wsp-state h3 { margin: 0 0 4px; font-family: var(--wsp-font-display); color: var(--wsp-text); }
 @media (max-width: 640px) { .wsp-head h1 { font-size: 24px; line-height: 30px; } .wsp-now { text-align: left; } .wsp-filters input, .wsp-filters select { min-width: 0; width: 100%; } .wsp-filters label { flex: 1 1 45%; } }
 
-/* Ca trống nhân viên tự nhận */
 .wsp-section small { color: #727785; font-size: 13px; font-weight: 400; }
 .wsp-open { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 8px; }
 .wsp-slot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid #dde1ff; border-radius: 14px; background: #fff; }

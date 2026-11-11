@@ -11,7 +11,7 @@ const TAB_SETS = {
 };
 const TYPE_LABEL = { receive: 'Received', sale: 'Sold', release: 'Returned to stock', adjust: 'Adjusted', stocktake: 'Stocktake', damaged: 'Damaged', expired: 'Expired write-off' };
 
-// Chọn sản phẩm bằng cách tìm theo tên / SKU / mã vạch
+// Chọn sản phẩm bằng tên / SKU / mã vạch
 function ProductPicker({ value, onPick }) {
   const [q, setQ] = useState('');
   const [term, setTerm] = useState('');
@@ -30,6 +30,7 @@ function ProductPicker({ value, onPick }) {
   </div>;
 }
 
+// Khung chung cho các form kho
 function FormShell({ title, hint, busy, error, onCancel, onSubmit, submitLabel, children }) {
   return <section className="pm-card" aria-label={title}>
     <h2>{title}</h2>{hint && <p>{hint}</p>}
@@ -40,6 +41,7 @@ function FormShell({ title, hint, busy, error, onCancel, onSubmit, submitLabel, 
   </section>;
 }
 
+// Form nhập hàng (số lượng, hạn dùng, giá vốn)
 function ReceiveForm({ initial, act, onCancel, onDone }) {
   const [product, setProduct] = useState(initial || null);
   const [f, setF] = useState({ quantity: '', expiryDate: '', costPrice: '', batchCode: '', note: '' });
@@ -67,6 +69,7 @@ function ReceiveForm({ initial, act, onCancel, onDone }) {
   </FormShell>;
 }
 
+// Form điều chỉnh tồn kho (bắt buộc lý do)
 function AdjustForm({ initial, act, onCancel, onDone }) {
   const [product, setProduct] = useState(initial || null);
   const [qty, setQty] = useState(initial ? String(initial.stockQuantity) : '');
@@ -91,6 +94,7 @@ function AdjustForm({ initial, act, onCancel, onDone }) {
   </FormShell>;
 }
 
+// Form ghi nhận hàng hỏng / hết hạn
 function DamagedForm({ initial, act, onCancel, onDone }) {
   const [product, setProduct] = useState(initial || null);
   const [f, setF] = useState({ quantity: '', type: 'damaged', reason: '' });
@@ -115,6 +119,7 @@ function DamagedForm({ initial, act, onCancel, onDone }) {
   </FormShell>;
 }
 
+// Danh sách lô của một sản phẩm
 function Batches({ product, onClose }) {
   const { data, loading, error } = useFetch(() => getProductStock(product._id), product._id);
   return <section className="pm-card" aria-label="Stock batches">
@@ -127,6 +132,7 @@ function Batches({ product, onClose }) {
   </section>;
 }
 
+// Bảng tồn kho (lọc còn / sắp hết / hết hàng)
 function StockTable({ fetcher, extraParams, rowActions, summary }) {
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
@@ -154,10 +160,11 @@ function StockTable({ fetcher, extraParams, rowActions, summary }) {
   </>;
 }
 
+// Tab kiểm kê: tạo phiên, nhập số đếm, hoàn tất
 function StocktakeTab({ act, role }) {
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
-  const [lines, setLines] = useState([]);   // [{ product, countedQty, note }]
+  const [lines, setLines] = useState([]);
   const [note, setNote] = useState('');
   const [picker, setPicker] = useState(null);
   const [err, setErr] = useState('');
@@ -198,6 +205,7 @@ function StocktakeTab({ act, role }) {
   </>;
 }
 
+// Tab các lô đã hết hạn
 function ExpiredTab({ act }) {
   const [page, setPage] = useState(1);
   const [target, setTarget] = useState(null);
@@ -216,6 +224,7 @@ function ExpiredTab({ act }) {
   </>;
 }
 
+// Tab lịch sử hàng hỏng
 function DamagedTab({ act }) {
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
@@ -233,6 +242,7 @@ function DamagedTab({ act }) {
   </>;
 }
 
+// Tab lịch sử biến động kho
 function HistoryTab() {
   const [type, setType] = useState('');
   const [from, setFrom] = useState('');
@@ -257,10 +267,11 @@ function HistoryTab() {
   </>;
 }
 
+// Trang quản lý kho dùng chung staff / admin (các tab theo quyền)
 export default function InventoryManager({ role }) {
   const tabs = TAB_SETS[role].map(([key, label]) => ({ key, label }));
   const [tab, setTab] = useState('stock');
-  const [form, setForm] = useState(null);       // { type: 'receive'|'adjust'|'damaged', product }
+  const [form, setForm] = useState(null);
   const [batches, setBatches] = useState(null);
   const [version, setVersion] = useState(0);
   const act = useAction();

@@ -1,4 +1,3 @@
-/* Trang "Thanh toán đơn hàng" (UC-08.2). Class bắt đầu bằng "pay-". */
 .pay { font-family: var(--qk-font-body); color: var(--qk-text); }
 .pay-crumb { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
 .pay-crumb a { color: inherit; text-decoration: none; }

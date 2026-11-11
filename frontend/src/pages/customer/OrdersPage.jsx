@@ -13,19 +13,18 @@ import { ACTIVE_STATUSES, ORDER_TABS } from '../../utils/orderMeta';
 const LIMIT = 10;
 const VALID_STATUS = ORDER_TABS.map((t) => t.key);
 
-// UC-09.1 View Orders (khách xem danh sách đơn của mình, lọc theo trạng thái)
+// UC-09.1 Danh sách đơn của khách
 export default function OrdersPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  // Trạng thái lọc và trang nằm trên URL: bấm "Quay lại" từ trang chi tiết vẫn giữ nguyên bộ lọc
   const rawStatus = params.get('status') || '';
   const status = VALID_STATUS.includes(rawStatus) ? rawStatus : '';
   const page = Math.max(parseInt(params.get('page'), 10) || 1, 1);
 
-  const [data, setData] = useState(null);       // { items, total, counts, store }
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
@@ -38,7 +37,6 @@ export default function OrdersPage() {
       .then((res) => { if (!ignore) setData(res.data); })
       .catch(async (err) => {
         if (ignore) return;
-        // Hết phiên đăng nhập: không hiện dữ liệu, yêu cầu đăng nhập lại
         if (err.response?.status === 401) {
           await logout();
           navigate('/login', { state: { from: location }, replace: true });
@@ -64,7 +62,6 @@ export default function OrdersPage() {
 
   const counts = data?.counts;
   const activeCount = counts ? ACTIVE_STATUSES.reduce((s, k) => s + (counts[k] || 0), 0) : 0;
-  // Dùng limit server trả về (server có thể giới hạn khác LIMIT yêu cầu)
   const totalPages = Math.max(Math.ceil((data?.total || 0) / (data?.limit || LIMIT)), 1);
   const storeName = data?.store?.name;
 

@@ -8,9 +8,9 @@ import Icon from '../../components/common/Icon';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 
 const POLL_MS = 3000;
-const MAX_POLLS = 10; // chờ tối đa ~30 giây cho cổng báo kết quả
+const MAX_POLLS = 10;
 
-// Quyết định hiển thị chỉ dựa vào TRẠNG THÁI ĐƠN do server trả về, không tin tham số trên URL.
+// Quyết định kết quả hiển thị từ trạng thái đơn do server trả về (không tin URL)
 function resolve(order) {
   const last = order.latestPayment;
   if (order.paymentStatus === 'refunded') return 'refunded';
@@ -36,7 +36,7 @@ const VIEW = {
   late: { tone: 'wait', icon: 'support_agent', title: "Payment received after the order expired", text: "The payment has been returned to your wallet. Open your wallet to see the credit." },
 };
 
-// Kết quả đặt hàng / thanh toán (UC-08.1, UC-08.2). Cổng thanh toán và tiền mặt đều dẫn về đây.
+// Trang kết quả đặt hàng / thanh toán
 export default function PaymentResultPage() {
   const [params] = useSearchParams();
   const orderId = params.get('orderId');
@@ -73,7 +73,6 @@ export default function PaymentResultPage() {
 
   const state = order ? resolve(order) : null;
 
-  // Đang chờ cổng báo kết quả: hỏi lại server vài lần
   useEffect(() => {
     if (state !== 'waiting' || polls >= MAX_POLLS) return undefined;
     const t = setTimeout(() => { setPolls((p) => p + 1); setTick((k) => k + 1); }, POLL_MS);

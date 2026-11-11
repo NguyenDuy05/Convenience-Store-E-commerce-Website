@@ -1,15 +1,14 @@
-// Quản lý tồn kho theo lô (StockBatch). Dùng chung cho Order, Inventory.
-// Trừ kho FEFO (lô hết hạn sớm nhất trước), bỏ qua lô đã hết hạn. Mọi thao tác trừ kho đều CÓ ĐIỀU KIỆN
-// (quantity >= số cần trừ) nên hai đơn cùng mua món cuối cùng không thể làm kho âm (BR-18, BR-19).
 const { StockBatch, Product, InventoryLog } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { runAtomic } = require('../utils/atomic');
 
 const MAX_ATTEMPTS = 5;
+// Tùy chọn truy vấn kèm session (nếu có transaction)
 const opt = (session) => (session ? { session } : {});
 
+// Hạn dùng của lô (lô không có hạn xếp cuối)
 const expiryOf = (b) => (b.expiryDate ? new Date(b.expiryDate).getTime() : Infinity);
-// Lô không có hạn dùng xếp sau cùng
+// So sánh lô theo hạn dùng sớm nhất trước (FEFO)
 const fefo = (a, b) => (expiryOf(a) - expiryOf(b)) || (new Date(a.receivedAt || 0) - new Date(b.receivedAt || 0));
 
 // Gộp các dòng trùng sản phẩm
@@ -23,13 +22,14 @@ const mergeItems = (items) => {
   return [...map.values()];
 };
 
+// Các lô còn hàng và chưa hết hạn của sản phẩm, sắp theo FEFO
 const sellableBatches = async (productId, session) => {
   const now = new Date();
   const rows = await StockBatch.find({ productId, quantity: { $gt: 0 } }, null, opt(session)).lean();
   return rows.filter((b) => !b.expiryDate || new Date(b.expiryDate) >= now).sort(fefo);
 };
 
-// Kiểm tra tồn kho thực tế (theo lô, không dùng cache) cho cả đơn và báo TẤT CẢ sản phẩm thiếu hàng một lượt
+// Kiểm tra tồn kho còn bán được cho cả đơn, báo tất cả sản phẩm thiếu một lượt
 async function assertAvailable(items, session) {
   const issues = [];
   for (const it of items) {
@@ -44,6 +44,7 @@ async function assertAvailable(items, session) {
   }
 }
 
+// Trừ kho một sản phẩm theo FEFO và ghi lịch sử kho
 async function deductOne({ productId, quantity }, { orderId, userId, session, reason = 'Online sale' }) {
   const opts = opt(session);
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
@@ -92,8 +93,7 @@ async function deductOne({ productId, quantity }, { orderId, userId, session, re
   throw new ApiError(409, 'Inventory is busy. Please retry.', { code: 'STOCK_BUSY' });
 }
 
-// Trừ kho khi tạo đơn. items: [{ productId, name, quantity }]. Ném ApiError 409 (kèm issues) nếu thiếu hàng.
-// Không có session (MongoDB đơn lẻ): nếu lỗi giữa chừng tự hoàn lại phần đã trừ.
+// Trừ kho khi tạo đơn (thiếu hàng thì báo 409 kèm danh sách)
 exports.deductStock = async (items, { orderId, userId, session, reason } = {}) => {
   const merged = mergeItems(items);
   await assertAvailable(merged, session);
@@ -107,8 +107,7 @@ exports.deductStock = async (items, { orderId, userId, session, reason } = {}) =
   }
 };
 
-// Hoàn kho khi thanh toán online thất bại / hết hạn. An toàn khi gọi lại nhiều lần:
-// chỉ hoàn phần còn lại = đã bán - đã hoàn (tính từ InventoryLog), ghi log type 'release'.
+// Trả hàng về đúng các lô khi đơn bị hủy / hết hạn (gọi lại nhiều lần vẫn an toàn)
 exports.releaseStock = async (orderId, { session, reason = 'Stock returned: unsuccessful order' } = {}) => {
   const opts = opt(session);
   const logs = await InventoryLog.find({ orderId, type: { $in: ['sale', 'release'] } }, null, opts).sort({ createdAt: 1, _id: 1 }).lean();
@@ -148,9 +147,7 @@ exports.releaseStock = async (orderId, { session, reason = 'Stock returned: unsu
   return restored;
 };
 
-// ---------- Nghiệp vụ kho cho nhân viên / admin (UC-19, UC-34) ----------
-
-// UC-19.2 Nhập hàng: mỗi lần nhập là một lô mới (có hạn dùng riêng).
+// Nhập hàng: tạo lô mới và ghi lịch sử kho
 exports.receiveBatch = async ({ productId, quantity, expiryDate, costPrice, batchCode, reason, userId, type = 'receive', stocktakeId, expectedStock }) => runAtomic(async ({ session, onRollback }) => {
   const opts = opt(session);
   const batchId = new (require('mongoose').Types.ObjectId)();
@@ -165,8 +162,7 @@ exports.receiveBatch = async ({ productId, quantity, expiryDate, costPrice, batc
   return { batch, stockQuantity: product.stockQuantity };
 });
 
-// Lấy `quantity` đơn vị ra khỏi kho (hàng hỏng, hết hạn, kiểm kê thiếu, điều chỉnh giảm). Khác bán hàng: tính cả lô đã hết hạn.
-// batchId: chỉ lấy từ đúng lô đó. Điều kiện cập nhật theo số lượng nên không thể làm tồn âm khi có đơn bán đồng thời.
+// Lấy hàng ra khỏi kho (hỏng, hết hạn, kiểm kê thiếu, điều chỉnh giảm)
 exports.removeStock = async ({ productId, quantity, batchId, type, reason, userId, stocktakeId, expectedStock }) => runAtomic(async ({ session, onRollback }) => {
   const opts = opt(session);
   const mutations = [];
@@ -203,7 +199,7 @@ exports.removeStock = async ({ productId, quantity, batchId, type, reason, userI
   throw new ApiError(409, 'Inventory is busy. Please retry.', { code: 'STOCK_BUSY' });
 });
 
-// Đưa tồn kho của sản phẩm về đúng `target` (điều chỉnh / kiểm kê). Tăng -> tạo lô điều chỉnh; giảm -> lấy theo FEFO.
+// Đưa tồn kho về đúng số lượng mới (tăng thì tạo lô điều chỉnh, giảm thì lấy theo FEFO)
 exports.setStockTo = async ({ productId, target, type, reason, userId, stocktakeId }) => {
   const prod = await Product.findById(productId).select('stockQuantity').lean();
   if (!prod) throw new ApiError(404, 'Product not found');
@@ -217,8 +213,7 @@ exports.setStockTo = async ({ productId, target, type, reason, userId, stocktake
   return { change: delta, stockQuantity: result.stockQuantity };
 };
 
-// Số lượng CÓ THỂ BÁN của từng sản phẩm = tổng các lô còn hàng và chưa hết hạn (hàng quá hạn không bán được).
-// Trả Map(productId -> số lượng). Sản phẩm không có lô nào còn hạn -> 0.
+// Số lượng còn bán được của từng sản phẩm (không tính lô đã hết hạn)
 exports.sellableMap = async (productIds) => {
   const ids = [...new Set(productIds.map(String))];
   const map = new Map(ids.map((id) => [id, 0]));

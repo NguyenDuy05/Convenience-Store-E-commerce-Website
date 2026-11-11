@@ -2,7 +2,7 @@ import '../../styles/qk-tokens.css';
 import '../../styles/payment-method-picker.css';
 import Icon from '../common/Icon';
 
-// Chọn phương thức thanh toán. methods: [{ key, label, desc, icon }]; disabledKeys: các cổng tạm khoá (vd. đang có giao dịch chờ).
+// Chọn phương thức thanh toán
 export default function PaymentMethodPicker({ methods, value, onChange, disabledKeys = [], disabled = false }) {
   return (
     <div className="pmp" role="radiogroup" aria-label="Payment method">

@@ -1,14 +1,12 @@
 const asyncHandler = require('../utils/asyncHandler');
 const { loadDashboard } = require('../services/dashboard.service');
 
-// GET /api/dashboard/admin?range=today|7d|30d|90d|custom&from=YYYY-MM-DD&to=YYYY-MM-DD  (admin)
+// Dashboard admin: doanh thu, đơn, sản phẩm bán chạy, tồn kho theo khoảng ngày
 exports.adminDashboard = asyncHandler(async (req, res) => {
     res.json(await loadDashboard({ range: req.query.range || '7d', from: req.query.from, to: req.query.to }));
 });
 
-// GET /api/dashboard/staff?range=...  (staff, admin). Mặc định là hôm nay.
-// Nhân viên chỉ được xem doanh thu CỦA HÔM NAY (tính từ 00:00 giờ VN, qua ngày tự về 0).
-// Mọi số tiền tổng hợp nhiều ngày bị bỏ; biểu đồ theo giờ của hôm nay được giữ số tiền.
+// Bỏ các số tiền tổng hợp nhiều ngày khỏi dữ liệu dashboard trả cho staff
 const hideRevenue = (d, keepSeriesSales) => {
     const { sales, avgOrderValue, ...kpis } = d.kpis;
     return {
@@ -22,6 +20,7 @@ const hideRevenue = (d, keepSeriesSales) => {
     };
 };
 
+// Dashboard staff: hàng đợi đơn, số đơn, tồn kho; chỉ xem doanh thu của hôm nay
 exports.staffDashboard = asyncHandler(async (req, res) => {
     const range = req.query.range || 'today';
     const data = await loadDashboard({ range, from: req.query.from, to: req.query.to });
@@ -32,7 +31,7 @@ exports.staffDashboard = asyncHandler(async (req, res) => {
         value: today.kpis.sales.value,
         orders: today.kpis.orders.value,
         avgOrderValue: today.kpis.avgOrderValue,
-        date: today.range.from,                 // mốc 00:00 hôm nay (giờ VN)
+        date: today.range.from,
     };
     res.json(out);
 });

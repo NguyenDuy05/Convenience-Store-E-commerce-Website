@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { verifyMail } = require('../services/mail.service');
 
+// Hủy thao tác nếu quá thời gian chờ
 const timeout = setTimeout(() => {
   console.error('SMTP verification timed out. No email sent.');
   process.exit(1);

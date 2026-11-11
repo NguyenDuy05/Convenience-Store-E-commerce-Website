@@ -9,7 +9,6 @@ const entry = new mongoose.Schema({
   createdAt: { type: Date, required: true },
 }, { _id: false });
 
-// Balance and its journal move in the same document, including on standalone MongoDB.
 const schema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   balance: { type: Number, default: 0, min: 0 },

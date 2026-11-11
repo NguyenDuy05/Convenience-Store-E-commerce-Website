@@ -7,8 +7,10 @@ const { logActivity } = require('../services/activity.service');
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+// Giờ mở cửa mặc định cho 7 ngày
 const defaultHours = () => require('../config/store').openingHours.map((day) => ({ ...day }));
 
+// Lấy cửa hàng theo id (404 nếu không có)
 async function loadStore(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Store not found');
   const s = await Store.findById(id);
@@ -16,6 +18,7 @@ async function loadStore(id) {
   return s;
 }
 
+// Kiểm tra tên, địa chỉ, SĐT, website của cửa hàng
 function parseBasics(body = {}) {
   const str = (v) => (typeof v === 'string' ? v.trim() : '');
   const name = str(body.name);
@@ -31,6 +34,7 @@ function parseBasics(body = {}) {
   return { name, address, phone: phone || undefined, website: website || undefined };
 }
 
+// Kiểm tra giờ mở cửa của 7 ngày
 function parseHours(hours) {
   if (!Array.isArray(hours) || hours.length !== 7) throw new ApiError(400, 'Opening hours must include all 7 days');
   const seen = new Set();
@@ -45,13 +49,13 @@ function parseHours(hours) {
   }).sort((a, b) => a.day - b.day);
 }
 
-// UC-31.1 View Stores
+// UC-31.1 Xem danh sách cửa hàng
 exports.listStores = asyncHandler(async (req, res) => {
   const stores = await Store.find().sort({ createdAt: 1 });
   res.json(stores);
 });
 
-// UC-31.2 Add Store
+// UC-31.2 Thêm cửa hàng
 exports.addStore = asyncHandler(async (req, res) => {
   const data = parseBasics(req.body);
   const hours = req.body?.openingHours ? parseHours(req.body.openingHours) : defaultHours();
@@ -60,7 +64,7 @@ exports.addStore = asyncHandler(async (req, res) => {
   res.status(201).json(store);
 });
 
-// UC-31.3 Update Store
+// UC-31.3 Sửa thông tin cửa hàng
 exports.updateStore = asyncHandler(async (req, res) => {
   const store = await loadStore(req.params.id);
   Object.assign(store, parseBasics(req.body));
@@ -69,7 +73,7 @@ exports.updateStore = asyncHandler(async (req, res) => {
   res.json(store);
 });
 
-// UC-31.4 Close Store
+// UC-31.4 Đóng cửa hàng
 exports.closeStore = asyncHandler(async (req, res) => {
   const store = await loadStore(req.params.id);
   if (store.status === 'closed') throw new ApiError(409, 'This store is already closed');
@@ -81,7 +85,7 @@ exports.closeStore = asyncHandler(async (req, res) => {
   res.json(store);
 });
 
-// UC-31.5 Open Store
+// UC-31.5 Mở lại cửa hàng
 exports.openStore = asyncHandler(async (req, res) => {
   const store = await loadStore(req.params.id);
   if (store.status === 'open') throw new ApiError(409, 'This store is already open');
@@ -92,7 +96,7 @@ exports.openStore = asyncHandler(async (req, res) => {
   res.json(store);
 });
 
-// UC-31.6 Update Store Hours. body: { openingHours: [{ day, openTime, closeTime, isClosed }] x 7 }
+// UC-31.6 Cập nhật giờ mở cửa
 exports.updateStoreHours = asyncHandler(async (req, res) => {
   const store = await loadStore(req.params.id);
   store.openingHours = parseHours(req.body?.openingHours);

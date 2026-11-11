@@ -11,12 +11,14 @@ import OrderStatusBadge from '../../components/order/OrderStatusBadge';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { PAYMENT_METHOD, PAYMENT_STATUS, SHOW_PICKUP_CODE, statusMessage } from '../../utils/orderMeta';
 
+// Giờ mở cửa hôm nay của cửa hàng
 const todayHours = (store) => {
   const h = store?.openingHours?.find((x) => x.day === new Date().getDay());
   if (!h) return '';
   return h.isClosed ? "The store is closed today" : `Today ${h.openTime} – ${h.closeTime}`;
 };
 
+// Một dòng trong bảng tổng tiền
 function Row({ label, value, strong, minus }) {
   return (
     <div className={`odetail-row ${strong ? 'strong' : ''}`}>
@@ -26,7 +28,7 @@ function Row({ label, value, strong, minus }) {
   );
 }
 
-// UC-09.2 View Order Details (chỉ xem, không sửa đơn)
+// UC-09.2 Chi tiết đơn của khách (hủy đơn nếu còn được)
 export default function OrderDetailPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -35,7 +37,7 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);       // { notFound, message }
+  const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -97,7 +99,6 @@ export default function OrderDetailPage() {
   }
 
   const banner = statusMessage(order);
-  // Quay lại đúng nơi khách đến (danh sách hoặc lịch sử)
   const backTo = location.state?.from || '/orders';
   const backLabel = backTo.startsWith('/orders/history') ? "Back to history" : "Back to list";
   const payStatus = PAYMENT_STATUS[order.paymentStatus];

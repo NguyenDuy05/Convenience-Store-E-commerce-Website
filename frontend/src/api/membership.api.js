@@ -1,35 +1,36 @@
 import api from './axios';
 
-// UC-12.1 View Membership Points
+// Gọi API: điểm và hạng của khách (UC-12.1)
 export const getMyMembership = (params) => api.get(`/membership/me`, { params });
 
-// UC-12.2 View Point History
+// Gọi API: lịch sử điểm của khách (UC-12.2)
 export const getMyPointHistory = (params) => api.get(`/membership/me/history`, { params });
+// Gọi API: tra mã thành viên
 export const lookupMemberCode = (code) => api.get('/membership/lookup', { params: { code } });
 
-// UC-39.1, 39.2 View / Search Members
+// Gọi API: danh sách thành viên (UC-39.1/39.2)
 export const listMembers = (params) => api.get(`/membership/members`, { params });
 
-// UC-39.3 View Member Details
+// Gọi API: chi tiết thành viên (UC-39.3)
 export const getMember = (id, params) => api.get(`/membership/members/${id}`, { params });
 
-// UC-39.5 Adjust Membership Points
+// Gọi API: cộng / trừ điểm (UC-39.5)
 export const adjustPoints = (id, data) => api.post(`/membership/members/${id}/points`, data);
 
-// UC-39.4 Manage Membership Tiers (xem)
+// Gọi API: danh sách hạng
 export const listTiers = (params) => api.get(`/membership/tiers`, { params });
 
-// UC-39.4 Manage Membership Tiers (thêm)
+// Gọi API: thêm hạng
 export const createTier = (data) => api.post(`/membership/tiers`, data);
 
-// UC-39.4 Manage Membership Tiers (sửa)
+// Gọi API: sửa hạng
 export const updateTier = (id, data) => api.put(`/membership/tiers/${id}`, data);
 
-// UC-39.4 Manage Membership Tiers (xóa)
+// Gọi API: xóa hạng
 export const deleteTier = (id) => api.delete(`/membership/tiers/${id}`);
 
-// UC-39.6 View Point History
+// Gọi API: lịch sử điểm (UC-39.6)
 export const listPointHistory = (params) => api.get(`/membership/history`, { params });
 
-// UC-39.7 View Redemption History
+// Gọi API: lịch sử đổi điểm (UC-39.7)
 export const listRedemptions = (params) => api.get(`/membership/redemptions`, { params });

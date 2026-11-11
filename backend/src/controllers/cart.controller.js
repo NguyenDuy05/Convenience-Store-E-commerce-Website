@@ -5,28 +5,28 @@ const ApiError = require('../utils/ApiError');
 const { buildCartView, MAX_PER_ITEM, mutateCart } = require('../services/cart.service');
 const { sellableMap } = require('../services/stock.service');
 
+// Kiểm tra số lượng là số nguyên trong giới hạn cho phép
 const parseQty = (v, label = "Quantity") => {
   const n = Number(v);
   if (!Number.isInteger(n) || n < 1 || n > MAX_PER_ITEM) throw new ApiError(400, `${label} must be an integer from 1 to ${MAX_PER_ITEM}`);
   return n;
 };
 
-
-// Chỉ cho đặt số lượng không vượt tồn kho (BR-18)
+// Chặn nếu sản phẩm ngừng bán hoặc số lượng vượt tồn kho còn bán được
 const assertSellable = async (productId, quantity) => {
   const p = await Product.findOne({ _id: productId, status: 'active' }).lean();
   if (!p) throw new ApiError(404, "Product not found or no longer available");
-  const available = (await sellableMap([p._id])).get(String(p._id)) ?? 0;   // không tính hàng đã quá hạn
+  const available = (await sellableMap([p._id])).get(String(p._id)) ?? 0;
   if (available <= 0) throw new ApiError(409, `"${p.name}" is out of stock`);
   if (quantity > available) throw new ApiError(409, `"${p.name}" only has ${available} items available`);
 };
 
-// UC-07.1 View Cart (catalog tài liệu; code cũ ghi UC-08.1)
+// UC-07.1 Xem giỏ hàng (kèm cảnh báo sản phẩm ngừng bán / thiếu hàng)
 exports.getCart = asyncHandler(async (req, res) => {
   res.json(await buildCartView(req.user.id));
 });
 
-// UC-07.2 Add Product. Body: { productId, quantity = 1 }. Thêm lại sản phẩm đã có thì cộng dồn số lượng.
+// UC-07.2 Thêm sản phẩm vào giỏ (đã có thì cộng dồn số lượng)
 exports.addCartItem = asyncHandler(async (req, res) => {
   const { productId } = req.body;
   if (!productId) throw new ApiError(400, "productId is required");
@@ -42,7 +42,7 @@ exports.addCartItem = asyncHandler(async (req, res) => {
   res.status(201).json(await buildCartView(req.user.id));
 });
 
-// UC-07.3 Update Cart Item. Body: { quantity }. Muốn bỏ sản phẩm thì dùng DELETE.
+// UC-07.3 Đổi số lượng một sản phẩm trong giỏ
 exports.updateCartItem = asyncHandler(async (req, res) => {
   const quantity = parseQty(req.body.quantity);
   await mutateCart(req.user.id, async items => {
@@ -55,7 +55,7 @@ exports.updateCartItem = asyncHandler(async (req, res) => {
   res.json(await buildCartView(req.user.id));
 });
 
-// UC-07.4 Remove Cart Item
+// UC-07.4 Xóa sản phẩm khỏi giỏ
 exports.removeCartItem = asyncHandler(async (req, res) => {
   await mutateCart(req.user.id, async items => {
   const next = items.filter((i) => String(i.productId) !== String(req.params.productId));
@@ -65,5 +65,4 @@ exports.removeCartItem = asyncHandler(async (req, res) => {
   res.json(await buildCartView(req.user.id));
 });
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
 exports.getCartSuggestions = notImplemented("Budget-based cart suggestions");

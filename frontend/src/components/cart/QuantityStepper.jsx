@@ -2,7 +2,7 @@ import '../../styles/qk-tokens.css';
 import '../../styles/quantity-stepper.css';
 import Icon from '../common/Icon';
 
-// Bộ chọn số lượng: [-] 3 [+]. max = số lượng tối đa cho phép (tồn kho / giới hạn mỗi sản phẩm).
+// Bộ tăng / giảm số lượng
 export default function QuantityStepper({ value, min = 1, max = 99, onChange, disabled = false, label = "Quantity" }) {
   return (
     <div className={`qs ${disabled ? 'disabled' : ''}`} role="group" aria-label={label}>

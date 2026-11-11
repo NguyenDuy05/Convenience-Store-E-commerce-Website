@@ -4,9 +4,10 @@ import DashboardHeader, { exportCsv } from '../../components/dashboard/Dashboard
 import { KpiCard, OrderQueue, Panel, RecentOrders, SalesChart, StockAlerts, TopProducts } from '../../components/dashboard/DashboardWidgets';
 import { vnd } from '../../components/admin/products/productUtils';
 
-// Dashboard nhân viên: dữ liệu thật từ GET /api/dashboard/staff, mặc định là hôm nay.
+// Định dạng số
 const n = (v) => Number(v || 0).toLocaleString('en-US');
 
+// Dashboard staff: hàng đợi đơn, doanh thu hôm nay, tồn kho
 export default function StaffDashboardPage() {
   const [params, setParams] = useState({ range: 'today' });
   const { data, error, loading, refresh } = useDashboard('staff', params);

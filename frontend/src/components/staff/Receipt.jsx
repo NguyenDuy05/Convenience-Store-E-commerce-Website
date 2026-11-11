@@ -5,7 +5,7 @@ import '../../styles/receipt.css';
 
 const METHOD = { cash: "Cash", card: "Card", vnpay: 'VNPay', wallet: 'Wallet' };
 
-// Hóa đơn thanh toán (Print Receipt). Bấm "In hóa đơn" mở hộp thoại in của trình duyệt, chỉ in phần hóa đơn.
+// Hóa đơn thanh toán để in
 export default function Receipt({ orderId, onClose }) {
   const [r, setR] = useState(null);
   const [error, setError] = useState('');

@@ -10,9 +10,9 @@ import OrderTimeline from '../../components/order/OrderTimeline';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { ACTIVE_STATUSES, SHOW_PICKUP_CODE, paymentSummary, statusMessage } from '../../utils/orderMeta';
 
-const REFRESH_MS = 30000; // tự làm mới mỗi 30 giây khi đơn còn đang xử lý
+const REFRESH_MS = 30000;
 
-// UC-09.3 Track Order Status (chỉ xem; không đổi trạng thái đơn)
+// UC-09.3 Theo dõi trạng thái đơn (tự làm mới)
 export default function OrderTrackingPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -22,8 +22,8 @@ export default function OrderTrackingPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);      // lỗi khi chưa có dữ liệu: { notFound, message }
-  const [staleError, setStaleError] = useState(''); // lỗi khi làm mới nhưng đã có dữ liệu cũ
+  const [error, setError] = useState(null);
+  const [staleError, setStaleError] = useState('');
   const [checkedAt, setCheckedAt] = useState(null);
   const [tick, setTick] = useState(0);
   const orderRef = useRef(null);
@@ -53,7 +53,6 @@ export default function OrderTrackingPage() {
         }
         if (code === 404) { orderRef.current = null; setOrder(null); setError({ notFound: true, message: "This order does not exist or you do not have permission to view it." }); return; }
         const message = err.response?.data?.message || "Could not connect to the order service.";
-        // Còn dữ liệu cũ: giữ lại nhưng ghi rõ là chưa cập nhật được; chưa có gì: báo lỗi để thử lại
         if (orderRef.current) setStaleError(message);
         else setError({ notFound: false, message });
       })
@@ -61,7 +60,6 @@ export default function OrderTrackingPage() {
     return () => { ignore = true; };
   }, [id, tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Tự làm mới khi đơn còn đang xử lý và tab đang mở
   const status = order?.status;
   useEffect(() => {
     if (!status || !ACTIVE_STATUSES.includes(status)) return undefined;

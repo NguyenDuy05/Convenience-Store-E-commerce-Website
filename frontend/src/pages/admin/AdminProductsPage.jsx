@@ -8,7 +8,6 @@ import { activateProduct, deactivateProduct, deleteProduct, listProducts, update
 import { listCategories } from '../../api/category.api';
 import ProductSearchInput from '../../components/home/ProductSearchInput';
 
-// UC-32.1 View / 32.2 Search / 32.3 View Details (link) / 32.4 Add / 32.5 Update (link) / 32.6 Price / 32.7 Delete / 32.8 Activate / 32.9 Deactivate
 const TABS = [
   { key: 'all', label: 'All', params: {}, count: 'all' },
   { key: 'active', label: 'Active', params: { status: 'active' }, count: 'active' },
@@ -22,6 +21,7 @@ const SORTS = [
   { value: 'stock', label: 'Stock: lowest first' },
 ];
 
+// UC-32 Admin quản lý sản phẩm
 export default function AdminProductsPage() {
     const { base, isStaff } = useProductBase();
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState('');
-  const [dialog, setDialog] = useState(null);       // { type: 'price'|'deactivate'|'activate'|'delete', product }
+  const [dialog, setDialog] = useState(null);
   const [busy, setBusy] = useState(false);
   const [dialogError, setDialogError] = useState('');
 

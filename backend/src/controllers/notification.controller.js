@@ -5,7 +5,9 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 
 const TYPES = ['general', 'order', 'payment', 'event', 'voucher', 'promotion'];
+// Kiểm tra ObjectId hợp lệ
 const validId = (id) => typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
+// Điều kiện thông báo mà người dùng này được thấy (theo vai trò, đã đăng, chưa hết hạn)
 const visible = (user, now = new Date()) => ({
   status: 'published', publishedAt: { $lte: now },
   $and: [
@@ -13,16 +15,19 @@ const visible = (user, now = new Date()) => ({
     { $or: [{ audience: 'all' }, { audience: user.role }, { audience: 'users', recipientIds: user.id }] },
   ],
 });
+// Đọc page/limit từ query
 const pageOf = (query) => {
   const page = Number(query.page || 1), limit = Number(query.limit || 20);
   if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new ApiError(400, "Invalid page or page size");
   return { page, limit };
 };
+// Dữ liệu một thông báo trả về cho người dùng (kèm đã đọc chưa)
 const publicItem = (item, readAt) => ({
   _id: item._id, title: item.title, message: item.message, type: item.type,
   link: item.link, publishedAt: item.publishedAt, expiresAt: item.expiresAt, readAt: readAt || null,
 });
 
+// Danh sách thông báo của người đang đăng nhập + số chưa đọc
 exports.listMine = asyncHandler(async (req, res) => {
   const { page, limit } = pageOf(req.query);
   if (req.query.type && !TYPES.includes(req.query.type)) throw new ApiError(400, "Invalid notification type");
@@ -39,6 +44,7 @@ exports.listMine = asyncHandler(async (req, res) => {
   res.json({ items: items.map((item) => publicItem(item, read.get(String(item._id)))), total, unreadCount, page, limit });
 });
 
+// Đánh dấu một thông báo là đã đọc
 exports.readOne = asyncHandler(async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(404, "Notification not found");
   const item = await Notification.findOne({ ...visible(req.user), _id: req.params.id }).lean();
@@ -49,6 +55,7 @@ exports.readOne = asyncHandler(async (req, res) => {
   res.json(publicItem(item, receipt.readAt));
 });
 
+// Đánh dấu tất cả thông báo là đã đọc
 exports.readAll = asyncHandler(async (req, res) => {
   const items = await Notification.find(visible(req.user)).select('_id').lean();
   if (items.length) await NotificationReceipt.bulkWrite(items.map((item) => ({ updateOne: {
@@ -58,6 +65,7 @@ exports.readAll = asyncHandler(async (req, res) => {
   res.json({ message: "All notifications marked as read" });
 });
 
+// Kiểm tra dữ liệu thông báo admin soạn
 function fields(body = {}) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   const message = typeof body.message === 'string' ? body.message.trim() : '';
@@ -73,6 +81,7 @@ function fields(body = {}) {
   return { title, message, audience: body.audience, type: body.type, link, publishedAt, expiresAt };
 }
 
+// Admin xem danh sách thông báo đã soạn
 exports.adminList = asyncHandler(async (req, res) => {
   const { page, limit } = pageOf(req.query);
   const filter = {};
@@ -94,16 +103,19 @@ exports.adminList = asyncHandler(async (req, res) => {
   ]);
   res.json({ items, total, page, limit });
 });
+// Admin tạo thông báo (bản nháp)
 exports.create = asyncHandler(async (req, res) => {
   const item = await Notification.create({ ...fields(req.body), status: 'draft', createdBy: req.user.id });
   res.status(201).json(item);
 });
+// Admin sửa thông báo
 exports.update = asyncHandler(async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(404, "Notification not found");
   const item = await Notification.findOneAndUpdate({ _id: req.params.id, status: 'draft' }, { $set: fields(req.body) }, { new: true, runValidators: true });
   if (!item) throw new ApiError(409, "Only draft notifications can be edited");
   res.json(item);
 });
+// Admin đăng thông báo cho người nhận
 exports.publish = asyncHandler(async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(404, "Notification not found");
   const now = new Date();
@@ -115,13 +127,16 @@ exports.publish = asyncHandler(async (req, res) => {
   if (!item) throw new ApiError(409, "This notification is already published, archived or expired");
   res.json(item);
 });
+// Admin gỡ / lưu trữ thông báo
 exports.archive = asyncHandler(async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(404, "Notification not found");
   const item = await Notification.findByIdAndUpdate(req.params.id, { $set: { status: 'archived' } }, { new: true });
   if (!item) throw new ApiError(404, "Notification not found");
   res.json(item);
 });
+// Xem cấu hình thông báo tự động
 exports.getSettings = asyncHandler(async (req, res) => res.json(await service.getSettings()));
+// Lưu cấu hình thông báo tự động
 exports.saveSettings = asyncHandler(async (req, res) => {
   const changes = {};
   for (const key of Object.keys(service.DEFAULTS)) if (Object.hasOwn(req.body || {}, key)) {

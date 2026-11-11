@@ -10,12 +10,11 @@ const payment = require('../services/payment.service');
 const STATUSES = Order.schema.path('status').enumValues;
 const STORE_FIELDS = 'name address phone website openingHours status';
 const NOT_FOUND = "Order not found";
-// Đơn đã kết thúc (thuộc lịch sử): đã nhận hàng hoặc thanh toán lỗi
 const HISTORY_STATUSES = ['completed', 'failed', 'cancelled'];
 
 const { toItem } = require('../utils/orderDto');
 
-// Tóm tắt một đơn cho danh sách (dùng chung cho View Orders và View Order History)
+// Tóm tắt một đơn cho danh sách đơn của khách
 const toListItem = (o) => ({
   _id: o._id,
   orderCode: o.orderCode,
@@ -33,22 +32,22 @@ const toListItem = (o) => ({
 
 const LIST_FIELDS = 'orderCode source status items paymentMethod paymentStatus totalAmount readyAt pickedUpAt createdAt';
 
+// Đọc page/limit từ query
 const parsePaging = (query, defLimit = 10) => ({
   page: Math.max(parseInt(query.page, 10) || 1, 1),
   limit: Math.min(Math.max(parseInt(query.limit, 10) || defLimit, 1), 50),
 });
 
-// Chỉ lịch sử StatusHistory cần cho khách: trạng thái + thời điểm (không lộ changedBy/note nội bộ)
+// Lịch sử trạng thái cho khách (chỉ trạng thái + thời điểm, không lộ ghi chú nội bộ)
 const toHistory = (list) =>
   (list || [])
     .map((h) => ({ status: h.status, changedAt: h.changedAt }))
     .sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
 
-// Đơn chờ thanh toán quá hạn thì chuyển failed + hoàn kho ngay khi khách xem (job nền cũng làm việc này mỗi phút).
-// Lỗi ở bước này không được làm hỏng việc xem đơn.
+// Tự hủy các đơn quá hạn thanh toán khi khách mở trang (bỏ qua lỗi)
 const expireQuietly = (customerId) => payment.expireStaleOrders({ customerId }).catch((e) => console.error("Order expiry failed:", e));
 
-// Thông tin để giao diện biết còn thanh toán được không: hạn thanh toán + giao dịch gần nhất (không lộ dữ liệu cổng)
+// Hạn thanh toán và giao dịch gần nhất của đơn (để biết còn thanh toán được không)
 const paymentInfo = async (o) => {
   const latest = await Transaction.find({ orderId: o._id }).sort({ createdAt: -1 }).limit(1).lean();
   return {
@@ -57,9 +56,7 @@ const paymentInfo = async (o) => {
   };
 };
 
-// UC-09.1 View Orders (catalog tài liệu; code cũ ghi UC-10.1)
-// GET /api/orders/my?status=&page=&limit=
-// Chỉ trả đơn của chính khách đang đăng nhập (BR-21). Mới nhất trước.
+// UC-09.1 Khách xem danh sách đơn của mình (lọc theo trạng thái)
 exports.listMyOrders = asyncHandler(async (req, res) => {
   await expireQuietly(req.user.id);
   const { page, limit } = parsePaging(req.query);
@@ -79,7 +76,6 @@ exports.listMyOrders = asyncHandler(async (req, res) => {
       .limit(limit)
       .lean(),
     Order.countDocuments(filter),
-    // Số đơn theo từng trạng thái (không phụ thuộc bộ lọc) để hiện trên các tab
     Order.aggregate([{ $match: { customerId } }, { $group: { _id: '$status', n: { $sum: 1 } } }]),
     Store.findOne().select('name address').lean(),
   ]);
@@ -93,10 +89,7 @@ exports.listMyOrders = asyncHandler(async (req, res) => {
   res.json({ items, total, page, limit, counts, store });
 });
 
-// UC-09.2 View Order Details (catalog tài liệu; code cũ ghi UC-10.2)
-// GET /api/orders/my/:id
-// Đơn không tồn tại HOẶC của người khác đều trả 404 giống nhau, không lộ đơn đó có tồn tại hay không.
-// Chỉ đọc, không đổi trạng thái đơn/thanh toán. Không trả dữ liệu nội bộ (issues, createdBy, gateway...).
+// UC-09.2 Khách xem chi tiết đơn (đơn của người khác trả 404)
 exports.getMyOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, NOT_FOUND);
@@ -144,10 +137,7 @@ exports.getMyOrder = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-09.3 Track Order Status
-// GET /api/orders/my/:id/tracking
-// Trả trạng thái hiện tại + các mốc đã xảy ra (kèm thời điểm). Đơn nhận tại cửa hàng nên không có hãng vận chuyển:
-// fulfillment.carrier/trackingNumber = null để giao diện giải thích. updatedAt + serverTime giúp khách biết dữ liệu cập nhật lúc nào.
+// UC-09.3 Theo dõi trạng thái đơn và các mốc thời gian
 exports.trackMyOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, NOT_FOUND);
@@ -181,7 +171,7 @@ exports.trackMyOrder = asyncHandler(async (req, res) => {
   });
 });
 
-// Chuyển 'from'/'to' (ISO) thành Date; null nếu không gửi; ném 400 nếu sai định dạng
+// Đọc ngày from/to từ query; sai định dạng thì báo lỗi 400
 const parseDate = (value, label) => {
   if (value === undefined || value === '') return null;
   const d = new Date(value);
@@ -189,10 +179,7 @@ const parseDate = (value, label) => {
   return d;
 };
 
-// UC-09.4 View Order History
-// GET /api/orders/my/history?status=completed|failed&from=&to=&page=&limit=
-// Chỉ đơn đã kết thúc (completed, failed) của chính khách (BR-21), lọc theo ngày đặt. Dữ liệu lấy từ snapshot lưu trong đơn.
-// summary: số đơn đã nhận và tổng chi tiêu trong khoảng đã lọc.
+// UC-09.4 Lịch sử đơn đã kết thúc của khách (lọc theo kết quả, khoảng ngày)
 exports.listMyOrderHistory = asyncHandler(async (req, res) => {
   const { page, limit } = parsePaging(req.query);
   const { status } = req.query;
@@ -235,7 +222,6 @@ exports.listMyOrderHistory = asyncHandler(async (req, res) => {
   });
 });
 
-// ---- Admin (UC-34): code nằm ở adminOrder.controller.js ----
 const admin = require('./adminOrder.controller');
 exports.listOrders = admin.listOrders;
 exports.getOrder = admin.getOrder;
@@ -245,41 +231,35 @@ exports.resolveOrderIssue = admin.resolveOrderIssue;
 exports.cancelOrder = admin.cancelOrder;
 exports.listRefunds = admin.listRefunds;
 
-// ---- Chưa triển khai: thay từng dòng bằng code thật ----
-// UC-08.1 Create Order, bước xem trước (hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền hiện tại)
-// POST /api/orders/preview  body: { discountCode? }
+// UC-08.1 Xem trước đơn: giá, khuyến mãi, mã giảm giá, ví, tồn kho tại thời điểm hiện tại
 exports.previewCheckout = asyncHandler(async (req, res) => {
   res.json(await checkout.previewCheckout(req.user.id, { discountCode: req.body.discountCode }));
 });
 
-// UC-08.1 Create Order (catalog tài liệu; code cũ ghi UC-09.1)
-// POST /api/orders  header Idempotency-Key  body: { paymentMethod: vnpay, discountCode?, customerNote?, expectedTotal }
-// Tạo đơn + trừ kho + dọn giỏ trong một khối atomic. Đơn online ở trạng thái pending_payment (giữ hàng), tiếp theo gọi
-// POST /api/payments/online để lấy link thanh toán. Tiền mặt: xác nhận ngay, trả khi nhận hàng.
+// UC-08.1 Tạo đơn từ giỏ hàng (chống đặt trùng bằng Idempotency-Key)
 exports.createOrder = asyncHandler(async (req, res) => {
   const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
   const { order, replayed } = await checkout.createOrder(req.user.id, { ...req.body, idempotencyKey });
   res.status(replayed ? 200 : 201).json({ order, replayed });
 });
 
-// ---- Staff: đơn tại quầy (UC-21 / UC-22) ----
-// POST /api/orders/store/quote  body: { items: [{ productId, quantity }], promotionId? } -> báo giá + kiểm tra tồn kho, không tạo gì
+// UC-22 Báo giá hóa đơn tại quầy (giá và khuyến mãi tính lại từ database)
 exports.quoteStoreOrder = asyncHandler(async (req, res) => {
   const items = storeOrder.normalizeItems(req.body?.items);
   const quote = await storeOrder.buildQuote(items, req.body?.promotionId);
   res.json({ ...quote, canCreate: quote.issues.length === 0 && !quote.promoError && quote.lines.length > 0 && quote.totalAmount > 0 });
 });
 
-// POST /api/orders/store  body: { idempotencyKey, items, promotionId?, customerNote?, expectedTotal? } -> { order, idempotent }
+// UC-22 Tạo đơn tại quầy chờ thu tiền
 exports.createStoreOrder = asyncHandler(async (req, res) => {
   const out = await storeOrder.createStoreOrder(req.user.id, req.body || {});
   res.status(out.idempotent ? 200 : 201).json(out);
 });
 
+// POS: chốt bán tại quầy (thu tiền, trừ kho); có gắn thành viên thì cộng điểm
 exports.checkoutStoreSale = asyncHandler(async (req, res) => {
   const sale = await storeOrder.checkoutSale(req.user.id, { ...req.body, idempotencyKey: req.get('Idempotency-Key') || req.body?.idempotencyKey });
   if (!sale.replayed) await require('../services/activity.service').logActivity(req, { action: 'POS_SALE', targetType: 'Order', targetId: sale.order._id, detail: { orderCode: sale.order.orderCode, method: sale.order.paymentMethod, amount: sale.order.totalAmount, member: sale.order.customerId ? String(sale.order.customerId) : undefined } });
-  // Đơn có gắn thành viên -> cộng điểm ngay (đơn tại quầy đã hoàn tất + đã thanh toán). Gọi lại vẫn an toàn (chỉ cộng 1 lần/đơn).
   let points = null;
   if (sale.order.customerId) {
     await require('../services/points.service').awardPointsForOrder(sale.order._id);

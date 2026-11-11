@@ -1,6 +1,8 @@
 const { Order, User, MembershipTier, PointHistory } = require('../models');
 const POINT_UNIT = 10000;
+// Số điểm của một số tiền (10.000 ₫ = 1 điểm, làm tròn xuống)
 exports.pointsFor = amount => Math.floor((Number(amount) || 0) / POINT_UNIT);
+// Cộng điểm cho đơn đã hoàn tất và đã thanh toán (mỗi đơn một lần) và cập nhật hạng
 exports.awardPointsForOrder = async orderId => {
   const order = await Order.findById(orderId).lean();
   if (!order || order.status !== 'completed' || order.paymentStatus !== 'paid' || !order.customerId || order.pointsEarned > 0) return 0;

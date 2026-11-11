@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createCategory, deleteCategory, listCategories, updateCategory } from '../../api/category.api';
 import { Badge, Confirm, Notice, STATUS_TONE, useAction, useFetch } from '../../components/admin/kit';
 
+// Form thêm / sửa danh mục
 function CategoryEditor({ category, busy, error, onSave, onCancel }) {
   const [f, setF] = useState({ name: category?.name || '', description: category?.description || '', imageUrl: category?.imageUrl || '', sortOrder: category?.sortOrder ?? 0, status: category?.status || 'active' });
   const [err, setErr] = useState('');
@@ -31,10 +32,11 @@ function CategoryEditor({ category, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// UC-33 Admin quản lý danh mục
 export default function AdminCategoriesPage() {
   const { data, loading, error, reload } = useFetch(listCategories, { all: 1 });
   const act = useAction(reload);
-  const [panel, setPanel] = useState(null); // { type: 'add'|'edit'|'delete', category }
+  const [panel, setPanel] = useState(null);
   const open = (type, category) => { act.setError(''); act.setSuccess(''); setPanel({ type, category }); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const run = async (op, notice) => { if (await act.run(op, notice)) setPanel(null); };
   const items = data || [];

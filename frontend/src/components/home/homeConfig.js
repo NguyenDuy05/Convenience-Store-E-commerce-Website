@@ -1,20 +1,15 @@
-// ============================================================
-//  THƯƠNG HIỆU + ẢNH: để trống, thêm sau. Đặt ảnh vào frontend/public/images/...
-//  rồi điền đường dẫn (bắt đầu bằng "/") vào các biến dưới đây.
-// ============================================================
 export const BRAND_NAME = 'QUICK';
-export const LOGO_IMAGE = '';                    // vd '/images/logo.png' (trống = dùng icon)
-export const HERO_IMAGE = '';                    // vd '/images/hero.jpg'
-export const CATEGORY_IMAGES = {};               // vd { snack: '/images/cat/snack.jpg' } (khóa = slug danh mục)
-export const PRODUCT_IMAGES = {};                // vd { SP001: '/images/products/sp001.jpg' } (khóa = mã SKU)
-// Nếu sản phẩm trong DB có product.images[0] thì cũng tự dùng ảnh đó.
+export const LOGO_IMAGE = '';
+export const HERO_IMAGE = '';
+export const CATEGORY_IMAGES = {};
+export const PRODUCT_IMAGES = {};
 
+// Ảnh đầu tiên của sản phẩm
 export const productImage = (p) => PRODUCT_IMAGES[p.sku] || p.images?.[0] || '';
 
-// ---------- Tiền tệ: 1 nghìn đồng => "1000 đ" ----------
+// Định dạng tiền VND
 export const money = (n) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n) || 0);
 
-// Icon + màu nền ô ảnh trống theo danh mục (khóa = slug)
 const DEFAULT_META = { icon: 'shopping_basket', tint: '#e4e7ff' };
 const CATEGORY_META = {
     snack: { icon: 'cookie', tint: '#fbe187' },
@@ -25,17 +20,19 @@ const CATEGORY_META = {
     'com-nam-com-hop': { icon: 'rice_bowl', tint: '#b4f486' },
     'xuc-xich-do-an-nhanh': { icon: 'lunch_dining', tint: '#ffdcc2' },
 };
+// Icon và màu của danh mục
 export const catMeta = (slug) => CATEGORY_META[slug] || DEFAULT_META;
 
 export const MEAL_LABEL = { main: 'Main meal', light: 'Light meal', snack: 'Snack', beverage: 'Beverage' };
 
-// Bỏ dấu + chữ thường để gõ "banh" vẫn ra "Bánh"
+// Bỏ dấu + chữ thường để tìm kiếm không dấu
 export const norm = (s = '') =>
     String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
 
+// Lấy id từ giá trị (đối tượng hoặc chuỗi)
 const idOf = (x) => String(x?._id || x);
 
-// ---------- Khuyến mãi ----------
+// Khuyến mãi có áp dụng cho sản phẩm không
 export function promoApplies(promo, product) {
     if (promo.scope === 'all') return true;
     if (promo.scope === 'category') {
@@ -45,21 +42,19 @@ export function promoApplies(promo, product) {
     return (promo.products || promo.productIds || []).some((p) => idOf(p) === String(product._id));
 }
 
+// Số tiền giảm của khuyến mãi cho một sản phẩm
 export function discountOf(promo, price) {
     let d = promo.type === 'percent' ? (price * promo.value) / 100 : promo.value;
     if (promo.maxDiscount) d = Math.min(d, promo.maxDiscount);
     return Math.min(Math.round(d), price);
 }
 
-
-// Chọn khuyến mãi giảm nhiều nhất cho sản phẩm
-// Chỉ hiển thị tham khảo, không cộng dồn.
+// Khuyến mãi giảm nhiều nhất cho sản phẩm (chỉ để hiển thị)
 export function bestPromo(product, promos) {
     if (!product || !Number.isFinite(Number(product.price))) {
         return null;
     }
 
-    // Chuẩn hóa dữ liệu đầu vào để tránh lỗi "promos is not iterable"
     if (!Array.isArray(promos)) {
         promos = Array.isArray(promos?.items) ? promos.items : [];
     }
@@ -87,18 +82,20 @@ export function bestPromo(product, promos) {
     return best;
 }
 
-
+// Mô tả mức giảm của khuyến mãi (-10%, -5.000 đ)
 export const promoValueText = (p) => (p.type === 'percent' ? `-${p.value}%` : `-${p.value} đ`);
 
+// Mô tả phạm vi áp dụng của khuyến mãi
 export function scopeText(p) {
     if (p.scope === 'all') return 'Entire store';
     const names = (p.scope === 'category' ? (p.categories || p.categoryIds || []) : (p.products || p.productIds || [])).map((x) => x?.name).filter(Boolean);
     return names.length ? names.join(', ') : p.scope === 'category' ? 'Selected categories' : 'Selected products';
 }
 
+// Số ngày còn lại của khuyến mãi
 export const daysLeft = (end) => Math.max(0, Math.ceil((new Date(end) - Date.now()) / 86400000));
 
-// ---------- Kho ----------
+// Trạng thái kho để hiển thị (còn hàng / sắp hết / hết)
 export function stockState(p) {
     const q = p.stockQuantity ?? 0;
     if (q <= 0) return { cls: 'out', text: 'Out of stock' };
@@ -106,7 +103,7 @@ export function stockState(p) {
     return { cls: 'ok', text: `In stock · ${q} ${p.unit}` };
 }
 
-// ---------- Giờ mở cửa hôm nay ----------
+// Cửa hàng hôm nay có đang mở không và giờ mở cửa
 export function openInfo(store, date = new Date()) {
     if (!store) return null;
     const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Ho_Chi_Minh', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date).filter((p) => p.type !== 'literal').map((p) => [p.type, p.value]));

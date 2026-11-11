@@ -1,4 +1,3 @@
-/* Admin > Products (list / detail / form). Theo thiết kế QUICK: tông xanh #0058bc, nền #fbf8ff, font Inter + Rubik. */
 .ap-page {
     display: flex;
     flex-direction: column;
@@ -62,7 +61,6 @@
     gap: 8px;
 }
 
-/* buttons */
 .ap-btn {
     display: inline-flex;
     align-items: center;
@@ -161,7 +159,6 @@
     font-size: 19px;
 }
 
-/* alerts */
 .ap-alert {
     margin: 0;
     padding: 11px 14px;
@@ -179,7 +176,6 @@
     color: #245100;
 }
 
-/* KPI */
 .ap-kpis {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -235,7 +231,6 @@
     background: #0058bc;
 }
 
-/* toolbar */
 .ap-panel {
     display: flex;
     flex-direction: column;
@@ -342,7 +337,6 @@
     font: 400 14px/20px Inter, sans-serif;
 }
 
-/* table */
 .ap-table-wrap {
     overflow: hidden;
     border-radius: 14px;
@@ -577,7 +571,6 @@
     cursor: not-allowed;
 }
 
-/* modal */
 .ap-scrim {
     position: fixed;
     inset: 0;
@@ -683,7 +676,6 @@
     font-size: 12px;
 }
 
-/* form controls */
 .ap-field {
     display: flex;
     flex-direction: column;
@@ -785,7 +777,6 @@
     font-size: 15px;
 }
 
-/* form + detail layout */
 .ap-layout {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
@@ -943,7 +934,6 @@
     gap: 8px;
 }
 
-/* detail */
 .ap-hero {
     display: flex;
     flex-wrap: wrap;

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { DiscountCode, Order } = require('../models');
 const ApiError = require('../utils/ApiError');
 
+// Giữ một lượt dùng mã giảm giá cho đơn (chặn vượt tổng lượt và lượt mỗi khách)
 async function reserve(codeId, userId, orderId, { session } = {}) {
   const opts = session ? { session } : {};
   const customerId = new mongoose.Types.ObjectId(String(userId));
@@ -20,6 +21,7 @@ async function reserve(codeId, userId, orderId, { session } = {}) {
   if (!code) throw new ApiError(409, 'This discount code reached its usage limit or is no longer available. Please review checkout.', { code: 'INVALID_DISCOUNT_CODE' });
 }
 
+// Trả lại lượt dùng mã giảm giá khi đơn bị hủy / hết hạn
 async function release(order, { session } = {}) {
   if (!order.discountCode?.codeId) return;
   const opts = session ? { session } : {};

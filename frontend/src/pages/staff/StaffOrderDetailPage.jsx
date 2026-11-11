@@ -11,6 +11,7 @@ import { formatCurrency, formatDateTime } from '../../utils/format';
 import '../../styles/staff-orders.css';
 
 const NEXT = { preparing: 'Start preparing', ready_for_pickup: 'Done', completed: 'Confirm pickup' };
+// Staff chuẩn bị đơn: chuyển trạng thái, thu tiền mặt, hủy đơn
 export default function StaffOrderDetailPage() {
   const { id } = useParams();
   const { refresh } = useNotifications();

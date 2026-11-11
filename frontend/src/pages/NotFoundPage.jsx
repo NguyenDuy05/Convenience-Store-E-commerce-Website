@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+// Trang 404
 export default function NotFoundPage() {
   return (
     <main className="container">

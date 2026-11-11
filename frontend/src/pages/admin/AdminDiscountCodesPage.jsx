@@ -3,8 +3,10 @@ import { activateDiscountCode, createDiscountCode, deleteDiscountCode, listDisco
 import { Badge, Confirm, Notice, Pager, STATUS_TONE, Tabs, dt, money, useAction, useFetch } from '../../components/admin/kit';
 
 const TABS = [{ key: '', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'inactive', label: 'Inactive' }, { key: 'suspended', label: 'Suspended' }];
+// Đổi ngày sang dạng cho ô datetime-local
 const local = (v) => { if (!v) return ''; const x = new Date(v); return new Date(x.getTime() - x.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 
+// Form thêm / sửa mã giảm giá
 function CodeEditor({ code, busy, error, onSave, onCancel }) {
   const editing = !!code;
   const [f, setF] = useState({
@@ -51,6 +53,7 @@ function CodeEditor({ code, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// UC-38 Admin quản lý mã giảm giá
 export default function AdminDiscountCodesPage() {
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');

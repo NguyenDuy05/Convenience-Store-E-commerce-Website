@@ -1,5 +1,3 @@
-// UC-02.4, UC-21, UC-37. Khuyến mãi tự động áp dụng (khác DiscountCode phải nhập mã).
-// Không có trạng thái "ended": hết hạn xác định bằng endDate (catalog đã bỏ End Promotion).
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -14,7 +12,6 @@ const promotionSchema = new Schema({
   productIds: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  // inactive = mới tạo | active = đang chạy | suspended = tạm dừng | deleted = xóa mềm
   status: { type: String, enum: ['inactive', 'active', 'suspended', 'deleted'], default: 'inactive', index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });

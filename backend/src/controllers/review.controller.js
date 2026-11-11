@@ -3,8 +3,10 @@ const { Review, Order, Product, Store } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { logActivity } = require('../services/activity.service');
 
+// Kiểm tra ObjectId hợp lệ
 const validId = (id) => mongoose.isValidObjectId(id);
 
+// Đọc page/limit từ query
 function pagination(query) {
   const page = query.page === undefined ? 1 : Number(query.page);
   const limit = query.limit === undefined ? 10 : Number(query.limit);
@@ -14,11 +16,13 @@ function pagination(query) {
   return { page, limit };
 }
 
+// Kiểm tra lý do kiểm duyệt nằm trong danh sách cho phép
 function moderationReason(value = '') {
   if (typeof value !== 'string' || value.length > 650) throw new ApiError(400, 'Moderation reason must be a string of 650 characters or fewer');
   return value.trim();
 }
 
+// Tính lại điểm trung bình và số đánh giá của sản phẩm
 async function refreshProductRating(productId) {
   if (!productId) return;
   const [stats] = await Review.aggregate([
@@ -28,6 +32,7 @@ async function refreshProductRating(productId) {
   await Product.updateOne({ _id: productId }, { $set: { ratingAvg: stats?.ratingAvg || 0, ratingCount: stats?.ratingCount || 0 } });
 }
 
+// UC-40.1 Xem đánh giá công khai của một sản phẩm
 exports.listProductReviews = async (req, res) => {
   if (!validId(req.params.productId)) throw new ApiError(400, 'Invalid product ID');
   const { page, limit } = pagination(req.query);
@@ -39,6 +44,7 @@ exports.listProductReviews = async (req, res) => {
   res.json({ items, total, page, pages: Math.ceil(total / limit) });
 };
 
+// UC-40.2 Xem đánh giá công khai của cửa hàng
 exports.listStoreReviews = async (req, res) => {
   const { page, limit } = pagination(req.query);
   const filter = { targetType: 'store', status: 'visible' };
@@ -53,7 +59,7 @@ exports.listStoreReviews = async (req, res) => {
   res.json({ items, total, page, pages: Math.ceil(total / limit) });
 };
 
-// List completed pickup orders and product lines the customer can still review.
+// Các món trong đơn đã nhận mà khách còn đánh giá được
 exports.listEligibleReviews = async (req, res) => {
   const orders = await Order.find({ customerId: req.user.id, source: 'online', status: 'completed' })
     .select('orderCode items pickedUpAt createdAt').sort({ pickedUpAt: -1, createdAt: -1 }).lean();
@@ -69,6 +75,7 @@ exports.listEligibleReviews = async (req, res) => {
   res.json(eligible);
 };
 
+// Khách xem các đánh giá của mình
 exports.listMyReviews = async (req, res) => {
   const reviews = await Review.find({ customerId: req.user.id, status: { $ne: 'deleted' } })
     .populate('productId', 'name images').populate('storeId', 'name').populate('orderId', 'orderCode')
@@ -76,6 +83,7 @@ exports.listMyReviews = async (req, res) => {
   res.json(reviews);
 };
 
+// UC-11.1 Thêm đánh giá (chỉ món thuộc đơn đã nhận, mỗi món một lần)
 exports.addReview = async (req, res) => {
   const { targetType = 'product', productId, storeId, orderId, rating, comment = '' } = req.body || {};
   if (!['product', 'store'].includes(targetType)) throw new ApiError(400, 'Invalid review target');
@@ -105,6 +113,7 @@ exports.addReview = async (req, res) => {
   res.status(201).json(review);
 };
 
+// UC-11.2 Sửa đánh giá của mình
 exports.updateReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
   const { rating, comment } = req.body || {};
@@ -120,6 +129,7 @@ exports.updateReview = async (req, res) => {
   res.json(review);
 };
 
+// UC-11.3 Xóa đánh giá của mình
 exports.deleteReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
   const review = await Review.findOne({ _id: req.params.id, customerId: req.user.id, status: 'visible' });
@@ -130,6 +140,7 @@ exports.deleteReview = async (req, res) => {
   res.json({ message: 'Review deleted' });
 };
 
+// Admin xem tất cả đánh giá (gồm đã ẩn / đã xóa)
 exports.listReviewsAdmin = async (req, res) => {
   const { status, targetType, q } = req.query;
   const filter = {};
@@ -140,6 +151,7 @@ exports.listReviewsAdmin = async (req, res) => {
   res.json(items);
 };
 
+// UC-40.3 Ẩn / hiện đánh giá (có lý do, ghi nhật ký)
 exports.hideReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
   const reason = moderationReason(req.body?.reason);
@@ -150,7 +162,6 @@ exports.hideReview = async (req, res) => {
   review.status = review.status === 'hidden' ? 'visible' : 'hidden';
   review.moderation.hiddenBy = review.status === 'hidden' ? req.user.id : undefined;
   review.moderation.hiddenAt = review.status === 'hidden' ? new Date() : undefined;
-  // Preserve a confirmed violation's reason until the flag is explicitly dismissed.
   if (review.status === 'hidden') review.moderation.reason = reason;
   else if (!review.moderation.isViolating) review.moderation.reason = undefined;
   await review.save();
@@ -162,6 +173,7 @@ exports.hideReview = async (req, res) => {
   res.json(review);
 };
 
+// UC-40.4 Xử lý đánh giá vi phạm: bỏ qua hoặc ẩn (bắt buộc lý do)
 exports.handleViolatingReview = async (req, res) => {
   if (!validId(req.params.id)) throw new ApiError(400, 'Invalid review ID');
   const { action } = req.body || {};

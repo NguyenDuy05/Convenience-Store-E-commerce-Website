@@ -1,8 +1,9 @@
 import { vnd } from '../admin/products/productUtils';
 
-// Các khối hiển thị dùng chung cho dashboard admin và staff. Mọi khối đều có trạng thái "chưa có dữ liệu".
+// Icon Material Symbols của dashboard
 const Icon = ({ name, className = '' }) => <span className={`review-material-icon ${className}`}>{name}</span>;
 
+// Rút gọn số lớn (1.2M, 350K)
 export const compact = (n) => {
     const v = Number(n) || 0;
     if (v >= 1e9) return `${(v / 1e9).toFixed(1).replace(/\.0$/, '')}B`;
@@ -10,6 +11,7 @@ export const compact = (n) => {
     if (v >= 1e3) return `${(v / 1e3).toFixed(1).replace(/\.0$/, '')}K`;
     return String(v);
 };
+// Định dạng số
 const num = (n) => Number(n || 0).toLocaleString('en-US');
 
 export const STATUS_META = {
@@ -22,6 +24,7 @@ export const STATUS_META = {
     cancelled: { label: 'Cancelled', color: '#7a1f1f' },
 };
 
+// Khung một khối trên dashboard
 export function Panel({ title, sub, action, children, className = '' }) {
     return (
         <section className={`db-panel ${className}`}>
@@ -30,14 +33,17 @@ export function Panel({ title, sub, action, children, className = '' }) {
         </section>
     );
 }
+// Trạng thái chưa có dữ liệu
 export const Empty = ({ icon = 'inbox', text }) => <div className="db-empty"><Icon name={icon} /><span>{text}</span></div>;
 
+// Mũi tên tăng / giảm so với kỳ trước
 function Delta({ pct }) {
     if (pct === null || pct === undefined) return <span className="db-delta none">No previous data</span>;
     if (pct === 0) return <span className="db-delta none">No change vs previous period</span>;
     return <span className={`db-delta ${pct > 0 ? 'up' : 'down'}`}><Icon name={pct > 0 ? 'trending_up' : 'trending_down'} />{pct > 0 ? '+' : ''}{pct}%<small style={{ marginLeft: 4 }}>vs previous period</small></span>;
 }
 
+// Ô chỉ số chính (doanh thu, số đơn…)
 export function KpiCard({ icon, tone = '', label, value, note, pct, showDelta }) {
     return (
         <article className="db-kpi">
@@ -48,8 +54,7 @@ export function KpiCard({ icon, tone = '', label, value, note, pct, showDelta })
     );
 }
 
-// Biểu đồ cột doanh thu theo giờ / ngày (SVG, không cần thư viện)
-// metric="sales": doanh thu (admin) | metric="orders": số đơn (staff không được xem doanh thu)
+// Biểu đồ cột theo giờ / ngày (doanh thu hoặc số đơn)
 export function SalesChart({ series, metric = 'sales' }) {
     const byOrders = metric === 'orders';
     const val = (r) => (byOrders ? r.orders : r.sales) || 0;
@@ -58,7 +63,7 @@ export function SalesChart({ series, metric = 'sales' }) {
     const W = 640; const H = 250; const L = 44; const B = 28; const T = 10; const plotH = H - B - T; const plotW = W - L - 8;
     const max = Math.max(...series.map(val));
     const mag = 10 ** Math.floor(Math.log10(max)); const n = max / mag;
-    const nice = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;          // trần "đẹp": 1, 2, 5, 10 × 10^k
+    const nice = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
     const top = byOrders ? Math.max(5, nice) : nice;
     const ticks = [0, 1, 2, 3, 4, 5].map((i) => (top * i) / 5);
     const step = Math.ceil(series.length / 12); const bw = plotW / series.length;
@@ -76,6 +81,7 @@ export function SalesChart({ series, metric = 'sales' }) {
     );
 }
 
+// Tỉ lệ đơn theo trạng thái
 export function StatusBreakdown({ counts }) {
     const total = Object.values(counts).reduce((s, n) => s + n, 0);
     if (!total) return <Empty icon="receipt_long" text="No orders in this period yet." />;
@@ -91,6 +97,7 @@ export function StatusBreakdown({ counts }) {
     );
 }
 
+// So sánh đơn online và đơn tại quầy
 export function ChannelSplit({ channels }) {
     const total = channels.reduce((s, c) => s + c.sales, 0);
     if (!total) return <Empty icon="storefront" text="No sales by channel yet." />;
@@ -105,6 +112,7 @@ export function ChannelSplit({ channels }) {
     );
 }
 
+// Doanh thu theo danh mục
 export function CategoryBreakdown({ items }) {
     if (!items.length) return <Empty icon="category" text="No category sales yet." />;
     return (
@@ -117,8 +125,10 @@ export function CategoryBreakdown({ items }) {
     );
 }
 
+// Ảnh nhỏ của sản phẩm
 const Thumb = ({ src }) => <span className="db-thumb">{src ? <img src={src} alt="" /> : <Icon name="inventory_2" />}</span>;
 
+// Sản phẩm bán chạy
 export function TopProducts({ items }) {
     if (!items.length) return <Empty icon="emoji_events" text="Best sellers will appear after the first sales." />;
     return (
@@ -130,6 +140,7 @@ export function TopProducts({ items }) {
     );
 }
 
+// Cảnh báo tồn kho (sắp hết, hết hạn)
 export function StockAlerts({ items, expiringSoon = 0, expiredUnits = 0 }) {
     return (
         <>
@@ -146,7 +157,9 @@ export function StockAlerts({ items, expiringSoon = 0, expiredUnits = 0 }) {
     );
 }
 
+// Thời gian tương đối (5 phút trước…)
 const when = (d) => new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+// Danh sách đơn gần đây
 export function RecentOrders({ orders }) {
     if (!orders.length) return <Empty icon="shopping_bag" text="No orders yet." />;
     return (
@@ -161,6 +174,7 @@ export function RecentOrders({ orders }) {
     );
 }
 
+// Hàng đợi đơn theo trạng thái
 export function OrderQueue({ queue }) {
     const cells = [
         ['pending_payment', 'Awaiting payment', false], ['confirmed', 'To prepare', true], ['preparing', 'Preparing', false], ['ready_for_pickup', 'Ready for pickup', true],

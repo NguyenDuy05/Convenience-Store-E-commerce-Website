@@ -1,13 +1,15 @@
 import { useState } from 'react';
 
+// Định dạng ngày cho tiêu đề báo cáo
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
+// Mô tả khoảng thời gian của báo cáo
 export function rangeLabel(range) {
     if (!range) return '';
     const last = new Date(new Date(range.to).getTime() - 1);
     return range.hourly ? fmt(range.from) : `${fmt(range.from)} – ${fmt(last)}`;
 }
 
-// Tiêu đề trang + chọn khoảng ngày + làm mới + xuất CSV. params = { range, from?, to? }
+// Tiêu đề dashboard: chọn khoảng ngày, làm mới, xuất CSV
 export default function DashboardHeader({ title, pill, description, ranges, params, onChange, data, loading, onRefresh, onExport }) {
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
@@ -45,11 +47,10 @@ export default function DashboardHeader({ title, pill, description, ranges, para
     );
 }
 
-// Xuất báo cáo đang hiển thị ra CSV (có BOM để Excel đọc đúng tiếng Việt)
+// Xuất báo cáo đang xem ra file CSV
 export function exportCsv(data, filename) {
     const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const k = data.kpis;
-    // Báo cáo của staff không có số tiền (backend đã bỏ) -> chỉ xuất số đơn, số món
     const money = k.sales !== undefined;
     const rows = money ? [
         ['Report', rangeLabel(data.range)], [],

@@ -1,22 +1,22 @@
 import api from './axios';
 
-// UC-19.1 View Customers (staff, admin). params: q (>= 2 ký tự), status, hasComplaint: '1', sort, page, limit
+// Gọi API: danh sách khách hàng (UC-19.1)
 export const listCustomers = (params) => api.get(`/customers`, { params });
 
-// UC-19.2 View Customer Details (staff chỉ nhận thông tin đã che bớt)
+// Gọi API: chi tiết khách hàng (UC-19.2)
 export const getCustomer = (id, params) => api.get(`/customers/${id}`, { params });
 
-// UC-29.4 Update Customer
+// Gọi API: admin sửa khách (UC-29.4)
 export const updateCustomer = (id, data) => api.put(`/customers/${id}`, data);
 
-// UC-29.5 Unlock Customer Account
+// Gọi API: mở khóa khách (UC-29.5)
 export const unlockCustomer = (id, data) => api.patch(`/customers/${id}/unlock`, data);
 
-// UC-29.6 Delete Customer Account
+// Gọi API: xóa khách (UC-29.6)
 export const deleteCustomer = (id) => api.delete(`/customers/${id}`);
 
-// Đăng ký thành viên tại quầy (staff/admin): { fullName, phone?, email? } — cần ít nhất 1 trong 2
+// Gọi API: đăng ký thành viên tại quầy
 export const registerMember = (data) => api.post('/customers/members', data);
 
-// Tìm thành viên khi bán tại quầy: số điện thoại, email hoặc mã thành viên (QUICK-...)
+// Gọi API: tìm thành viên theo SĐT / email / mã
 export const findMember = (q) => api.get('/customers/members/lookup', { params: { q } });

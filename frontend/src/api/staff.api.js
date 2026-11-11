@@ -1,19 +1,19 @@
 import api from './axios';
 
-// UC-30.1 View Staff
+// Gọi API: danh sách nhân viên (UC-30.1)
 export const listStaff = (params) => api.get(`/staff`, { params });
 
-// UC-30.2 Add Staff
+// Gọi API: thêm nhân viên (UC-30.2)
 export const addStaff = (data) => api.post(`/staff`, data);
 
-// UC-30.3 Update Staff
+// Gọi API: sửa nhân viên (UC-30.3)
 export const updateStaff = (id, data) => api.put(`/staff/${id}`, data);
 
-// UC-30.4 Lock Staff Account
+// Gọi API: khóa nhân viên (UC-30.4)
 export const lockStaff = (id, data) => api.patch(`/staff/${id}/lock`, data);
 
-// UC-30.5 Unlock Staff Account
+// Gọi API: mở khóa nhân viên (UC-30.5)
 export const unlockStaff = (id, data) => api.patch(`/staff/${id}/unlock`, data);
 
-// UC-30.6 View Staff Activity History
+// Gọi API: nhật ký thao tác nhân viên (UC-30.6)
 export const getStaffActivity = (id, params) => api.get(`/staff/${id}/activity`, { params });

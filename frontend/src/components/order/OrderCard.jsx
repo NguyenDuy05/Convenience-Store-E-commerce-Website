@@ -8,7 +8,7 @@ import { ACTIVE_STATUSES, paymentSummary } from '../../utils/orderMeta';
 
 const MAX_THUMBS = 4;
 
-// Khối nổi bật theo trạng thái (chỉ cho đơn đang xử lý / lỗi)
+// Khối nhắc nổi bật theo trạng thái đơn
 function Callout({ order }) {
   switch (order.status) {
     case 'ready_for_pickup':
@@ -80,7 +80,7 @@ function Callout({ order }) {
   }
 }
 
-// Một đơn trong danh sách (UC-09.1). Bấm "Xem chi tiết" -> /orders/:id (UC-09.2).
+// Thẻ một đơn trong danh sách đơn của khách
 export default function OrderCard({ order, storeName }) {
   const shown = order.items.slice(0, MAX_THUMBS);
   const more = order.items.length - shown.length;

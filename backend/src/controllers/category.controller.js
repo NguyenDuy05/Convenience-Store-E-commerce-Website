@@ -4,10 +4,12 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { logActivity } = require('../services/activity.service');
 
+// Tạo slug từ tên danh mục (bỏ dấu, nối bằng gạch ngang)
 const slugify = (text) => String(text)
   .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
   .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'category';
 
+// Tạo slug không trùng (thêm hậu tố số nếu đã có)
 async function uniqueSlug(name, excludeId) {
   const base = slugify(name);
   let slug = base;
@@ -15,6 +17,7 @@ async function uniqueSlug(name, excludeId) {
   return slug;
 }
 
+// Kiểm tra dữ liệu danh mục gửi lên
 function parseBody(body = {}) {
   const str = (v) => (typeof v === 'string' ? v.trim() : '');
   const name = str(body.name);
@@ -31,6 +34,7 @@ function parseBody(body = {}) {
   return { name, description: description || undefined, imageUrl: imageUrl || undefined, sortOrder, status };
 }
 
+// Lấy danh mục theo id (404 nếu không có)
 async function loadCategory(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Category not found');
   const c = await Category.findById(id);
@@ -38,7 +42,7 @@ async function loadCategory(id) {
   return c;
 }
 
-// UC-33.1 View Categories. Public: chỉ danh mục đang hoạt động. Admin thêm ?all=1 để xem cả danh mục ẩn, kèm số sản phẩm.
+// UC-33.1 Xem danh mục (khách chỉ thấy danh mục đang bật; admin xem tất cả kèm số sản phẩm)
 exports.listCategories = asyncHandler(async (req, res) => {
   const all = req.query.all === '1' && req.user?.role === 'admin';
   const categories = await Category.find(all ? {} : { status: 'active' }).sort({ sortOrder: 1, name: 1 }).lean();
@@ -48,7 +52,7 @@ exports.listCategories = asyncHandler(async (req, res) => {
   res.json(categories.map((c) => ({ ...c, productCount: byId.get(String(c._id)) || 0 })));
 });
 
-// UC-33.2 Add Category
+// UC-33.2 Thêm danh mục
 exports.createCategory = asyncHandler(async (req, res) => {
   const data = parseBody(req.body);
   if (await Category.exists({ name: new RegExp(`^${data.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') })) {
@@ -59,7 +63,7 @@ exports.createCategory = asyncHandler(async (req, res) => {
   res.status(201).json(c);
 });
 
-// UC-33.3 Update Category
+// UC-33.3 Sửa danh mục
 exports.updateCategory = asyncHandler(async (req, res) => {
   const c = await loadCategory(req.params.id);
   const data = parseBody({ status: c.status, ...req.body });
@@ -72,7 +76,7 @@ exports.updateCategory = asyncHandler(async (req, res) => {
   res.json(c);
 });
 
-// UC-33.4 Delete Category: chỉ xóa khi không còn sản phẩm nào thuộc danh mục
+// UC-33.4 Xóa danh mục (chỉ khi không còn sản phẩm)
 exports.deleteCategory = asyncHandler(async (req, res) => {
   const c = await loadCategory(req.params.id);
   const n = await Product.countDocuments({ categoryId: c._id, status: { $ne: 'deleted' } });

@@ -1,4 +1,3 @@
-/* Review pages follow the QUICK admin design in code.html. */
 .review-page {
   --rv-bg: #fbf8ff;
   --rv-low: #f3f2ff;
@@ -76,7 +75,6 @@
 .review-alert.error { background: var(--rv-error-container); color: #93000a; }
 .review-alert.success { background: var(--rv-green-fixed); color: #245100; }
 
-/* Admin review ledger */
 .review-admin-breadcrumb { display: flex; align-items: center; gap: 8px; min-height: 32px; color: var(--rv-variant); font-size: 12px; }
 .review-admin-breadcrumb b { color: var(--rv-ink); }
 .review-material-icon { display: inline-block; flex: 0 0 auto; font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 20px; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; }
@@ -116,7 +114,6 @@
 .review-admin-actions { display: flex; flex: 0 0 150px; flex-direction: column; gap: 8px; }
 .review-admin-actions .review-button { width: 100%; }
 
-/* Moderation confirmation dialog inspired by code.html. */
 .review-modal-scrim { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 24px; background: rgba(35, 46, 88, .48); backdrop-filter: blur(6px); }
 .review-modal { width: min(680px, 100%); max-height: calc(100vh - 48px); overflow: hidden auto; border-radius: 12px; background: #fff; box-shadow: 0 24px 70px rgba(12, 24, 66, .28); animation: review-modal-in .2s ease-out; }
 @keyframes review-modal-in { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -200,7 +197,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .review-modal { animation: none; } }
 
-/* Full moderation dashboard shown in the supplied reference image. */
 .review-dashboard { display: grid; grid-template-columns: 292px minmax(0, 1fr); min-height: 100vh; background: var(--rv-bg, #fbf8ff); color: #0c1842; font: 400 14px/20px Inter, system-ui, sans-serif; }
 .review-sidebar { position: sticky; top: 0; display: flex; height: 100vh; min-height: 600px; flex-direction: column; overflow-y: auto; background: #f3f2ff; box-shadow: 1px 0 8px rgba(0, 0, 0, .035); z-index: 20; }
 .review-brand { display: flex; align-items: center; gap: 8px; height: 72px; flex: 0 0 auto; padding: 0 28px; color: #0c1842; font: 700 22px/1 Rubik, Inter, sans-serif; letter-spacing: -.03em; }
@@ -424,7 +420,6 @@
   .review-engine-status { margin-left: 6px; }
 }
 
-/* Avatar + menu tài khoản trên topbar Admin/Staff (giống header phía khách) */
 .portal-user { position: relative; }
 .portal-avatar-btn { all: unset; box-sizing: border-box; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #0c1842; cursor: pointer; transition: color .2s; }
 .portal-avatar-btn:hover, .portal-avatar-btn.on { color: #0058bc; }
@@ -439,7 +434,6 @@
 .portal-user-item:hover { background: #f3f2ff; }
 .portal-user-item.out { margin-top: 4px; border-top: 1px solid #e4e7ff; border-radius: 0 0 12px 12px; color: #ba1a1a; }
 
-/* Logo sidebar staff/admin = logo cửa hàng phía khách (icon cửa hàng, chữ xanh), bấm về trang chủ */
 a.review-brand { color: #0058bc; text-decoration: none; cursor: pointer; }
 a.review-brand:hover .review-brand-mark { filter: brightness(1.08); }
 .review-brand-mark { width: 40px; height: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 12px -6px rgba(0, 88, 188, .7); }

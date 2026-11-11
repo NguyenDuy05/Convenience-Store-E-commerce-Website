@@ -3,7 +3,7 @@ import '../../styles/order-status-badge.css';
 import Icon from '../common/Icon';
 import { ORDER_STATUS } from '../../utils/orderMeta';
 
-// Nhãn trạng thái đơn. "sẵn sàng nhận" có chấm nhấp nháy để khách chú ý.
+// Nhãn trạng thái đơn
 export default function OrderStatusBadge({ status }) {
   const meta = ORDER_STATUS[status] || { label: status, icon: 'help', tone: 'neutral' };
   return (

@@ -1,7 +1,7 @@
 import api from './axios';
 
-// GET /api/dashboard/admin?range=today|7d|30d|90d|custom&from=YYYY-MM-DD&to=YYYY-MM-DD (admin)
+// Gọi API: số liệu dashboard admin
 export const getAdminDashboard = (params) => api.get('/dashboard/admin', { params });
 
-// GET /api/dashboard/staff?range=... (staff, admin)
+// Gọi API: số liệu dashboard staff
 export const getStaffDashboard = (params) => api.get('/dashboard/staff', { params });

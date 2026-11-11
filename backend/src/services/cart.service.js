@@ -1,15 +1,14 @@
-// Giỏ hàng (UC-07): dựng dữ liệu hiển thị từ Cart + giá/tồn kho HIỆN TẠI của Product.
 const { Cart, Product } = require('../models');
 const { sellableMap } = require('./stock.service');
 
 const MAX_PER_ITEM = 99;
 
-// Trả về { items, itemCount, subtotal, issues }. Sản phẩm bị ẩn/xóa vẫn hiện trong giỏ (kèm cảnh báo) để khách tự xóa.
+// Dựng giỏ hàng trả về: dòng hàng, tổng tiền, cảnh báo ngừng bán / thiếu hàng
 async function buildCartView(userId) {
   const cart = await Cart.findOne({ userId }).lean();
   const raw = cart?.items || [];
   const products = raw.length ? await Product.find({ _id: { $in: raw.map((i) => i.productId) } }).lean() : [];
-  const sellable = await sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const sellable = await sellableMap(products.map((p) => p._id));
   const pMap = new Map(products.map((p) => [String(p._id), { ...p, stockQuantity: sellable.get(String(p._id)) ?? 0 }]));
 
   const issues = [];
@@ -41,7 +40,7 @@ async function buildCartView(userId) {
   };
 }
 
-// Compare revisions after validation so concurrent tabs cannot overwrite each other.
+// Sửa giỏ hàng an toàn khi nhiều tab cùng sửa (so phiên bản trước khi lưu)
 async function mutateCart(userId, mutate) {
   try { await Cart.updateOne({ userId }, { $setOnInsert: { items: [], revision: 0 } }, { upsert: true }); }
   catch (error) { if (error.code !== 11000) throw error; }
@@ -55,6 +54,7 @@ async function mutateCart(userId, mutate) {
   throw new (require('../utils/ApiError'))(409, 'Your cart is being updated in another tab. Please try again.');
 }
 
+// Bỏ các món đã đặt khỏi giỏ sau khi tạo đơn
 async function removePurchasedItems(userId, lines, { session } = {}) {
   const branches = lines.map(line => ({ case: { $eq: ['$$item.productId', line.productId] }, then: line.quantity }));
   const cart = await Cart.findOneAndUpdate({ userId }, [{ $set: {
@@ -66,6 +66,7 @@ async function removePurchasedItems(userId, lines, { session } = {}) {
   return lines.map(line => ({ productId: line.productId, quantity: Math.min(line.quantity, cart?.items.find(item => String(item.productId) === String(line.productId))?.quantity || 0) })).filter(line => line.quantity > 0);
 }
 
+// Trả lại các món vào giỏ khi tạo đơn thất bại
 async function restorePurchasedItems(userId, lines) {
   for (const line of lines) await Cart.updateOne({ userId }, [{ $set: {
     items: { $cond: [

@@ -12,16 +12,16 @@ import { ORDER_SOURCE, ORDER_TABS, PAYMENT_METHOD, PAYMENT_STATUS } from '../../
 
 const LIMIT = 20;
 const SORTS = [['newest', "Newest"], ['oldest', "Oldest"], ['total_desc', "Total: high to low"], ['total_asc', "Total: low to high"]];
+// Lấy giá trị query hợp lệ trong danh sách cho phép
 const pickOf = (value, allowed) => (allowed.includes(value) ? value : '');
 
-// UC-34.1 View Orders + UC-34.2 Search Orders (Admin)
+// UC-34.1/34.2 Admin xem và tìm đơn
 export default function AdminOrdersPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  // Mọi bộ lọc nằm trên URL: tải lại / quay lại từ trang chi tiết vẫn giữ nguyên
   const q = (params.get('q') || '').slice(0, 100);
   const status = pickOf(params.get('status') || '', ORDER_TABS.map((t) => t.key));
   const source = pickOf(params.get('source') || '', Object.keys(ORDER_SOURCE));
@@ -50,7 +50,6 @@ export default function AdminOrdersPage() {
     setParams(out);
   }, [q, status, source, paymentStatus, paymentMethod, from, to, hasIssue, sort, setParams]);
 
-  // Gõ tìm kiếm: chờ 400ms sau lần gõ cuối rồi mới đưa lên URL (Enter tìm ngay)
   useEffect(() => { setQInput(q); }, [q]);
   useEffect(() => {
     if (qInput.trim() === q) return undefined;

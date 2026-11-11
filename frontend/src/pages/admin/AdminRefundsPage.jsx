@@ -4,6 +4,7 @@ import { Pager, Stat, dt, money, useFetch } from '../../components/admin/kit';
 
 const METHOD = { cash: 'Cash', card: 'Card', vnpay: 'VNPay', wallet: 'Wallet' };
 
+// Admin xem lịch sử hoàn tiền
 export default function AdminRefundsPage() {
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');

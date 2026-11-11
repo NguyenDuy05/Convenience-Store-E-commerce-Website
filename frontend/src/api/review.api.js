@@ -1,27 +1,29 @@
 import api from './axios';
 
-// UC-40.1 View Product Reviews
+// Gọi API: đánh giá của sản phẩm (UC-40.1)
 export const listProductReviews = (productId, params) => api.get(`/reviews/product/${productId}`, { params });
 
-// UC-40.2 View Store Reviews
+// Gọi API: đánh giá cửa hàng (UC-40.2)
 export const listStoreReviews = (params) => api.get(`/reviews/store`, { params });
+// Gọi API: đánh giá của tôi
 export const listMyReviews = () => api.get('/reviews/mine');
+// Gọi API: món còn đánh giá được
 export const listEligibleReviews = () => api.get('/reviews/mine/eligible');
 
-// UC-11.1 Add Review
+// Gọi API: thêm đánh giá (UC-11.1)
 export const addReview = (data) => api.post(`/reviews`, data);
 
-// UC-11.2 Update Review
+// Gọi API: sửa đánh giá (UC-11.2)
 export const updateReview = (id, data) => api.put(`/reviews/${id}`, data);
 
-// UC-11.3 Delete Review
+// Gọi API: xóa đánh giá (UC-11.3)
 export const deleteReview = (id) => api.delete(`/reviews/${id}`);
 
-// UC-40.1, 40.2 Admin review list, including hidden and deleted reviews
+// Gọi API: admin xem tất cả đánh giá
 export const listReviewsAdmin = (params) => api.get(`/reviews/admin/all`, { params });
 
-// UC-40.3 Hide Review
+// Gọi API: ẩn / hiện đánh giá (UC-40.3)
 export const hideReview = (id, data) => api.patch(`/reviews/${id}/hide`, data);
 
-// UC-40.4 Handle Violating Review
+// Gọi API: xử lý đánh giá vi phạm (UC-40.4)
 export const handleViolatingReview = (id, data) => api.patch(`/reviews/${id}/violation`, data);

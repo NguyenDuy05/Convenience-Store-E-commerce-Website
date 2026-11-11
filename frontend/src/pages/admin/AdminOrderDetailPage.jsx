@@ -15,7 +15,7 @@ import { ORDER_SOURCE, ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS } from '../.
 
 const TXN_STATUS = { success: "Successful", failed: "Failed", pending: "Pending", refunded: "Refunded to wallet" };
 
-// UC-34.3 View Order Details (Admin) + thao tác chuyển trạng thái và xử lý sự cố (UC-34.4)
+// UC-34.3 Chi tiết đơn của admin: chuyển trạng thái, hủy đơn, sự cố
 export default function AdminOrderDetailPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -32,7 +32,6 @@ export default function AdminOrderDetailPage() {
     return true;
   }, [logout, navigate, location]);
 
-  // Tải (hoặc tải lại sau mỗi thao tác) đơn hàng. showSpinner=false khi tải lại để trang không nhấp nháy.
   const load = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
     try {

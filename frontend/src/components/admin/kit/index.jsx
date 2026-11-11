@@ -2,20 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import '../../../styles/admin-promotions.css';
 import '../../../styles/admin-kit.css';
 
-// Bộ nhỏ dùng chung cho các trang quản trị (Admin/Staff): lỗi, ngày, tiền, phân trang, tab, hook tải danh sách.
+// Định dạng tiền VND
 export const money = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
+// Định dạng tiền VND theo kiểu Việt Nam
 export const moneyVi = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
+// Định dạng ngày giờ
 export const dt = (v) => (v ? new Date(v).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
+// Định dạng ngày
 export const d = (v) => (v ? new Date(v).toLocaleDateString('en-GB', { dateStyle: 'medium' }) : '—');
+// Định dạng ngày giờ kiểu Việt Nam
 export const dtVi = (v) => (v ? new Date(v).toLocaleString('vi-VN') : '—');
 
+// Lấy thông báo lỗi từ response API
 export const msgOf = (err, fallback = 'Unable to complete the request. Please try again.') => {
   if (err?.response?.status === 401) return 'Your session has expired. Please sign in again.';
   if (err?.response?.status === 403) return 'You do not have permission to do this.';
   return err?.response?.data?.message || fallback;
 };
 
-// Tải danh sách theo params; trả { data, loading, error, reload }. fetcher(params) -> axios promise.
+// Hook tải dữ liệu theo params; trả { data, loading, error, reload }
 export function useFetch(fetcher, params) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +41,7 @@ export function useFetch(fetcher, params) {
   return { data, loading, error, reload };
 }
 
-// Chạy một thao tác ghi: quản lý busy / lỗi / thông báo thành công và tải lại danh sách khi xong.
+// Hook chạy thao tác ghi: quản lý đang xử lý / lỗi / thông báo thành công, xong thì tải lại
 export function useAction(onDone) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +56,7 @@ export function useAction(onDone) {
   return { busy, error, success, run, setError, setSuccess };
 }
 
+// Dòng thông báo thành công / lỗi
 export function Notice({ success, error }) {
   return <>
     {success && <p className="pm-success" role="status">{success}</p>}
@@ -58,6 +64,7 @@ export function Notice({ success, error }) {
   </>;
 }
 
+// Thanh phân trang
 export function Pager({ page, total, limit, onPage, busy }) {
   const pages = Math.max(1, Math.ceil((total || 0) / limit));
   return <nav className="pm-pagination" aria-label="Pagination">
@@ -67,6 +74,7 @@ export function Pager({ page, total, limit, onPage, busy }) {
   </nav>;
 }
 
+// Thanh tab lọc
 export function Tabs({ tabs, value, onChange }) {
   return <div className="pm-tabs" role="tablist">
     {tabs.map((t) => <button key={t.key} role="tab" aria-selected={value === t.key} className={value === t.key ? 'on' : ''} onClick={() => onChange(t.key)}>
@@ -75,10 +83,12 @@ export function Tabs({ tabs, value, onChange }) {
   </div>;
 }
 
+// Ô số liệu thống kê
 export function Stat({ label, value, tone }) {
   return <div className={`pm-stat ${tone || ''}`}><span>{label}</span><strong>{value}</strong></div>;
 }
 
+// Hộp xác nhận thao tác
 export function Confirm({ title, children, confirmLabel = 'Confirm', danger, busy, error, onConfirm, onCancel }) {
   return <section className="pm-card pm-confirm" aria-labelledby="confirm-title">
     <h2 id="confirm-title">{title}</h2>
@@ -91,5 +101,6 @@ export function Confirm({ title, children, confirmLabel = 'Confirm', danger, bus
   </section>;
 }
 
+// Nhãn trạng thái có màu
 export const Badge = ({ tone = '', children }) => <span className={`pm-badge pm-tone-${tone}`}>{children}</span>;
 export const STATUS_TONE = { active: 'ok', open: 'ok', success: 'ok', in: 'ok', locked: 'warn', closed: 'warn', pending: 'warn', low: 'warn', suspended: 'warn', inactive: 'muted', deleted: 'bad', failed: 'bad', out: 'bad', expired: 'bad', refunded: 'muted' };

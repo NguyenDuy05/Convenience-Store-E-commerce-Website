@@ -1,12 +1,13 @@
-// Gửi email mời thành viên (đăng ký tại quầy) tự đặt mật khẩu để dùng website/app.
-// Dùng lại cơ chế đặt lại mật khẩu: lưu hash của token, link /reset-password?token=...
 const crypto = require('crypto');
 const { sendMail } = require('./mail.service');
 
 const INVITE_DAYS = 7;
+// Băm SHA-256 (dùng để lưu token đặt mật khẩu)
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
+// Escape HTML khi chèn vào email
 const esc = (v) => String(v || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Gửi email chào mừng thành viên đăng ký tại quầy kèm link tự đặt mật khẩu
 exports.sendSetPasswordInvite = async (user, memberCode) => {
   if (!user.email) return false;
   const token = crypto.randomBytes(32).toString('hex');

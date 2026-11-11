@@ -6,9 +6,11 @@ const { validateDiscountCode: checkCode, DiscountCodeError } = require('../servi
 const { logActivity } = require('../services/activity.service');
 const notifications = require('../services/inAppNotification.service');
 
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const CODE_RE = /^[A-Z0-9_-]{3,30}$/;
 
+// Lấy mã giảm giá chưa bị xóa theo id (404 nếu không có)
 async function loadCode(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Discount code not found');
   const d = await DiscountCode.findOne({ _id: id, status: { $ne: 'deleted' } });
@@ -16,6 +18,7 @@ async function loadCode(id) {
   return d;
 }
 
+// Kiểm tra dữ liệu mã giảm giá (loại, giá trị, giới hạn lượt, thời gian)
 function parseBody(body = {}, { partial } = {}) {
   const num = (v, label, { min = 0, max = 1e9, int = true, optional = false } = {}) => {
     if (v === undefined || v === null || v === '') {
@@ -51,7 +54,7 @@ function parseBody(body = {}, { partial } = {}) {
   return out;
 }
 
-// Kiểm tra mã khi checkout (customer). body: { code, amount? } -> { valid, code, type, value, discount }
+// Khách kiểm tra mã giảm giá khi thanh toán (hợp lệ không, giảm bao nhiêu)
 exports.validateDiscountCode = asyncHandler(async (req, res) => {
   const text = typeof req.body?.code === 'string' ? req.body.code.trim().toUpperCase() : '';
   if (!text) throw new ApiError(400, 'Enter a discount code');
@@ -67,7 +70,7 @@ exports.validateDiscountCode = asyncHandler(async (req, res) => {
   res.json({ valid: true, code: code.code, type: code.type, value: code.value, maxDiscount: code.maxDiscount ?? null, minOrderAmount: code.minOrderAmount });
 });
 
-// UC-38.1 View Discount Codes. GET ?q=&status=&page=&limit=
+// UC-38.1 Admin xem / tìm mã giảm giá
 exports.listDiscountCodes = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -83,7 +86,7 @@ exports.listDiscountCodes = asyncHandler(async (req, res) => {
   res.json({ items, total, page, limit });
 });
 
-// UC-38.2 Create Discount Code (mặc định inactive, bật bằng Activate)
+// UC-38.2 Tạo mã giảm giá (mặc định chưa kích hoạt)
 exports.createDiscountCode = asyncHandler(async (req, res) => {
   const data = parseBody(req.body);
   if (await DiscountCode.exists({ code: data.code })) throw new ApiError(409, 'This code already exists');
@@ -92,7 +95,7 @@ exports.createDiscountCode = asyncHandler(async (req, res) => {
   res.status(201).json(d);
 });
 
-// UC-38.3 Update Discount Code (mã code không đổi)
+// UC-38.3 Sửa mã giảm giá (không đổi được mã code)
 exports.updateDiscountCode = asyncHandler(async (req, res) => {
   const d = await loadCode(req.params.id);
   const data = parseBody(req.body, { partial: true });
@@ -105,7 +108,7 @@ exports.updateDiscountCode = asyncHandler(async (req, res) => {
   res.json(d);
 });
 
-// UC-38.4 Activate
+// UC-38.4 Kích hoạt mã giảm giá
 exports.activateDiscountCode = asyncHandler(async (req, res) => {
   const d = await loadCode(req.params.id);
   if (d.status === 'active') throw new ApiError(409, 'This code is already active');
@@ -117,7 +120,7 @@ exports.activateDiscountCode = asyncHandler(async (req, res) => {
   res.json(d);
 });
 
-// UC-38.5 Suspend
+// UC-38.5 Tạm ngưng mã giảm giá
 exports.suspendDiscountCode = asyncHandler(async (req, res) => {
   const d = await loadCode(req.params.id);
   if (d.status !== 'active') throw new ApiError(409, 'Only active codes can be suspended');
@@ -128,7 +131,7 @@ exports.suspendDiscountCode = asyncHandler(async (req, res) => {
   res.json(d);
 });
 
-// UC-38.6 Delete (xóa mềm: đơn cũ vẫn giữ tham chiếu)
+// UC-38.6 Xóa mềm mã giảm giá (đơn cũ vẫn giữ tham chiếu)
 exports.deleteDiscountCode = asyncHandler(async (req, res) => {
   const d = await loadCode(req.params.id);
   d.status = 'deleted';

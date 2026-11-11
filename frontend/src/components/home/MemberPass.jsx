@@ -1,6 +1,7 @@
 import { useId, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
+// Thẻ thành viên có mã QR của khách
 export default function MemberPass({ code, name }) {
   const qrRef = useRef(null);
   const titleId = useId();

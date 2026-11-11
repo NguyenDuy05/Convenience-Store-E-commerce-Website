@@ -1,4 +1,3 @@
-// UC-08.1 Create Order (và bước xem trước đơn). Mọi giá/tồn kho đều tính lại ở server.
 const { Cart, Product, Promotion, DiscountCode, Order, Store } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { runAtomic } = require('../utils/atomic');
@@ -9,16 +8,17 @@ const { notifyOrder } = require('./notification.service');
 
 const wallet = require('./wallet.service');
 const { pickupSchedule } = require('./pickupSchedule.service');
-const METHODS = ['vnpay']; // Store credit is applied internally before VNPay.
+const METHODS = ['vnpay'];
+// Thời gian giữ hàng chờ thanh toán (mặc định 15 phút)
 const ttlMs = () => (parseInt(process.env.PAYMENT_TTL_MINUTES, 10) || 15) * 60 * 1000;
 
-// Đọc giỏ -> danh sách dòng hợp lệ + các vấn đề (ngừng bán, thiếu hàng)
+// Đọc giỏ thành các dòng hợp lệ + vấn đề (ngừng bán, thiếu hàng)
 async function loadCartLines(userId) {
   const cart = await Cart.findOne({ userId }).lean();
   const items = cart?.items || [];
   if (!items.length) return { lines: [], issues: [] };
   const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } }).lean();
-  const sellable = await stock.sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const sellable = await stock.sellableMap(products.map((p) => p._id));
   const pMap = new Map(products.map((p) => [String(p._id), { ...p, stockQuantity: sellable.get(String(p._id)) ?? 0 }]));
   const lines = [];
   const issues = [];
@@ -39,6 +39,7 @@ async function loadCartLines(userId) {
   return { lines, issues };
 }
 
+// Tìm mã giảm giá đang bật và số lần khách đã dùng
 async function loadDiscount(userId, input) {
   const text = typeof input === 'string' ? input.trim().toUpperCase() : '';
   if (!text) return { discountCode: null, userUsedCount: 0 };
@@ -48,6 +49,7 @@ async function loadDiscount(userId, input) {
   return { discountCode, userUsedCount };
 }
 
+// Dựng tóm tắt giá trả về cho trang thanh toán
 const toSummary = (pricing, issues, discountError) => ({
   items: pricing.lines.map((l) => ({
     productId: l.productId, name: l.name, image: l.image, unit: l.unit,
@@ -63,7 +65,7 @@ const toSummary = (pricing, issues, discountError) => ({
   canCheckout: pricing.lines.length > 0 && issues.length === 0 && pricing.totalAmount > 0,
 });
 
-// Dựng tóm tắt giá. throwOnCodeError=true (khi tạo đơn): mã sai -> lỗi; false (xem trước): bỏ mã và báo discountError.
+// Tính tóm tắt giá của giỏ (khi tạo đơn thì mã sai báo lỗi; khi xem trước thì chỉ cảnh báo)
 async function buildSummary(userId, codeInput, { throwOnCodeError }) {
   const { lines, issues } = await loadCartLines(userId);
   const now = new Date();
@@ -84,7 +86,7 @@ async function buildSummary(userId, codeInput, { throwOnCodeError }) {
   return { pricing, issues, discountError };
 }
 
-// Xem trước đơn (UC-08.1 bước 2-3): hiển thị lại sản phẩm, giá, khuyến mãi, tổng tiền THỜI ĐIỂM HIỆN TẠI
+// Xem trước đơn: giá, khuyến mãi, mã giảm giá, ví, giờ nhận hàng
 exports.previewCheckout = async (userId, { discountCode } = {}) => {
   const { pricing, issues, discountError } = await buildSummary(userId, discountCode, { throwOnCodeError: false });
   const store = await Store.findOne({ status: 'open' }).select('name address phone openingHours status').lean()
@@ -95,6 +97,7 @@ exports.previewCheckout = async (userId, { discountCode } = {}) => {
   return { ...summary, pickupSchedule: schedule, walletBalance: await wallet.balance(userId), estimatedPoints: Math.floor(pricing.totalAmount / 10000), canCheckout: summary.canCheckout && !storeClosed, storeClosed, store };
 };
 
+// Dữ liệu đơn trả về sau khi tạo
 const orderView = (o) => ({
   _id: o._id, orderCode: o.orderCode, status: o.status, paymentMethod: o.paymentMethod, paymentStatus: o.paymentStatus,
   preparationStartsAt: o.preparationStartsAt || null,
@@ -102,12 +105,11 @@ const orderView = (o) => ({
   expiresAt: o.status === 'pending_payment' ? new Date(new Date(o.createdAt).getTime() + ttlMs()) : null,
 });
 
-// Tạo đơn. Trả { order, replayed }. replayed=true nếu cùng idempotencyKey đã tạo đơn trước đó (không tạo đơn thứ hai).
+// Tạo đơn: kiểm tra giá, trừ kho, giữ mã giảm giá, trừ ví (chống đặt trùng bằng idempotencyKey)
 exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote, expectedTotal, idempotencyKey, expectedWalletAmount }) => {
   if (!METHODS.includes(paymentMethod)) throw new ApiError(400, "Website orders use VNPay only");
   const key = typeof idempotencyKey === 'string' && idempotencyKey.trim() ? idempotencyKey.trim().slice(0, 100) : null;
 
-  // Mô hình nhận hàng tại cửa hàng: cửa hàng đang đóng cửa thì không nhận đơn mới
   const store = await Store.findOne().lean();
   const schedule = pickupSchedule(store);
   if (!schedule.acceptingOrders) throw new ApiError(409, schedule.notice || 'The store is temporarily closed.', { code: 'STORE_CLOSED' });
@@ -126,7 +128,6 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
     });
   }
   if (pricing.totalAmount <= 0) throw new ApiError(400, "Order total must be greater than zero");
-  // E1: giá/khuyến mãi đã đổi so với lúc khách xem -> dừng, hiển thị lại để khách xác nhận
   if (expectedTotal !== undefined && Number(expectedTotal) !== pricing.totalAmount) {
     throw new ApiError(409, "Prices or promotions have changed. Please review your order.", {
       code: 'PRICE_CHANGED', summary: toSummary(pricing, issues, null),
@@ -172,7 +173,6 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
       }], opts);
       onRollback(() => Order.deleteOne({ _id: doc._id }));
 
-      // Trừ kho theo thời gian thực (BR-19): thiếu hàng thì ném 409 và toàn bộ được hoàn tác
       await stock.deductStock(
         pricing.lines.map((l) => ({ productId: l.productId, name: l.name, quantity: l.quantity })),
         { orderId: doc._id, userId, session },
@@ -185,7 +185,6 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
         onRollback(() => reservations.release(doc));
       }
 
-      // Bước cuối: dọn giỏ (chỉ bỏ các sản phẩm đã đặt, sản phẩm khách mới thêm trong lúc này vẫn giữ)
       if (walletAmount > 0) {
         await wallet.move(userId, { key: 'pay:' + doc._id, amount: -walletAmount, orderId: doc._id, orderCode, description: 'Order payment' }, { session });
         onRollback(() => wallet.move(userId, { key: 'return:' + doc._id, amount: walletAmount, orderId: doc._id, orderCode, description: 'Checkout reversed' }));
@@ -205,7 +204,6 @@ exports.createOrder = async (userId, { paymentMethod, discountCode, customerNote
     void notifyOrder(order, 'order_created');
     return { order: orderView(order.toObject ? order.toObject() : order), replayed: false };
   } catch (err) {
-    // Hai yêu cầu cùng idempotencyKey chạy song song: yêu cầu thua trả lại đơn của yêu cầu thắng
     if (key && err && err.code === 11000) {
       const existing = await Order.findOne({ customerId: userId, idempotencyKey: key }).lean();
       if (existing?.checkoutReady === false) throw new ApiError(409, 'Order creation is still processing. Please retry shortly.', { code: 'CHECKOUT_PROCESSING' });

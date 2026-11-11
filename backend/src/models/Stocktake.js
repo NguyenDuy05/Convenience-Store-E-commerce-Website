@@ -1,12 +1,11 @@
-// UC-19.4 / UC-34.3 Stocktake (kiểm kê)
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const stocktakeItemSchema = new Schema({
   productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  systemQty: { type: Number, required: true },              // tồn theo hệ thống lúc kiểm
-  countedQty: { type: Number, required: true, min: 0 },     // số đếm thực tế
-  difference: { type: Number, required: true },             // countedQty - systemQty
+  systemQty: { type: Number, required: true },
+  countedQty: { type: Number, required: true, min: 0 },
+  difference: { type: Number, required: true },
   note: String,
 }, { _id: false });
 

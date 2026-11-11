@@ -5,10 +5,10 @@ import DashboardHeader, { exportCsv } from '../../components/dashboard/Dashboard
 import { CategoryBreakdown, ChannelSplit, KpiCard, Panel, RecentOrders, SalesChart, StatusBreakdown, StockAlerts, TopProducts, compact } from '../../components/dashboard/DashboardWidgets';
 import { vnd } from '../../components/admin/products/productUtils';
 
-// Dashboard admin: toàn bộ số liệu lấy từ GET /api/dashboard/admin (dữ liệu thật trong MongoDB).
-// Mục nào chưa có dữ liệu thì hiện 0 / trạng thái trống, sẽ tự có số khi module tương ứng được làm.
+// Định dạng số
 const n = (v) => Number(v || 0).toLocaleString('en-US');
 
+// Dashboard admin: doanh thu, đơn, khách, tồn kho, biểu đồ, top sản phẩm
 export default function AdminDashboardPage() {
   const [params, setParams] = useState({ range: '7d' });
   const { data, error, loading, refresh } = useDashboard('admin', params);

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/format';
 import Icon from '../common/Icon';
 
+// Thẻ sản phẩm (ảnh, giá, khuyến mãi)
 export default function ProductCard({ product }) {
   const inStock = product.stockQuantity > 0;
   return (

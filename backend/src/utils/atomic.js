@@ -1,11 +1,8 @@
-// BR-20: tạo đơn phải "tất cả hoặc không gì cả".
-// - Có replica set / Atlas: chạy trong MongoDB transaction (lỗi giữa chừng thì tự rollback toàn bộ).
-// - MongoDB đơn lẻ (standalone, hay gặp khi chạy local): transaction không dùng được -> chạy tuần tự,
-//   mỗi bước đăng ký hàm hoàn tác bằng ctx.onRollback(fn); nếu lỗi thì chạy ngược các hàm đó.
 const mongoose = require('mongoose');
 
-let supported; // cache kết quả kiểm tra
+let supported;
 
+// Kiểm tra MongoDB có hỗ trợ transaction không (lưu lại kết quả)
 async function supportsTransactions() {
   if (supported !== undefined) return supported;
   try {
@@ -17,7 +14,7 @@ async function supportsTransactions() {
   return supported;
 }
 
-// work(ctx) với ctx = { session | null, onRollback(fn) }. Các thao tác DB phải truyền { session } nếu có.
+// Chạy nhiều thao tác như một khối: dùng transaction nếu có, không thì tự hoàn tác khi lỗi
 async function runAtomic(work) {
   if (await supportsTransactions()) {
     const session = await mongoose.startSession();

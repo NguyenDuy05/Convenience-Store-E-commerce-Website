@@ -12,7 +12,7 @@ import { CHECKOUT_METHODS } from '../../utils/orderMeta';
 
 const ONLINE_METHODS = CHECKOUT_METHODS.filter((m) => m.key !== 'cash');
 
-// UC-08.2 Make Payment: thanh toán (hoặc thanh toán lại) một đơn đang chờ thanh toán bằng VNPay.
+// UC-08.2 Thanh toán (lại) đơn đang chờ bằng VNPay
 export default function PayOrderPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -53,7 +53,6 @@ export default function PayOrderPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Đếm ngược thời gian giữ hàng; hết hạn thì tải lại để hiển thị đúng trạng thái
   useEffect(() => {
     if (!order?.expiresAt) return undefined;
     const t = setInterval(() => {

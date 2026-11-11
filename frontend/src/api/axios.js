@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Mọi file *.api.js dùng chung instance này. Tự gắn token đăng nhập vào mỗi request.
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
 
 api.interceptors.request.use((config) => {

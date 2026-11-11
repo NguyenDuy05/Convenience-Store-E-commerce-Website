@@ -6,7 +6,9 @@ import '../../styles/notifications.css';
 
 const audiences = { all: "All accounts", customer: "Customer", staff: "Staff", admin: "Administrators", users: "Individual recipients" };
 const statuses = { draft: "Draft", published: "Published", archived: "Archived" };
+// Dữ liệu trống cho form thông báo mới
 const blank = () => ({ title: '', message: '', type: 'general', audience: 'all', link: '', publishedAt: '', expiresAt: '' });
+// Đổi ngày sang dạng cho ô datetime-local
 const localTime = (value) => { if (!value) return ''; const d = new Date(value); return new Date(+d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 const settingLabels = {
   orders: ["Customer orders", "Order confirmations, status changes and payment expiry."],
@@ -16,6 +18,7 @@ const settingLabels = {
   promotions: ["New promotions", "Notify customers when a promotion is activated."],
 };
 
+// Admin soạn, đăng, gỡ thông báo và cấu hình thông báo tự động
 export default function AdminNotificationsPage() {
   const { refresh } = useNotifications();
   const [tab, setTab] = useState('messages');

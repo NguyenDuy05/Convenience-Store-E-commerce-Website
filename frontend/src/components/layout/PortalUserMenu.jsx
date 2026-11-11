@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import UserAvatarIcon from '../common/UserAvatarIcon';
 
-// Avatar trên topbar Admin/Staff: chỉ hiện icon, bấm vào mở menu (Profile, Log out) — giống header phía khách.
+// Avatar + menu tài khoản trên thanh trên cùng của staff / admin
 export default function PortalUserMenu({ profilePath, roleLabel }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();

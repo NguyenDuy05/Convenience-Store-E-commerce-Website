@@ -5,26 +5,32 @@ const ApiError = require('../utils/ApiError');
 const stock = require('../services/stock.service');
 const { logActivity } = require('../services/activity.service');
 
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const LOW = { $expr: { $and: [{ $gt: ['$stockQuantity', 0] }, { $lte: ['$stockQuantity', '$lowStockThreshold'] }] } };
 const NOT_DELETED = { status: { $ne: 'deleted' } };
 
+// Đọc page/limit từ query
 const paging = (query, def = 20) => ({
   page: Math.max(parseInt(query.page, 10) || 1, 1),
   limit: Math.min(Math.max(parseInt(query.limit, 10) || def, 1), 100),
 });
+// Kiểm tra ObjectId hợp lệ
 const validId = (id, label = 'ID') => { if (!mongoose.isValidObjectId(id)) throw new ApiError(400, `Invalid ${label}`); };
+// Kiểm tra số nguyên dương
 const posInt = (v, label, max = 100000) => {
   const n = Number(v);
   if (!Number.isInteger(n) || n < 1 || n > max) throw new ApiError(400, `${label} must be a whole number between 1 and ${max}`);
   return n;
 };
+// Kiểm tra chuỗi (bắt buộc / tùy chọn) có độ dài hợp lệ
 const text = (v, label, { required = false, max = 300 } = {}) => {
   const s = typeof v === 'string' ? v.trim() : '';
   if (required && !s) throw new ApiError(400, `${label} is required`);
   if (s.length > max) throw new ApiError(400, `${label} must be ${max} characters or fewer`);
   return s || undefined;
 };
+// Lấy sản phẩm chưa bị xóa theo id (404 nếu không có)
 async function requireProduct(id) {
   validId(id, 'product ID');
   const p = await Product.findOne({ _id: id, ...NOT_DELETED });
@@ -32,6 +38,7 @@ async function requireProduct(id) {
   return p;
 }
 
+// Một dòng tồn kho trả về: sản phẩm, số lượng, ngưỡng cảnh báo
 const productRow = (p, nearest) => ({
   _id: p._id, name: p.name, sku: p.sku, unit: p.unit, status: p.status, images: (p.images || []).slice(0, 1),
   category: p.categoryId?.name ? { _id: p.categoryId._id, name: p.categoryId.name } : null,
@@ -40,6 +47,7 @@ const productRow = (p, nearest) => ({
   nearestExpiry: nearest?.get(String(p._id)) || null,
 });
 
+// Hạn dùng gần nhất của các lô còn hàng theo từng sản phẩm
 async function nearestExpiries(ids) {
   if (!ids.length) return new Map();
   const rows = await StockBatch.aggregate([
@@ -49,7 +57,7 @@ async function nearestExpiries(ids) {
   return new Map(rows.map((r) => [String(r._id), r.d]));
 }
 
-// UC-19.1 / 34.1 View Inventory + UC-19 Check Stock. GET ?q=&categoryId=&stock=in|low|out&page=&limit=
+// UC-19.1/34.1 Xem tồn kho (lọc còn hàng / sắp hết / hết hàng)
 exports.listInventory = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = { ...NOT_DELETED };
@@ -73,7 +81,7 @@ exports.listInventory = asyncHandler(async (req, res) => {
   res.json({ items: docs.map((p) => productRow(p, nearest)), total, page, limit, summary: { products: counts[0], lowStock: counts[1], outOfStock: counts[2] } });
 });
 
-// Chi tiết các lô của một sản phẩm (Check Stock). GET /inventory/product/:productId
+// Check Stock: các lô còn hàng của một sản phẩm
 exports.getProductStock = asyncHandler(async (req, res) => {
   const p = await requireProduct(req.params.productId);
   const batches = await StockBatch.find({ productId: p._id, quantity: { $gt: 0 } }).sort({ expiryDate: 1, receivedAt: 1 }).lean();
@@ -84,7 +92,7 @@ exports.getProductStock = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.2 Receive Stock (staff). body: { productId, quantity, expiryDate?, costPrice?, batchCode?, note? }
+// UC-19.2 Nhập hàng: tạo lô mới có hạn dùng
 exports.receiveStock = asyncHandler(async (req, res) => {
   const b = req.body || {};
   const p = await requireProduct(b.productId);
@@ -108,7 +116,7 @@ exports.receiveStock = asyncHandler(async (req, res) => {
   res.status(201).json(out);
 });
 
-// UC-19.3 / 34.2 Adjust Inventory. body: { productId, newQuantity, reason }
+// UC-19.3/34.2 Điều chỉnh tồn kho về số lượng mới (bắt buộc ghi lý do)
 exports.adjustInventory = asyncHandler(async (req, res) => {
   const b = req.body || {};
   const p = await requireProduct(b.productId);
@@ -121,7 +129,7 @@ exports.adjustInventory = asyncHandler(async (req, res) => {
   res.json(r);
 });
 
-// ---- Stocktake ----
+// Sinh mã phiên kiểm kê
 const stocktakeCode = async () => {
   const d = new Date();
   const base = `ST-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
@@ -129,7 +137,7 @@ const stocktakeCode = async () => {
   return `${base}-${String(n + 1).padStart(3, '0')}`;
 };
 
-// UC-19.4 / 34.3 danh sách phiên kiểm kê
+// UC-19.4/34.3 Danh sách phiên kiểm kê
 exports.listStocktakes = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query, 10);
   const filter = {};
@@ -152,7 +160,7 @@ exports.listStocktakes = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.4 / 34.3 tạo phiên kiểm kê. body: { note?, items: [{ productId, countedQty, note? }] }
+// UC-19.4/34.3 Tạo phiên kiểm kê với số lượng đếm thực tế
 exports.createStocktake = asyncHandler(async (req, res) => {
   const { items, note } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) throw new ApiError(400, 'Add at least one product to count');
@@ -172,7 +180,7 @@ exports.createStocktake = asyncHandler(async (req, res) => {
   res.status(201).json(s);
 });
 
-// UC-19.4 / 34.3 hoàn tất: đưa tồn kho về đúng số đã đếm
+// UC-19.4/34.3 Hoàn tất kiểm kê: đưa tồn kho về đúng số đã đếm
 exports.completeStocktake = asyncHandler(async (req, res) => {
   validId(req.params.id, 'stocktake ID');
   const s = await Stocktake.findOneAndUpdate({ _id: req.params.id, status: 'in_progress' }, { $set: { status: 'completed', completedAt: new Date() } }, { new: true });
@@ -190,7 +198,7 @@ exports.completeStocktake = asyncHandler(async (req, res) => {
   res.json({ stocktake: s, failed });
 });
 
-// UC-19.5 / 34.4 Low stock
+// UC-19.5/34.4 Sản phẩm sắp hết hàng
 exports.listLowStock = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = { ...NOT_DELETED, ...LOW };
@@ -202,7 +210,7 @@ exports.listLowStock = asyncHandler(async (req, res) => {
   res.json({ items: docs.map((p) => productRow(p, nearest)), total, page, limit });
 });
 
-// UC-34.5 Out of stock
+// UC-34.5 Sản phẩm hết hàng
 exports.listOutOfStock = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = { ...NOT_DELETED, stockQuantity: 0 };
@@ -213,7 +221,7 @@ exports.listOutOfStock = asyncHandler(async (req, res) => {
   res.json({ items: docs.map((p) => productRow(p)), total, page, limit });
 });
 
-// UC-19.6 View Expired Products: các lô đã quá hạn mà vẫn còn hàng
+// UC-19.6 Các lô đã hết hạn mà vẫn còn hàng
 exports.listExpired = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = { quantity: { $gt: 0 }, expiryDate: { $lt: new Date() } };
@@ -228,7 +236,7 @@ exports.listExpired = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.7 Manage Damaged Products (xem): các lần ghi nhận hàng hỏng / hết hạn bị loại
+// UC-19.7 Xem các lần ghi nhận hàng hỏng / hết hạn bị loại
 exports.listDamaged = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = { type: { $in: ['damaged', 'expired'] } };
@@ -244,7 +252,7 @@ exports.listDamaged = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.7 ghi nhận hàng hỏng / hết hạn. body: { productId, quantity, type: damaged|expired, batchId?, reason }
+// UC-19.7 Ghi nhận hàng hỏng / hết hạn và trừ khỏi kho
 exports.recordDamaged = asyncHandler(async (req, res) => {
   const b = req.body || {};
   const p = await requireProduct(b.productId);
@@ -257,7 +265,7 @@ exports.recordDamaged = asyncHandler(async (req, res) => {
   res.status(201).json(r);
 });
 
-// UC-34.6 View Inventory History (admin). GET ?productId=&type=&from=&to=&page=&limit=
+// UC-34.6 Lịch sử biến động kho (nhập, bán, điều chỉnh, kiểm kê, hỏng)
 exports.getInventoryHistory = asyncHandler(async (req, res) => {
   const { page, limit } = paging(req.query);
   const filter = {};

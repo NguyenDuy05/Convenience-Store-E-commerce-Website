@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Icon } from './AuthShell';
 
-// Một ô nhập: nhãn + icon trái + (nút hiện/ẩn mật khẩu) + lỗi
+// Ô nhập của form đăng nhập / đăng ký (nhãn, icon, hiện / ẩn mật khẩu, lỗi)
 export default function AuthField({ label, hint, icon, error, type = 'text', ...inputProps }) {
     const [show, setShow] = useState(false);
     const isPassword = type === 'password';

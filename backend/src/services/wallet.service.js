@@ -2,16 +2,18 @@ const Wallet = require('../models/Wallet');
 const { Order, Transaction } = require('../models');
 const ApiError = require('../utils/ApiError');
 
+// Tạo ví cho khách nếu chưa có
 async function ensure(userId) {
   try { await Wallet.updateOne({ userId }, { $setOnInsert: { userId, balance: 0, entries: [] } }, { upsert: true }); }
   catch (err) { if (err.code !== 11000) throw err; }
 }
 
+// Số dư ví của khách
 async function balance(userId) {
   return (await Wallet.findOne({ userId }).lean())?.balance || 0;
 }
 
-// A conditional single-document update prevents overdrafts and duplicate journal keys.
+// Cộng / trừ ví một lần duy nhất theo khóa (không cho âm, không ghi trùng)
 async function move(userId, { key, amount, orderId, orderCode, description }, { session } = {}) {
   if (!Number.isSafeInteger(amount) || !amount || !key) throw new Error('Invalid wallet movement');
   if (!session) await ensure(userId);
@@ -35,7 +37,7 @@ async function move(userId, { key, amount, orderId, orderCode, description }, { 
   throw new ApiError(409, 'Your wallet balance changed. Review checkout and try again.', { code: 'WALLET_BALANCE_CHANGED' });
 }
 
-// Durable closed-order reconciliation: retries are safe after a crash or duplicate IPN.
+// Đơn bị hủy / hết hạn: hoàn tiền ví và tiền đã trả vào ví, đổi giao dịch sang Refunded
 async function settleClosedOrder(orderId) {
   const order = await Order.findById(orderId).lean();
   if (!order?.customerId || !['cancelled', 'failed'].includes(order.status)) return 0;
@@ -43,7 +45,6 @@ async function settleClosedOrder(orderId) {
   const debit = await Wallet.findOne({ userId: order.customerId, 'entries.key': `pay:${order._id}` }).select({ entries: { $elemMatch: { key: `pay:${order._id}` } } }).lean();
   const used = -(debit?.entries.find(e => e.key === `pay:${order._id}`)?.amount || 0);
   const reason = order.cancelReason || 'Payment deadline expired / late payment';
-  // Giao dịch đã hoàn tiền -> chuyển trạng thái 'refunded' để trang Giao dịch không còn tính là tiền đã thu
   const markRefunded = (filter, amount) => Transaction.updateMany({ ...filter, orderId, status: 'success' }, {
     $set: { status: 'refunded', refund: { amount, method: 'wallet', reason, refundedAt: new Date() } },
   });
@@ -66,6 +67,7 @@ async function settleClosedOrder(orderId) {
   return refunded;
 }
 
+// Đối soát các đơn đã đóng: trả kho, trả mã giảm giá, hoàn ví (chạy khi khởi động)
 async function reconcile() {
   const orders = await Order.find({ customerId: { $exists: true }, status: { $in: ['cancelled', 'failed'] }, walletPolicy: true,
   }).lean();

@@ -10,6 +10,7 @@ const ACTIONS = {
   dismiss: 'Dismiss (reviewed, no action)',
 };
 
+// Khung xử lý giao dịch lỗi
 function ResolvePanel({ txn, busy, error, onSave, onCancel }) {
   const allowed = txn.status === 'pending' ? ['confirm_paid', 'mark_failed'] : txn.status === 'failed' ? ['confirm_paid', 'dismiss'] : ['dismiss'];
   const [action, setAction] = useState(allowed[0]);
@@ -32,6 +33,7 @@ function ResolvePanel({ txn, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// UC-41 Admin xem giao dịch thanh toán (tiền đã thu / đã hoàn / thực nhận)
 export default function AdminPaymentsPage() {
   const [tab, setTab] = useState('all');
   const [method, setMethod] = useState('');

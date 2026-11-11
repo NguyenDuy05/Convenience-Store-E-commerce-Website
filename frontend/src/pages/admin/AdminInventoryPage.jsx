@@ -1,6 +1,6 @@
 import InventoryManager from '../../components/inventory/InventoryManager';
 
-// UC-34.1–34.6: View, Adjust, Stocktake, Low Stock, Out of Stock, History
+// UC-34 Admin quản lý kho
 export default function AdminInventoryPage() {
   return <InventoryManager role="admin" />;
 }

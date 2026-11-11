@@ -11,7 +11,7 @@ import { newIdempotencyKey } from '../../utils/idempotency';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { COMPLAINT_STATUS, STATUS_ACTION } from '../../utils/complaintMeta';
 
-// UC-19.3 Handle Customer Complaint (Staff): view complaints, respond to customers, and follow allowed status transitions
+// UC-19.3 Staff xem và phản hồi một khiếu nại
 export default function StaffComplaintDetailPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -22,12 +22,12 @@ export default function StaffComplaintDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-  const [target, setTarget] = useState('');            // '' = keep the current status and send a response only
+  const [target, setTarget] = useState('');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
-  const [done, setDone] = useState(null);              // { replayed }
+  const [done, setDone] = useState(null);
   const lock = useRef(false);
-  const keyRef = useRef(newIdempotencyKey());          // reuse after network errors; replace after a successful save or a definitive failure
+  const keyRef = useRef(newIdempotencyKey());
 
   const onAuth = useCallback(async (err) => {
     if (err.response?.status !== 401) return false;
@@ -81,12 +81,11 @@ export default function StaffComplaintDetailPage() {
       if (await onAuth(err)) return;
       const st = err.response?.status; const data = err.response?.data || {};
       if (!err.response || st >= 500) {
-        // Save status is unknown: retain the key so a retry cannot duplicate the response
         setFormError('The server response was not received, so the save status is unknown. You can retry without creating a duplicate response.');
       } else {
         keyRef.current = newIdempotencyKey();
         setFormError(data.message || 'Unable to save. Please try again.');
-        if (['INVALID_TRANSITION', 'STALE_STATUS', 'CLOSED'].includes(data.code)) { setTarget(''); await load(); }   // refresh the allowed transitions
+        if (['INVALID_TRANSITION', 'STALE_STATUS', 'CLOSED'].includes(data.code)) { setTarget(''); await load(); }
       }
     } finally { lock.current = false; setSaving(false); }
   };

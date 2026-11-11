@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { lookupMemberCode } from '../../api/membership.api';
 import '../../styles/member-code-lookup.css';
 
+// Ô tra mã thành viên (quét QR hoặc nhập mã)
 export default function MemberCodeLookup() {
   const navigate = useNavigate();
   const [code, setCode] = useState('');

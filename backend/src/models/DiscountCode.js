@@ -1,4 +1,3 @@
-// UC-38 Manage Discount Codes. Số lần mỗi khách đã dùng: đếm từ Order.discountCode.codeId + customerId.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -9,7 +8,7 @@ const discountCodeSchema = new Schema({
   value: { type: Number, required: true, min: 0 },
   maxDiscount: { type: Number, min: 0 },
   minOrderAmount: { type: Number, default: 0, min: 0 },
-  usageLimit: { type: Number, min: 0 },                       // tổng lượt dùng tối đa (bỏ trống = không giới hạn)
+  usageLimit: { type: Number, min: 0 },
   usedCount: { type: Number, default: 0, min: 0 },
   allocations: { type: [{ orderId: Schema.Types.ObjectId, userId: Schema.Types.ObjectId, _id: false }], default: [], select: false },
   perUserLimit: { type: Number, default: 1, min: 1 },

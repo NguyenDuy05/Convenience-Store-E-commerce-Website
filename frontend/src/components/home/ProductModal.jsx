@@ -7,7 +7,7 @@ import AddToCart from '../cart/AddToCart';
 import { estimatePromo } from '../../utils/promoPrice';
 import { formatCurrency } from '../../utils/format';
 
-// Native dialog provides focus trapping, Escape and inert background content.
+// Hộp xem nhanh sản phẩm
 export default function ProductModal({ product, promos = [], onClose }) {
   const dialogRef = useRef(null);
   const [current, setCurrent] = useState(product);

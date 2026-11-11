@@ -2,7 +2,7 @@ import '../../styles/qk-tokens.css';
 import '../../styles/price-summary.css';
 import { formatCurrency } from '../../utils/format';
 
-// Bảng tổng tiền: tạm tính, từng khuyến mãi, mã giảm giá, tổng thanh toán. Dữ liệu lấy từ server (previewCheckout / đơn).
+// Bảng tổng tiền: tạm tính, khuyến mãi, mã giảm giá, tổng thanh toán
 export default function PriceSummary({ subtotal, appliedPromotions = [], promotionDiscount = 0, discountCode, totalAmount, children }) {
   return (
     <div className="psum">

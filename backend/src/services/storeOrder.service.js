@@ -1,5 +1,3 @@
-// Tính tiền đơn tại quầy (UC-21) từ dữ liệu có thẩm quyền: giá lấy từ Product, khuyến mãi tính bằng promotion.service.
-// Không bao giờ tin số tiền client gửi lên. Dùng chung cho "báo giá" (quote) và "tạo đơn".
 const mongoose = require('mongoose');
 const { Product, Promotion, Order, User } = require('../models');
 const { runAtomic } = require('../utils/atomic');
@@ -13,7 +11,7 @@ const crypto = require('node:crypto');
 const MAX_LINES = 100;
 const MAX_QTY = 999;
 
-// items: [{ productId, quantity }] -> gộp dòng trùng, kiểm tra định dạng (ném ApiError 400 nếu sai)
+// Kiểm tra và gộp các dòng hàng của hóa đơn tại quầy
 exports.normalizeItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) throw new ApiError(400, "The order has no items");
   if (items.length > MAX_LINES) throw new ApiError(400, `An order can have at most ${MAX_LINES} product lines`);
@@ -27,7 +25,7 @@ exports.normalizeItems = (items) => {
   return [...map].map(([productId, quantity]) => ({ productId, quantity }));
 };
 
-// POS confirmation records a completed sale, its payment and stock movement together.
+// POS: chốt bán tại quầy trong một lần (đơn, giao dịch, trừ kho), có gắn thành viên nếu chọn
 exports.checkoutSale = async (staffId, body = {}) => {
   if (typeof body.idempotencyKey !== 'string' || !/^[A-Za-z0-9_-]{8,100}$/.test(body.idempotencyKey)) throw new ApiError(400, 'A valid checkout key is required');
   const items = exports.normalizeItems(body.items).sort((a, b) => a.productId.localeCompare(b.productId));
@@ -39,7 +37,6 @@ exports.checkoutSale = async (staffId, body = {}) => {
   if (method === 'cash' && (!Number.isSafeInteger(received) || received < 0 || received > 1e9)) throw new ApiError(400, 'Enter a valid cash amount');
   if (method !== 'cash' && (!/^[A-Za-z0-9-]{4,40}$/.test(reference) || body.paymentConfirmed !== true)) throw new ApiError(400, 'Confirm the approved terminal/QR payment and enter its transaction reference');
   const note = typeof body.customerNote === 'string' ? body.customerNote.trim().slice(0, 500) : '';
-  // Thành viên (tùy chọn): gắn đơn cho khách để tích điểm
   let customerId = null;
   if (body.customerId !== undefined && body.customerId !== null && body.customerId !== '') {
     if (typeof body.customerId !== 'string' || !/^[a-f\d]{24}$/i.test(body.customerId)) throw new ApiError(400, 'Invalid member');
@@ -98,12 +95,10 @@ exports.checkoutSale = async (staffId, body = {}) => {
   }
 };
 
-// Trả { lines, issues, subtotal, promotion, promoError, discount, totalAmount }
-//  - issues: lỗi theo từng dòng (sản phẩm không bán / không đủ hàng) -> phải sửa trước khi tạo đơn (21.0.E2)
-//  - promoError: lý do khuyến mãi không áp dụng được (chưa trừ gì vào tổng)
+// Tính hóa đơn tại quầy: giá từ database, tồn kho, khuyến mãi
 exports.buildQuote = async (items, promotionId) => {
   const products = await Product.find({ _id: { $in: items.map((i) => i.productId) } });
-  const sellable = await stock.sellableMap(products.map((p) => p._id));   // chỉ tính hàng còn hạn dùng
+  const sellable = await stock.sellableMap(products.map((p) => p._id));
   const byId = new Map(products.map((p) => [String(p._id), Object.assign(p, { stockQuantity: sellable.get(String(p._id)) ?? 0 })]));
   const issues = [];
   const lines = [];
@@ -145,8 +140,7 @@ exports.buildQuote = async (items, promotionId) => {
   };
 };
 
-// UC-22 Tạo đơn tại quầy: giá/khuyến mãi tính lại từ database, trừ kho, đơn ở trạng thái chờ thanh toán (thu tiền ở UC-23).
-// Trả { order, idempotent }. Cùng idempotencyKey gửi lại -> trả đúng đơn cũ, không tạo đơn thứ hai.
+// Tạo đơn tại quầy chờ thu tiền (trừ kho ngay)
 exports.createStoreOrder = async (staffId, body) => {
   const key = typeof body.idempotencyKey === 'string' && body.idempotencyKey.length <= 100 ? body.idempotencyKey : undefined;
   const findExisting = () => (key ? Order.findOne({ source: 'store', createdBy: staffId, idempotencyKey: key }).lean() : null);

@@ -1,4 +1,3 @@
-/* Trang "Chi tiết đơn hàng" (UC-09.2). Class bắt đầu bằng "odetail-". */
 .odetail { font-family: var(--qk-font-body); color: var(--qk-text); }
 
 .odetail-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 12px; color: var(--qk-text-variant); }
@@ -36,7 +35,6 @@
 .odetail-btn.ghost { background: var(--qk-surface); color: var(--qk-text); }
 .odetail-btn.ghost:hover { background: var(--qk-surface-high); color: var(--qk-text); }
 
-/* ----- Banner trạng thái ----- */
 .odetail-banner { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; border-radius: 12px; background: var(--qk-surface-low); }
 .odetail-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .odetail-banner strong { font-size: 16px; line-height: 22px; }
@@ -49,7 +47,6 @@
 .odetail-banner.error { background: rgba(255, 218, 214, .45); }
 .odetail-banner.error .odetail-banner-icon { background: var(--qk-error-container); color: var(--qk-error); }
 
-/* ----- Lưới 2 cột ----- */
 .odetail-grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 24px; align-items: start; }
 .odetail-side { display: flex; flex-direction: column; gap: 16px; }
 
@@ -62,7 +59,6 @@
 .odetail-card h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 16px; line-height: 22px; font-weight: 700; }
 .odetail-card h2 .qk-icon { color: var(--qk-primary); }
 
-/* ----- Danh sách sản phẩm ----- */
 .odetail-items ul { list-style: none; margin: 0; padding: 0; }
 .odetail-item { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--qk-surface-container); }
 .odetail-item:first-child { border-top: 0; padding-top: 4px; }
@@ -77,7 +73,6 @@ a.odetail-item-name:hover { color: var(--qk-primary); text-decoration: underline
 .odetail-item-disc { font-size: 12px; font-weight: 600; color: var(--qk-secondary); }
 .odetail-item-total { font-family: var(--qk-font-display); font-size: 16px; font-weight: 700; white-space: nowrap; }
 
-/* ----- Cửa hàng / mã đơn ----- */
 .odetail-store { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .odetail-store span { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
 .odetail-store span .qk-icon { color: var(--qk-primary); }
@@ -94,7 +89,6 @@ a.odetail-item-name:hover { color: var(--qk-primary); text-decoration: underline
 .odetail-note { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--qk-surface-low); font-size: 12px; line-height: 18px; color: var(--qk-text-variant); }
 .odetail-note .qk-icon { color: var(--qk-tertiary); }
 
-/* ----- Thanh toán / tổng kết ----- */
 .odetail-pay, .odetail-sum { display: flex; flex-direction: column; gap: 8px; }
 .odetail-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--qk-text-variant); }
 .odetail-row > span:last-child { color: var(--qk-text); font-weight: 600; text-align: right; }
@@ -110,7 +104,6 @@ a.odetail-item-name:hover { color: var(--qk-primary); text-decoration: underline
 .odetail-chip.warn { background: var(--qk-tertiary-fixed); color: var(--qk-on-tertiary-fixed) !important; }
 .odetail-chip.error { background: var(--qk-error-container); color: var(--qk-on-error-container) !important; }
 
-/* ----- Đang tải / lỗi ----- */
 .odetail-skeleton {
     height: 360px;
     border-radius: 12px;

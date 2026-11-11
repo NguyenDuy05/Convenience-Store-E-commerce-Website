@@ -16,6 +16,7 @@ import useSmoothScroll from '../../hooks/useSmoothScroll';
 import useHomeStoryAnimations from '../../hooks/useHomeStoryAnimations';
 import '../../styles/pickup-home.css';
 
+// Trang chủ cửa hàng
 export default function HomePage() {
   const rootRef = useRef(null);
   const [data, setData] = useState({ products: [], categories: [], promotions: [], store: null });

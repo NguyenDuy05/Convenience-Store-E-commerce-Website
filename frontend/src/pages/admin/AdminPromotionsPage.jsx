@@ -4,27 +4,34 @@ import { listCategories } from '../../api/category.api';
 import { listProducts } from '../../api/product.api';
 import '../../styles/admin-promotions.css';
 
+// Định dạng tiền VND
 const money = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);
+// Định dạng ngày
 const date = (value) => new Date(value).toLocaleString('en-US');
 const STATUS = { inactive: 'Inactive', active: 'Active', suspended: 'Suspended', deleted: 'Deleted' };
 const SCOPE = { all: 'All products', category: 'Selected categories', product: 'Selected products' };
+// Lấy thông báo lỗi từ response API
 const message = (err) => {
   if (err.response?.status === 401) return 'Your session has expired. Please sign in again.';
   if (err.response?.status === 403) return 'You do not have permission to manage promotions.';
   return err.response?.data?.message || 'Unable to complete the request. Please try again.';
 };
+// Đổi ngày sang dạng cho ô datetime-local
 const localDate = (value) => {
   if (!value) return '';
   const d = new Date(value);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 };
+// Tên sản phẩm / danh mục mà khuyến mãi áp dụng
 const reference = (item) => typeof item === 'string' ? { _id: item, name: item } : item;
+// Trạng thái thời gian của khuyến mãi (sắp chạy / đang chạy / đã kết thúc)
 const timing = (item) => {
   if (new Date(item.endDate) < new Date()) return 'Expired';
   if (new Date(item.startDate) > new Date()) return 'Scheduled';
   return item.status === 'active' ? 'Running' : 'Within date range';
 };
 
+// Form thêm / sửa khuyến mãi
 function PromotionEditor({ promotion, busy, error, onSave, onCancel }) {
   const [form, setForm] = useState(() => ({
     name: promotion?.name || '', description: promotion?.description || '', type: promotion?.type || 'percent',
@@ -106,6 +113,7 @@ function PromotionEditor({ promotion, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// UC-37 Admin quản lý khuyến mãi
 export default function AdminPromotionsPage() {
   const [data, setData] = useState({ items: [], total: 0, limit: 10 });
   const [status, setStatus] = useState('');

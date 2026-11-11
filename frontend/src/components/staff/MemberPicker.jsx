@@ -4,8 +4,7 @@ import Icon from '../common/Icon';
 import RegisterMemberForm from './RegisterMemberForm';
 import '../../styles/member-picker.css';
 
-// Chọn thành viên cho hóa đơn tại quầy (tùy chọn) để tích điểm: tìm theo SĐT / email / mã thành viên,
-// không có thì đăng ký thành viên mới ngay tại đây.
+// POS: tìm thành viên cho hóa đơn (SĐT / email / mã) hoặc đăng ký thành viên mới
 export default function MemberPicker({ value, onChange, disabled }) {
   const [q, setQ] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notFound, setNotFound] = useState(false);
   const [registering, setRegistering] = useState(false), [notice, setNotice] = useState('');

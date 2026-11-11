@@ -11,6 +11,7 @@ const STEPS = [
   { id: 'pickup', label: '07 / PICK UP', title: 'Order online. Pick up at QUICK.', text: 'Follow your order from confirmed to preparing. When it is ready for pickup, visit the store and show your order code to staff.', note: 'Ordering after hours? We prepare when the store reopens.', link: '/orders', action: 'View my orders' },
 ];
 
+// Hình minh họa từng bước đặt và nhận hàng
 function ProcessArt({ index, product, store }) {
   if (index === 0) return <div className="quick-selection-art">
     <span className="quick-art-tag">A CLOSER LOOK</span>
@@ -44,6 +45,7 @@ function ProcessArt({ index, product, store }) {
   </div>;
 }
 
+// Khối giới thiệu quy trình đặt online và nhận tại cửa hàng
 export default function PickupJourney({ product, store }) {
   return <section className="quick-process" aria-labelledby="quick-process-title">
     <div className="quick-wrap">

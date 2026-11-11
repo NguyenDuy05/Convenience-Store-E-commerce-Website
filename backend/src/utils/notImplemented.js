@@ -1,3 +1,3 @@
-// Handler tạm cho API chưa làm. Trả 501 kèm tên use case để cả nhóm biết còn thiếu gì.
+// Handler tạm cho API chưa làm (trả 501)
 exports.notImplemented = (uc) => (req, res) =>
   res.status(501).json({ message: `Not implemented: ${uc}` });

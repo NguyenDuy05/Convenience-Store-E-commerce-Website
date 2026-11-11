@@ -1,40 +1,40 @@
 import api from './axios';
 
-// UC-19.1, 34.1 View Inventory
+// Gọi API: xem tồn kho (UC-19.1/34.1)
 export const listInventory = (params) => api.get(`/inventory`, { params });
 
-// UC-19.2 Receive Stock
+// Gọi API: nhập hàng (UC-19.2)
 export const receiveStock = (data) => api.post(`/inventory/receive`, data);
 
-// UC-19.3, 34.2 Adjust Inventory
+// Gọi API: điều chỉnh tồn kho (UC-19.3/34.2)
 export const adjustInventory = (data) => api.post(`/inventory/adjust`, data);
 
-// UC-19.4, 34.3 Stocktake (danh sách phiên kiểm kê)
+// Gọi API: danh sách phiên kiểm kê
 export const listStocktakes = (params) => api.get(`/inventory/stocktakes`, { params });
 
-// UC-19.4, 34.3 Stocktake (tạo phiên kiểm kê)
+// Gọi API: tạo phiên kiểm kê
 export const createStocktake = (data) => api.post(`/inventory/stocktakes`, data);
 
-// UC-19.4, 34.3 Stocktake (hoàn tất, cập nhật tồn kho)
+// Gọi API: hoàn tất kiểm kê
 export const completeStocktake = (id, data) => api.patch(`/inventory/stocktakes/${id}/complete`, data);
 
-// UC-19.5, 34.4 View Low Stock Products
+// Gọi API: sản phẩm sắp hết hàng
 export const listLowStock = (params) => api.get(`/inventory/low-stock`, { params });
 
-// UC-19.6 View Expired Products
+// Gọi API: lô đã hết hạn
 export const listExpired = (params) => api.get(`/inventory/expired`, { params });
 
-// UC-34.5 View Out of Stock Products
+// Gọi API: sản phẩm hết hàng
 export const listOutOfStock = (params) => api.get(`/inventory/out-of-stock`, { params });
 
-// UC-19.7 Manage Damaged Products (xem)
+// Gọi API: lịch sử hàng hỏng
 export const listDamaged = (params) => api.get(`/inventory/damaged`, { params });
 
-// UC-19.7 Manage Damaged Products (ghi nhận)
+// Gọi API: ghi nhận hàng hỏng
 export const recordDamaged = (data) => api.post(`/inventory/damaged`, data);
 
-// UC-34.6 View Inventory History
+// Gọi API: lịch sử biến động kho
 export const getInventoryHistory = (params) => api.get(`/inventory/history`, { params });
 
-// Check Stock: các lô còn hàng của một sản phẩm -> { product, batches }
+// Gọi API: các lô còn hàng của một sản phẩm
 export const getProductStock = (productId) => api.get(`/inventory/product/${productId}`);

@@ -21,14 +21,13 @@ const PRESETS = [
   { key: 'all', label: "All", from: () => '' },
 ];
 
-// UC-09.4 View Order History (xem lại đơn đã kết thúc, lọc theo kết quả và khoảng ngày)
+// UC-09.4 Lịch sử đơn đã kết thúc
 export default function OrderHistoryPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  // Toàn bộ bộ lọc nằm trên URL để có thể quay lại / chia sẻ / tải lại mà không mất
   const rawStatus = params.get('status') || '';
   const status = VALID_STATUS.includes(rawStatus) ? rawStatus : '';
   const from = validYMD(params.get('from'));
@@ -42,7 +41,7 @@ export default function OrderHistoryPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    if (rangeInvalid) { setLoading(false); return undefined; } // không gọi API khi khoảng ngày sai
+    if (rangeInvalid) { setLoading(false); return undefined; }
     let ignore = false;
     setLoading(true);
     setError('');

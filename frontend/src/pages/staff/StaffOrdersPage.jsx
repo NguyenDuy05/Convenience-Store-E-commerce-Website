@@ -8,6 +8,7 @@ import { formatCurrency, formatDateTime } from '../../utils/format';
 import '../../styles/staff-orders.css';
 
 const TABS = [['active', 'Active'], ['confirmed', 'New'], ['preparing', 'Preparing'], ['ready_for_pickup', 'Ready'], ['pending_payment', 'Awaiting payment']];
+// Staff xem hàng đợi / lịch sử đơn
 export default function StaffOrdersPage({ history = false }) {
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState({ items: [], total: 0, counts: {} });

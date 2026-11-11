@@ -3,7 +3,7 @@ import '../../styles/order-filter-tabs.css';
 import Icon from '../common/Icon';
 import { ORDER_TABS } from '../../utils/orderMeta';
 
-// Tab lọc theo trạng thái. counts = { all, preparing, ... } lấy từ API.
+// Tab lọc đơn theo trạng thái (kèm số lượng)
 export default function OrderFilterTabs({ active, counts, onChange }) {
   return (
     <div className="otabs">

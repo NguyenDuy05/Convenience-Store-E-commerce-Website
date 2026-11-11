@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Loading from '../components/common/Loading';
 
-// Chỉ cho vào khi đã đăng nhập và đúng role: <ProtectedRoute roles={['admin']}>...</ProtectedRoute>
+// Chặn trang khi chưa đăng nhập hoặc sai vai trò
 export default function ProtectedRoute({ roles, children }) {
   const { user, loading } = useAuth();
   const location = useLocation();

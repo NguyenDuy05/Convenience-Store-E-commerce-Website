@@ -1,19 +1,19 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
+// Lấy JWT từ header Authorization: Bearer <token>
 function readToken(req) {
   const header = req.headers.authorization || '';
   return header.startsWith('Bearer ') ? header.slice(7) : null;
 }
 
-// Require authentication using the token in the header "Authorization: Bearer <token>".
-// Recheck account status and role in the database on every authenticated request.
+// Bắt buộc đăng nhập: kiểm tra token và tài khoản còn hoạt động, gắn req.user
 async function authenticate(req, res, next) {
   const token = readToken(req);
   if (!token) return res.status(401).json({ message: 'Authentication required' });
   let payload;
   try {
-    payload = jwt.verify(token, process.env.JWT_SECRET); // { id, role }
+    payload = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
@@ -27,7 +27,7 @@ async function authenticate(req, res, next) {
   }
 }
 
-// Optional authentication: attach req.user when a valid token is provided
+// Đăng nhập tùy chọn: có token hợp lệ thì gắn req.user, không có vẫn cho qua
 async function optionalAuth(req, res, next) {
   const token = readToken(req);
   if (token) {
@@ -41,7 +41,7 @@ async function optionalAuth(req, res, next) {
   next();
 }
 
-// Authorize by role, for example: authorize('admin', 'staff')
+// Chỉ cho các vai trò được liệt kê, vd authorize("admin", "staff")
 const authorize = (...roles) => (req, res, next) =>
   roles.includes(req.user.role) ? next() : res.status(403).json({ message: 'Access denied' });
 

@@ -8,13 +8,16 @@ import '../../styles/admin-transactions.css';
 const LIMIT = 10;
 const STATUS_LABEL = { pending: "Pending", success: "Successful", failed: "Failed", refunded: "Refunded" };
 const METHOD_LABEL = { cash: "Cash", card: "Card", vnpay: 'VNPay', wallet: 'Wallet' };
+// Định dạng ngày giờ
 const dt = (d) => (d ? new Date(d).toLocaleString('en-GB') : '—');
 const EMPTY = { q: '', status: '', method: '', from: '', to: '' };
 
+// Nhãn trạng thái giao dịch
 const Badge = ({ status }) => <span className={`atx-chip ${status}`}>{STATUS_LABEL[status] || status}</span>;
+// Một dòng thông tin trong chi tiết giao dịch
 const Row = ({ k, v }) => <div className="atx-row"><span>{k}</span><span>{v}</span></div>;
 
-// Giao diện dùng chung: Admin (UC-35.1, 35.2) và Staff (UC-23.1, 23.2, 23.3). Chỉ đọc.
+// Trang giao dịch dùng chung staff / admin: tìm, lọc, xem chi tiết, in hóa đơn
 export default function TransactionManager({ homePath, homeLabel, subtitle }) {
   const [form, setForm] = useState(EMPTY);
   const [filters, setFilters] = useState(EMPTY);

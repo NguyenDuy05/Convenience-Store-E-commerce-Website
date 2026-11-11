@@ -9,6 +9,7 @@ const notifications = require('../services/inAppNotification.service');
 const MAX_LINES = 100;
 const MAX_QTY = 999;
 
+// Dữ liệu khuyến mãi công khai cho khách
 const publicPromo = (p) => ({
   _id: p._id, name: p.name, description: p.description, type: p.type, value: p.value, maxDiscount: p.maxDiscount,
   scope: p.scope, categories: (p.categoryIds || []).map((c) => (c && c.name ? { _id: c._id, name: c.name } : { _id: c })),
@@ -16,7 +17,7 @@ const publicPromo = (p) => ({
   startDate: p.startDate, endDate: p.endDate,
 });
 
-// UC-02.4, 20.1 View Promotions (active promotions within their date range; read only)
+// UC-02.4/20.1 Xem các khuyến mãi đang chạy
 exports.listPromotions = asyncHandler(async (req, res) => {
   const q = (req.query.q || '').toString().trim();
   if (q.length > 100) throw new ApiError(400, 'Search must not exceed 100 characters');
@@ -29,15 +30,13 @@ exports.listPromotions = asyncHandler(async (req, res) => {
   res.json({ items: items.map(publicPromo), total: items.length });
 });
 
-// UC-20.2 Apply Promotion: validate eligibility and calculate discounts using database prices.
-// Preview only; counter checkout (UC-22) evaluates the promotion again before saving the order.
+// UC-20.2 Staff tính thử khuyến mãi cho hóa đơn (chỉ xem trước, không lưu)
 exports.applyPromotion = asyncHandler(async (req, res) => {
   const { promotionId, items } = req.body || {};
   if (!mongoose.isValidObjectId(promotionId)) throw new ApiError(400, 'Select a valid promotion');
   if (!Array.isArray(items) || items.length === 0) throw new ApiError(400, 'The order has no items');
   if (items.length > MAX_LINES) throw new ApiError(400, `An order can contain at most ${MAX_LINES} product lines`);
 
-  // Combine duplicate lines and validate quantities
   const qtyById = new Map();
   for (const it of items) {
     const qty = Number(it?.quantity);
@@ -77,9 +76,12 @@ exports.applyPromotion = asyncHandler(async (req, res) => {
 });
 const MANAGED_STATUSES = ['inactive', 'active', 'suspended', 'deleted'];
 const EDITABLE_FIELDS = ['name', 'description', 'type', 'value', 'maxDiscount', 'scope', 'categoryIds', 'productIds', 'startDate', 'endDate'];
+// Kiểm tra ObjectId hợp lệ
 const validId = (id) => typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Kiểm tra dữ liệu khuyến mãi (loại, giá trị, phạm vi, thời gian)
 async function readPromotion(body) {
   if (typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 120)
     throw new ApiError(400, 'Name is required and must not exceed 120 characters');
@@ -122,6 +124,7 @@ async function readPromotion(body) {
     productIds: scope === 'product' ? products : [], startDate, endDate };
 }
 
+// Lấy khuyến mãi chưa bị xóa theo id (404 nếu không có)
 async function loadManaged(id) {
   if (!validId(id)) throw new ApiError(404, 'Promotion not found');
   const promotion = await Promotion.findOne({ _id: id, status: { $ne: 'deleted' } }).lean();
@@ -129,8 +132,8 @@ async function loadManaged(id) {
   return promotion;
 }
 
+// Lưu khuyến mãi và ghi nhật ký
 async function saveManaged(req, current, fields, action) {
-  // Compare-and-swap prevents concurrent administrators from overwriting this operation.
   const promotion = await Promotion.findOneAndUpdate(
     { _id: current._id, __v: current.__v, status: current.status },
     { $set: fields, $inc: { __v: 1 } }, { new: true, runValidators: true },
@@ -141,6 +144,7 @@ async function saveManaged(req, current, fields, action) {
   return promotion;
 }
 
+// UC-37.1 Admin xem tất cả khuyến mãi
 exports.listAllPromotions = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -160,6 +164,7 @@ exports.listAllPromotions = asyncHandler(async (req, res) => {
   res.json({ items, total, page, limit });
 });
 
+// UC-37.2 Tạo khuyến mãi
 exports.createPromotion = asyncHandler(async (req, res) => {
   const fields = await readPromotion(req.body || {});
   if (fields.endDate <= new Date()) throw new ApiError(400, 'A new promotion must end in the future');
@@ -168,19 +173,20 @@ exports.createPromotion = asyncHandler(async (req, res) => {
   res.status(201).json(promotion);
 });
 
+// UC-37.3 Sửa khuyến mãi
 exports.updatePromotion = asyncHandler(async (req, res) => {
   const current = await loadManaged(req.params.id);
   if (!EDITABLE_FIELDS.some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key)))
     throw new ApiError(400, 'Provide at least one editable promotion field');
   const merged = { ...current };
   for (const key of EDITABLE_FIELDS) if (Object.prototype.hasOwnProperty.call(req.body || {}, key)) merged[key] = req.body[key];
-  // MongoDB returns ObjectIds; normalize existing references before validating a partial update.
   for (const key of ['categoryIds', 'productIds']) if (!Object.prototype.hasOwnProperty.call(req.body || {}, key)) merged[key] = (current[key] || []).map(String);
   const fields = await readPromotion(merged);
   if (fields.endDate <= new Date()) throw new ApiError(400, 'Updated promotions must end in the future');
   res.json(await saveManaged(req, current, fields, 'PROMOTION_UPDATE'));
 });
 
+// UC-37.4 Kích hoạt khuyến mãi
 exports.activatePromotion = asyncHandler(async (req, res) => {
   const current = await loadManaged(req.params.id);
   if (current.endDate <= new Date()) throw new ApiError(409, 'Expired promotions cannot be activated. Update the dates first.');
@@ -191,12 +197,14 @@ exports.activatePromotion = asyncHandler(async (req, res) => {
   res.json(promotion);
 });
 
+// UC-37.5 Tạm ngưng khuyến mãi
 exports.suspendPromotion = asyncHandler(async (req, res) => {
   const current = await loadManaged(req.params.id);
   if (current.status !== 'active') throw new ApiError(409, 'Only active promotions can be suspended');
   res.json(await saveManaged(req, current, { status: 'suspended' }, 'PROMOTION_SUSPEND'));
 });
 
+// UC-37.6 Xóa mềm khuyến mãi
 exports.deletePromotion = asyncHandler(async (req, res) => {
   const current = await loadManaged(req.params.id);
   res.json(await saveManaged(req, current, { status: 'deleted' }, 'PROMOTION_DELETE'));

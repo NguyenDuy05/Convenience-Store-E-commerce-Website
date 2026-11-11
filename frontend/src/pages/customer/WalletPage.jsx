@@ -6,6 +6,7 @@ import Icon from '../../components/common/Icon';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import '../../styles/wallet.css';
 
+// Ví của khách: số dư và lịch sử cộng / trừ
 export default function WalletPage() {
   const [data, setData] = useState(null);
   const [page, setPage] = useState(1);

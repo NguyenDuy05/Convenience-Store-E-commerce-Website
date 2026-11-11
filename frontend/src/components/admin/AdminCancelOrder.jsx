@@ -8,7 +8,7 @@ import { formatCurrency, formatDateTime } from '../../utils/format';
 
 const CANCELLABLE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 
-// Admin hủy đơn chưa hoàn tất. Đơn đã thanh toán sẽ được ghi hoàn tiền (xem ở Admin > Refunds).
+// Nút + hộp hủy đơn cho staff/admin (chọn lý do; đơn đã trả thì hoàn tiền vào ví)
 export default function AdminCancelOrder({ order, onChanged, onAuthError = async () => false, cancelFn = cancelOrder }) {
   const [open, setOpen] = useState(false);
   const [pick, setPick] = useState({ choice: '', other: '' });

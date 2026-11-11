@@ -6,7 +6,7 @@ import { ConfirmDialog, PriceDialog } from '../../components/admin/products/Prod
 import { categoryName, errMsg, mealLabel, shortDate, stockState, vnd } from '../../components/admin/products/productUtils';
 import { activateProduct, deactivateProduct, deleteProduct, getProduct, updateProductPrice } from '../../api/product.api';
 
-// UC-32.3 View Product Details (+ nút Edit, Update price, Activate/Deactivate, Delete)
+// Trạng thái của một lô (còn hạn / sắp hết hạn / hết hạn)
 function batchState(b) {
     if (!b.expiryDate) return { key: 'active', label: 'No expiry' };
     const days = Math.ceil((new Date(b.expiryDate) - Date.now()) / 86400000);
@@ -15,6 +15,7 @@ function batchState(b) {
     return { key: 'active', label: `${days}d left` };
 }
 
+// UC-32.3 Chi tiết sản phẩm: lô hàng, lịch sử giá, sửa / đổi giá / bật tắt / xóa
 export default function AdminProductDetailPage() {
     const { base, isStaff } = useProductBase();
     const { id } = useParams();

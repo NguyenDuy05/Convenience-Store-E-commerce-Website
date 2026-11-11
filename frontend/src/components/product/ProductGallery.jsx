@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '../common/Icon';
 
-// Ảnh sản phẩm: ảnh lớn + dải ảnh nhỏ để chọn. Chưa có ảnh thì hiện khung giữ chỗ.
+// Ảnh sản phẩm: ảnh lớn + dải ảnh nhỏ
 export default function ProductGallery({ images = [], name }) {
     const [active, setActive] = useState(0);
     useEffect(() => { setActive(0); }, [images.join('|')]);

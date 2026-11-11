@@ -1,6 +1,6 @@
 const { Counter } = require('../models');
 
-// Tạo mã đơn dạng CM-20261015-0001 (reset số thứ tự mỗi ngày)
+// Sinh mã đơn CM-YYYYMMDD-0001 (đếm lại mỗi ngày)
 exports.generateOrderCode = async () => {
   const d = new Date();
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;

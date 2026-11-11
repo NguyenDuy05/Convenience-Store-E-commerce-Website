@@ -1,4 +1,4 @@
-// Dòng hàng trả về: snapshot trong đơn + ảnh/đơn vị lấy từ Product (đơn cũ vẫn đúng giá, tên)
+// Dòng hàng trả về: giá, tên đã chốt trong đơn + ảnh, đơn vị lấy từ sản phẩm
 exports.toItem = (it) => {
   const product = it.productId && it.productId._id ? it.productId : null;
   return {

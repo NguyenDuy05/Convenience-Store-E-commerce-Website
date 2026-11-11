@@ -6,11 +6,15 @@ import useAuth from '../../hooks/useAuth';
 import { getMyMembership, getMyPointHistory } from '../../api/membership.api';
 import '../../styles/membership.css';
 
+// Định dạng ngày giờ
 const formatDateTime = (value) => value ? new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+// Định dạng số
 const number = (value) => new Intl.NumberFormat('en-US').format(value ?? 0);
 const types = { earn: 'Earned', redeem: 'Redeemed', adjust: 'Adjustment' };
+// Lấy thông báo lỗi từ response API
 const messageOf = (error) => error.response?.data?.message || 'Unable to load data. Please try again.';
 
+// UC-12 Trang thành viên: điểm, hạng, lịch sử điểm
 export default function MembershipPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +42,6 @@ export default function MembershipPage() {
     setHistoryStatus({ loading: true, error: '' });
     getMyPointHistory({ page, limit, type }).then(({ data }) => {
       if (!current) return;
-      // A transaction may disappear while this page is open. Return to the last available page.
       if (page > Math.max(1, data.pages)) { setPage(Math.max(1, data.pages)); return; }
       setHistory(data); setHistoryStatus({ loading: false, error: '' });
     }).catch((error) => { if (current) setHistoryStatus({ loading: false, error: messageOf(error) }); });

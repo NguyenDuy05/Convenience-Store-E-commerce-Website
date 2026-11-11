@@ -7,6 +7,7 @@ import '../../styles/my-reviews.css';
 import StoreReviewForm from '../../components/product/StoreReviewForm';
 
 const RATING_LABELS = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+// Chọn số sao
 function RatingInput({ name, value, disabled, onChange }) {
   return <fieldset className="my-review-rating" disabled={disabled}>
     <legend>Your rating</legend>
@@ -17,8 +18,10 @@ function RatingInput({ name, value, disabled, onChange }) {
   </fieldset>;
 }
 
+// Lấy thông báo lỗi từ response API
 const messageOf = (error) => error.response?.data?.message || 'Unable to load reviews. Please try again.';
 
+// UC-11 Khách đánh giá món đã nhận, sửa / xóa đánh giá của mình
 export default function MyReviewsPage() {
   const [eligible, setEligible] = useState([]);
   const [reviews, setReviews] = useState([]);

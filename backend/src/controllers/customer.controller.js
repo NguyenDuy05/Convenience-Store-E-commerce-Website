@@ -6,23 +6,22 @@ const { maskEmail, maskPhone } = require('../utils/mask');
 const { logActivity } = require('../services/activity.service');
 
 const OPEN = ['open', 'in_progress'];
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Nhân viên chỉ thấy thông tin liên hệ đã che bớt (UC-19: "chỉ các trường tối thiểu, che dữ liệu nhạy cảm không cần cho công việc").
-// Admin (cùng endpoint, dùng cho UC-28) thấy đầy đủ email/số điện thoại. Địa chỉ, mật khẩu, thông tin đăng nhập không bao giờ trả ra.
+// Thông tin liên hệ theo vai trò: admin thấy đầy đủ, staff thấy đã che bớt
 const contact = (u, role) => (role === 'admin'
   ? { email: u.email, phone: u.phone || null, masked: false }
   : { email: maskEmail(u.email), phone: maskPhone(u.phone), masked: true });
 
+// Lấy tên hạng thành viên của danh sách khách
 const tierNames = async (users) => {
   const ids = [...new Set(users.map((u) => u.membership?.tierId).filter(Boolean).map(String))];
   const tiers = ids.length ? await MembershipTier.find({ _id: { $in: ids } }).select('name').lean() : [];
   return new Map(tiers.map((t) => [String(t._id), t.name]));
 };
 
-// UC-19.1 View Customers (staff). Catalog tài liệu ghi UC-19.x; code cũ ghi UC-20.x.
-// GET /api/customers?q=&status=active|locked&hasComplaint=1&sort=newest|name&page=&limit=
-// Chỉ xem, không sửa dữ liệu khách (POST-3). Tài khoản đã xóa không hiện.
+// UC-19.1 Xem / tìm danh sách khách hàng (staff thấy liên hệ đã che)
 exports.listCustomers = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
@@ -71,9 +70,7 @@ exports.listCustomers = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.2 View Customer Details (staff)
-// GET /api/customers/:id  Thông tin tối thiểu + tóm tắt đơn hàng và khiếu nại để hỗ trợ khách. Có ghi nhật ký truy cập.
-// Khách không tồn tại, đã xóa hoặc không phải khách hàng đều trả 404 giống nhau (không lộ bản ghi - E4).
+// UC-19.2 Xem chi tiết khách: thông tin, hạng, tóm tắt đơn hàng và khiếu nại
 exports.getCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, "Customer not found");
@@ -113,6 +110,7 @@ exports.getCustomer = asyncHandler(async (req, res) => {
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const IN_PROGRESS = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 
+// Lấy khách hàng chưa bị xóa theo id (404 nếu không có)
 async function loadCustomerOr404(id, { allowLocked = true } = {}) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Customer not found');
   const u = await User.findOne({ _id: id, role: 'customer', status: { $ne: 'deleted' } });
@@ -121,12 +119,13 @@ async function loadCustomerOr404(id, { allowLocked = true } = {}) {
   return u;
 }
 
+// Dữ liệu khách trả về cho admin sau khi sửa / mở khóa
 const adminView = (u) => ({
   _id: u._id, fullName: u.fullName, email: u.email, phone: u.phone || null, status: u.status,
   lockedUntil: u.lockedUntil || null, joinedAt: u.createdAt,
 });
 
-// UC-29.4 Update Customer (Admin): họ tên, số điện thoại. Email không đổi được (là tên đăng nhập).
+// UC-29.4 Admin sửa họ tên, số điện thoại của khách
 exports.updateCustomer = asyncHandler(async (req, res) => {
   const u = await loadCustomerOr404(req.params.id);
   const { fullName, phone } = req.body || {};
@@ -142,7 +141,7 @@ exports.updateCustomer = asyncHandler(async (req, res) => {
   res.json(adminView(u));
 });
 
-// UC-29.5 Unlock Customer Account (Admin): mở khóa tài khoản bị khóa (admin khóa hoặc khóa tạm do nhập sai mật khẩu)
+// UC-29.5 Admin mở khóa tài khoản khách
 exports.unlockCustomer = asyncHandler(async (req, res) => {
   const u = await loadCustomerOr404(req.params.id);
   const tempLocked = u.lockedUntil && u.lockedUntil > new Date();
@@ -155,7 +154,7 @@ exports.unlockCustomer = asyncHandler(async (req, res) => {
   res.json(adminView(u));
 });
 
-// UC-29.6 Delete Customer Account (Admin): xóa mềm để đơn hàng cũ vẫn còn tham chiếu. Không xóa khi còn đơn đang xử lý.
+// UC-29.6 Admin xóa mềm tài khoản khách (không xóa khi còn đơn đang xử lý)
 exports.deleteCustomer = asyncHandler(async (req, res) => {
   const u = await loadCustomerOr404(req.params.id);
   const open = await Order.countDocuments({ customerId: u._id, status: { $in: IN_PROGRESS } });
@@ -166,24 +165,22 @@ exports.deleteCustomer = asyncHandler(async (req, res) => {
   res.json({ message: 'Customer account deleted' });
 });
 
-// ===== Đăng ký thành viên tại quầy (staff/admin) =====
-// Khách mua tại quầy chưa có tài khoản: staff tạo thành viên để tích điểm.
-// Bắt buộc họ tên + EMAIL (để khách nhận link tự đặt mật khẩu, đăng nhập web/app và lấy lại mật khẩu); số điện thoại tùy chọn.
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { memberCode, memberIdFromCode } = require('../utils/memberCode');
 const { sendSetPasswordInvite } = require('../services/memberInvite.service');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Chuẩn hóa số điện thoại: bỏ khoảng trắng/chấm/gạch, +84/84 -> 0
+// Chuẩn hóa số điện thoại: bỏ khoảng trắng/dấu, +84 → 0
 const normPhone = (v) => {
   const d = String(v || '').trim().replace(/[\s.-]/g, '');
   if (!d) return '';
   return d.replace(/^\+?84/, '0');
 };
+// Các cách viết của cùng một số điện thoại (0…, +84…, 84…) để tìm kiếm
 const phoneVariants = (p) => [p, p.replace(/^0/, '+84'), p.replace(/^0/, '84')];
 
-// Thông tin tối thiểu staff cần ở quầy (che bớt liên hệ với staff)
+// Thông tin thành viên tối thiểu staff cần ở quầy (mã, hạng, điểm, liên hệ đã che)
 const memberCard = async (u, role) => {
   const tiers = await tierNames([u]);
   return {
@@ -195,7 +192,7 @@ const memberCard = async (u, role) => {
   };
 };
 
-// POST /api/customers/members  body: { fullName, email, phone? }
+// Đăng ký thành viên tại quầy: họ tên + email (bắt buộc), SĐT tùy chọn; gửi email mời đặt mật khẩu
 exports.registerMember = asyncHandler(async (req, res) => {
   const body = req.body || {};
   const fullName = typeof body.fullName === 'string' ? body.fullName.trim().replace(/\s+/g, ' ') : '';
@@ -206,7 +203,6 @@ exports.registerMember = asyncHandler(async (req, res) => {
   if (phone && !PHONE_RE.test(phone)) throw new ApiError(400, 'Phone number is invalid (e.g. 0901234567)');
   if (email && (!EMAIL_RE.test(email) || email.length > 254)) throw new ApiError(400, 'Email address is invalid');
 
-  // Đã là thành viên? Trả lại thẻ thành viên để staff chọn luôn thay vì tạo trùng
   const or = [...(email ? [{ email }] : []), ...(phone ? [{ phone: { $in: phoneVariants(phone) } }] : [])];
   const existing = await User.findOne({ $or: or, status: { $ne: 'deleted' } }).lean();
   if (existing) {
@@ -220,7 +216,7 @@ exports.registerMember = asyncHandler(async (req, res) => {
   try {
     user = await User.create({
       role: 'customer', fullName, ...(email ? { email } : {}), ...(phone ? { phone } : {}),
-      passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),   // khách tự đặt mật khẩu qua email
+      passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),
       signupChannel: 'counter', registeredBy: req.user.id,
       membership: tier ? { tierId: tier._id } : undefined,
     });
@@ -234,7 +230,7 @@ exports.registerMember = asyncHandler(async (req, res) => {
   res.status(201).json({ member: await memberCard(user.toObject(), req.user.role), invited });
 });
 
-// GET /api/customers/members/lookup?q=  (số điện thoại, email hoặc mã thành viên QUICK-...) -> { member }
+// Tìm thành viên ở quầy theo SĐT, email hoặc mã thành viên
 exports.findMember = asyncHandler(async (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   if (q.length < 3 || q.length > 254) throw new ApiError(400, 'Enter a phone number, email or member code');

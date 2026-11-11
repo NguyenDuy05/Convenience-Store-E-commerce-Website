@@ -7,15 +7,16 @@ import { MEAL_TYPES, errMsg, vnd } from '../../components/admin/products/product
 import { createProduct, getProduct, updateProduct } from '../../api/product.api';
 import { listCategories } from '../../api/category.api';
 
-// UC-32.4 Add Product (/admin/products/new) và UC-32.5 Update Product (/admin/products/:id/edit)
 const EMPTY = { name: '', sku: '', barcode: '', categoryId: '', mealType: '', unit: 'cái', description: '', price: '', lowStockThreshold: '10', status: 'active', images: [''] };
 const UNITS = ['cái', 'gói', 'chai', 'lon', 'hộp', 'ly', 'phần', 'kg'];
 
+// Tự tạo SKU từ tên sản phẩm
 const autoSku = (name) => {
     const letters = String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'D').toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 3) || 'SP';
     return `${letters}-${String(Date.now()).slice(-5)}`;
 };
 
+// Kiểm tra form sản phẩm
 function validate(f) {
     const e = {};
     if (!f.name.trim()) e.name = 'Product name is required';
@@ -29,6 +30,7 @@ function validate(f) {
     return e;
 }
 
+// Form thêm / sửa sản phẩm (dùng chung admin / staff)
 export default function AdminProductFormPage() {
     const { base } = useProductBase();
     const { id } = useParams();

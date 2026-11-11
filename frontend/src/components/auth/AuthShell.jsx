@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import '../../styles/auth.css';
 
+// Icon Material Symbols của trang đăng nhập
 export function Icon({ name, size = '' }) {
     return <span className={`auth-icon ${size}`} aria-hidden="true">{name}</span>;
 }
@@ -11,7 +12,7 @@ const perks = [
     { icon: 'loyalty', color: 'gold', title: 'Member rewards', desc: 'Earn points on every purchase' },
 ];
 
-// Khung chung cho Login / Register / Forgot / Reset. active = 'login' | 'register' | null (null = ẩn tab)
+// Khung chung cho trang đăng nhập / đăng ký / quên mật khẩu
 export default function AuthShell({ active = null, children }) {
     return (
         <div className="auth-page">

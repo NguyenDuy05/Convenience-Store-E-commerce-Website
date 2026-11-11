@@ -5,8 +5,10 @@ import { Badge, Confirm, Notice, Pager, STATUS_TONE, Tabs, d, dt, useAction, use
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const TABS = [{ key: '', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'locked', label: 'Locked' }];
+// Đổi ngày sang dạng YYYY-MM-DD cho ô chọn ngày
 const toDateInput = (v) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 
+// Form thêm / sửa nhân viên
 function StaffEditor({ staff, busy, error, onSave, onCancel }) {
   const editing = !!staff;
   const [f, setF] = useState({
@@ -43,6 +45,7 @@ function StaffEditor({ staff, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// Nhật ký thao tác của một nhân viên
 function Activity({ staff, onClose }) {
   const [page, setPage] = useState(1);
   const { data, loading, error } = useFetch((p) => getStaffActivity(staff._id, p), { page, limit: 10 });
@@ -57,12 +60,13 @@ function Activity({ staff, onClose }) {
   </section>;
 }
 
+// UC-30 Admin quản lý nhân viên
 export default function AdminStaffPage() {
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [panel, setPanel] = useState(null); // { type: 'add'|'edit'|'lock'|'unlock'|'activity', staff }
+  const [panel, setPanel] = useState(null);
   const { data, loading, error, reload } = useFetch(listStaff, { status: status || undefined, q: q || undefined, page, limit: 10 });
   const act = useAction(reload);
   const items = data?.items || [];

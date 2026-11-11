@@ -4,22 +4,26 @@ import { listStaff } from '../../api/staff.api';
 import { Badge, Confirm, Notice, Stat, d, dt, useAction, useFetch } from '../../components/admin/kit';
 import '../../styles/admin-shifts.css';
 
-// Admin › Work Shifts: admin MỞ CA (ngày, giờ, số người cần); nhân viên tự vào trang Staff › Work shifts để nhận ca.
-// Trang này cho xem ca nào đủ / thiếu người, ai đã nhận, chấm công (vào/ra ca, trễ, về sớm, vắng),
-// gỡ nhân viên khỏi ca chưa bắt đầu và chốt ca khi nhân viên quên ra ca.
 const STATUS = { scheduled: ['Upcoming', 'muted'], in_progress: ['In progress', 'warn'], completed: ['Completed', 'ok'], missed: ['Missed', 'bad'] };
-// Ca 8 tiếng + ca 4 tiếng (cho nhân viên chỉ làm được nửa ca)
 const PRESETS = [['Morning', '06:00', '14:00'], ['Afternoon', '14:00', '22:00'], ['Night', '22:00', '06:00']];
 const HALF_PRESETS = [['06–10', '06:00', '10:00'], ['10–14', '10:00', '14:00'], ['14–18', '14:00', '18:00'], ['18–22', '18:00', '22:00'], ['22–02', '22:00', '02:00'], ['02–06', '02:00', '06:00']];
+// Định dạng tiền VND
 const vnd = (v) => `${Math.round(v || 0).toLocaleString('vi-VN')} ₫`;
 const WEEKDAYS = [['Mon', 1], ['Tue', 2], ['Wed', 3], ['Thu', 4], ['Fri', 5], ['Sat', 6], ['Sun', 0]];
+// Thêm số 0 phía trước (5 → "05")
 const pad = (n) => String(n).padStart(2, '0');
+// Đổi Date thành "YYYY-MM-DD"
 const ymd = (x) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+// Cộng thêm n ngày
 const addDays = (x, n) => { const r = new Date(x); r.setDate(r.getDate() + n); return r; };
+// Thứ Hai đầu tuần của một ngày
 const mondayOf = (x) => { const r = new Date(x); r.setHours(0, 0, 0, 0); r.setDate(r.getDate() - ((r.getDay() + 6) % 7)); return r; };
+// Đổi số phút thành giờ (vd "7.5 h")
 const hours = (min) => `${(Math.round((min || 0) / 6) / 10).toLocaleString('en-US')} h`;
+// Định dạng giờ:phút
 const time = (v) => (v ? new Date(v).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—');
 
+// Các ngày trong khoảng thuộc những thứ đã chọn
 function datesBetween(from, to, days) {
   if (!from || !to) return [];
   const out = [];
@@ -27,7 +31,7 @@ function datesBetween(from, to, days) {
   return out;
 }
 
-// Mở ca trống cho nhiều ngày cùng lúc (không gán nhân viên)
+// Form mở ca trống cho nhiều ngày (giờ, số người cần, ghi chú)
 function SlotCreator({ busy, error, onSave, onCancel, weekStart }) {
   const today = ymd(new Date());
   const start = ymd(weekStart) < today ? today : ymd(weekStart);
@@ -70,6 +74,7 @@ function SlotCreator({ busy, error, onSave, onCancel, weekStart }) {
   </section>;
 }
 
+// Form sửa ca trống
 function SlotEditor({ slot, busy, error, onSave, onCancel }) {
   const [f, setF] = useState({ capacity: slot.capacity, note: slot.note || '', startTime: slot.startTime, endTime: slot.endTime });
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -90,10 +95,11 @@ function SlotEditor({ slot, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// Admin quản lý ca làm: lịch tuần, ai đã nhận, chấm công, lương
 export default function AdminWorkShiftsPage() {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [staffId, setStaffId] = useState(''), [status, setStatus] = useState('');
-  const [panel, setPanel] = useState(null);   // { type: 'new' } | { type: 'edit'|'deleteSlot', slot } | { type: 'remove'|'close', shift }
+  const [panel, setPanel] = useState(null);
   const range = useMemo(() => ({ from: ymd(weekStart), to: ymd(addDays(weekStart, 6)) }), [weekStart]);
   const slotsQ = useFetch(listSlots, range);
   const shiftsQ = useFetch(listShifts, { ...range, staffId: staffId || undefined, status: status || undefined, limit: 200 });

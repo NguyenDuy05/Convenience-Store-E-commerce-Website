@@ -1,25 +1,25 @@
 import api from './axios';
 
-// UC-02.1/02.3, 18.1/18.2, 32.1/32.2 View / Search Products
+// Gọi API: xem / tìm sản phẩm
 export const listProducts = (params) => api.get(`/products`, { params });
 
-// UC-02.2, 18.3, 32.3 View Product Details
+// Gọi API: chi tiết sản phẩm
 export const getProduct = (id, params) => api.get(`/products/${id}`, { params });
 
-// UC-18.4, 32.4 Add Product
+// Gọi API: thêm sản phẩm
 export const createProduct = (data) => api.post(`/products`, data);
 
-// UC-18.5, 32.5 Update Product
+// Gọi API: sửa sản phẩm
 export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
 
-// UC-32.6 Update Product Price
+// Gọi API: đổi giá (UC-32.6)
 export const updateProductPrice = (id, data) => api.patch(`/products/${id}/price`, data);
 
-// UC-32.8 Activate Product
+// Gọi API: bật bán sản phẩm
 export const activateProduct = (id, data) => api.patch(`/products/${id}/activate`, data);
 
-// UC-32.9 Deactivate Product
+// Gọi API: tắt bán sản phẩm
 export const deactivateProduct = (id, data) => api.patch(`/products/${id}/deactivate`, data);
 
-// UC-18.6, 32.7 Delete Product
+// Gọi API: xóa sản phẩm
 export const deleteProduct = (id) => api.delete(`/products/${id}`);

@@ -1,10 +1,5 @@
-/* Giao diện Đăng nhập / Đăng ký: ảnh nền + form kính mờ bên phải.
-   Mọi class đều bắt đầu bằng "auth-" nên không đụng CSS của trang khác. */
-
-/* Ảnh nền: frontend/public/auth_background.png; dùng gradient nếu thiếu ảnh. */
 .auth-page {
     --auth-nav-h: 58px;
-    /* chiều cao NavBar, chỉnh nếu NavBar cao/thấp hơn */
     --a-primary: #0058bc;
     --a-primary-container: #1c71e4;
     --a-primary-dark: #004494;
@@ -19,7 +14,6 @@
     --a-error-container: #ffdad6;
     --a-on-error-container: #93000a;
 
-    /* thoát khỏi khung .container để ảnh nền phủ kín chiều ngang, bù lại padding 24px của container */
     position: relative;
     width: 100vw;
     margin: -24px 0 -24px calc(50% - 50vw);
@@ -32,7 +26,6 @@
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--a-text);
 
-    /* Lớp trên cùng là ảnh; nếu thiếu file thì hiện gradient. */
     background-color: #0b3d91;
     background-image: url('/auth_background.png'), linear-gradient(135deg, #0b3d91, #1c71e4 55%, #3b9b3b);
     background-size: cover, cover;
@@ -40,19 +33,16 @@
     background-repeat: no-repeat;
 }
 
-/* 100vw tính cả thanh cuộn nên chặn cuộn ngang */
 body:has(.auth-page) {
     overflow-x: hidden;
 }
 
-/* Lớp phủ tối dần từ trái sang phải để chữ trắng bên trái dễ đọc */
 .auth-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(5, 25, 70, .70) 0%, rgba(5, 25, 70, .35) 55%, rgba(5, 25, 70, .10) 100%);
 }
 
-/* Bố cục 2 cột: giới thiệu | form */
 .auth-layout {
     position: relative;
     z-index: 1;
@@ -86,7 +76,6 @@ body:has(.auth-page) {
     }
 }
 
-/* ---------- Bên trái: giới thiệu ---------- */
 .auth-hero {
     color: #fff;
 }
@@ -191,7 +180,6 @@ body:has(.auth-page) {
     color: rgba(255, 255, 255, .8);
 }
 
-/* ---------- Bên phải: thẻ form kính mờ ---------- */
 .auth-panel {
     width: 100%;
     max-width: 480px;
@@ -212,11 +200,9 @@ body:has(.auth-page) {
     padding: 32px;
     border-radius: 20px;
     background: rgba(255, 255, 255, .78);
-    /* trắng mờ */
     border: 1px solid rgba(255, 255, 255, .65);
     box-shadow: 0 24px 60px rgba(0, 20, 60, .35);
     backdrop-filter: blur(18px) saturate(140%);
-    /* làm mờ ảnh phía sau */
     -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
@@ -250,7 +236,6 @@ body:has(.auth-page) {
     color: var(--a-secondary-container);
 }
 
-/* Icon */
 .auth-icon {
     font-family: 'Material Symbols Outlined';
     font-weight: 400;
@@ -276,7 +261,6 @@ body:has(.auth-page) {
     font-size: 24px;
 }
 
-/* Tab */
 .auth-tabs {
     display: flex;
     padding: 4px;
@@ -306,7 +290,6 @@ body:has(.auth-page) {
     box-shadow: 0 1px 4px rgba(25, 36, 78, .15);
 }
 
-/* Tiêu đề thẻ */
 .auth-head {
     display: flex;
     align-items: center;
@@ -352,7 +335,6 @@ body:has(.auth-page) {
     color: var(--a-text-variant);
 }
 
-/* Form */
 .auth-form {
     display: flex;
     flex-direction: column;
@@ -474,7 +456,6 @@ body:has(.auth-page) {
     color: var(--a-primary-dark);
 }
 
-/* Checkbox điều khoản */
 .auth-check {
     display: flex;
     align-items: flex-start;
@@ -502,7 +483,6 @@ body:has(.auth-page) {
     text-decoration: underline;
 }
 
-/* Nút chính */
 .auth-btn {
     width: 100%;
     height: 48px;
@@ -551,7 +531,6 @@ body:has(.auth-page) {
     }
 }
 
-/* Banner lỗi / thành công */
 .auth-banner {
     display: flex;
     align-items: flex-start;
@@ -601,7 +580,6 @@ body:has(.auth-page) {
     }
 }
 
-/* Chân thẻ */
 .auth-foot {
     margin-top: 24px;
     text-align: center;
@@ -619,7 +597,6 @@ body:has(.auth-page) {
     color: var(--a-primary-dark);
 }
 
-/* ----- Google + liên kết + dòng "or" (thêm cho Google / Forgot Password) ----- */
 .auth-google {
     display: flex;
     justify-content: center;

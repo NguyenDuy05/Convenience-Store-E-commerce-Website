@@ -1,4 +1,3 @@
-// UC-34 Manage Orders (Admin). Catalog tài liệu ghi UC-34.x; code cũ ghi UC-35.x.
 const mongoose = require('mongoose');
 const { Order, User, Transaction, Store, DiscountCode } = require('../models');
 const stockService = require('../services/stock.service');
@@ -21,13 +20,15 @@ const SORTS = {
   total_desc: { totalAmount: -1, _id: -1 },
   total_asc: { totalAmount: 1, _id: -1 },
 };
-// Chuyển trạng thái theo đúng thứ tự xử lý đơn nhận tại cửa hàng
 const NEXT_STATUS = { confirmed: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
 const NOT_FOUND = "Order not found";
 
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Kiểm tra chuỗi có phải ObjectId hợp lệ
 const isId = (v) => mongoose.isValidObjectId(v);
 
+// Đọc ngày từ query; sai định dạng thì báo lỗi 400
 const parseDate = (value, label) => {
   if (value === undefined || value === '') return null;
   const d = new Date(value);
@@ -35,17 +36,17 @@ const parseDate = (value, label) => {
   return d;
 };
 
+// Lấy giá trị query nếu nằm trong danh sách cho phép
 const pick = (value, allowed, label) => {
   if (value === undefined || value === '') return undefined;
   if (!allowed.includes(value)) throw new ApiError(400, `${label} is invalid`);
   return value;
 };
 
+// Đếm số sự cố chưa xử lý của đơn
 const openIssues = (o) => (o.issues || []).filter((i) => i.status === 'open').length;
 
-// UC-34.1 View Orders + UC-34.2 Search Orders
-// GET /api/orders?q=&status=&source=&paymentStatus=&paymentMethod=&from=&to=&hasIssue=1&sort=&page=&limit=
-// q tìm theo: mã đơn, tên/email/số điện thoại khách, tên sản phẩm trong đơn (không phân biệt hoa thường). Các bộ lọc kết hợp bằng AND.
+// UC-34.1/34.2 Admin xem và tìm kiếm đơn (lọc theo trạng thái, nguồn, thanh toán, ngày, có sự cố)
 exports.listOrders = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
@@ -83,7 +84,6 @@ exports.listOrders = asyncHandler(async (req, res) => {
       .limit(limit)
       .lean(),
     Order.countDocuments(filter),
-    // Số đơn theo trạng thái (theo các bộ lọc khác, không theo trạng thái) để hiện trên các tab
     Order.aggregate([{ $match: base }, { $group: { _id: '$status', n: { $sum: 1 } } }]),
     Order.countDocuments({ 'issues.status': 'open' }),
   ]);
@@ -117,15 +117,14 @@ exports.listOrders = asyncHandler(async (req, res) => {
   });
 });
 
-// Điều kiện xem được từng bước chuyển (giao diện dùng để hiện nút)
+// Bước chuyển trạng thái tiếp theo của đơn (và có cần xác nhận đã thu tiền mặt không)
 const allowedTransition = (o) => {
   const next = NEXT_STATUS[o.status];
   if (!next) return null;
   return { to: next, needsCashConfirm: next === 'completed' && o.paymentStatus !== 'paid' && o.paymentMethod === 'cash' };
 };
 
-// UC-34.3 View Order Details
-// GET /api/orders/:id  Toàn bộ thông tin kể cả nội bộ: khách, giao dịch thanh toán, lịch sử trạng thái kèm người thao tác, sự cố.
+// UC-34.3 Admin xem chi tiết đơn: khách, sản phẩm, giao dịch, lịch sử trạng thái, sự cố
 exports.getOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
@@ -181,7 +180,6 @@ exports.getOrder = asyncHandler(async (req, res) => {
       failureReason: t.failureReason || null,
       gateway: t.gateway ? { provider: t.gateway.provider, transactionNo: t.gateway.transactionNo, responseCode: t.gateway.responseCode, bankCode: t.gateway.bankCode } : null,
       processedBy: name(t.processedBy),
-      // Cần quản trị viên rà soát: tiền về sau khi đơn hết hạn, hoặc còn "đang chờ" trên đơn đã đóng (BR-29)
       needsReview: (t.status === 'success' && !!t.failureReason) || (t.status === 'pending' && ['failed', 'completed'].includes(o.status)),
     })),
     issues: (o.issues || []).map((i) => ({
@@ -195,6 +193,7 @@ exports.getOrder = asyncHandler(async (req, res) => {
   });
 });
 
+// Kiểm tra chuỗi bắt buộc có độ dài trong giới hạn
 const text = (v, label, min, max) => {
   const s = typeof v === 'string' ? v.trim() : '';
   if (s.length < min) throw new ApiError(400, `${label} must contain at least ${min} characters`);
@@ -202,9 +201,7 @@ const text = (v, label, min, max) => {
   return s;
 };
 
-// Chuyển trạng thái đơn theo thứ tự confirmed -> preparing -> ready_for_pickup -> completed (không có hủy đơn, BR-24).
-// PATCH /api/orders/:id/status  body: { status, note?, cashCollected? }
-// Đơn tiền mặt chưa thu: khi chuyển "completed" admin phải xác nhận đã thu tiền; hệ thống ghi giao dịch tiền mặt.
+// Chuyển đơn sang bước kế tiếp (confirmed → preparing → ready_for_pickup → completed); đơn tiền mặt phải xác nhận đã thu; hoàn tất thì cộng điểm
 exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
@@ -240,11 +237,9 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
   const updated = await runAtomic(async ({ session, onRollback }) => {
     const opts = session ? { session } : {};
-    // Điều kiện status hiện tại: hai admin bấm cùng lúc thì chỉ một người thành công
     const upd = await Order.findOneAndUpdate({ _id: id, status: o.status }, { $set: set, $push: { statusHistory: entry } }, { new: true, ...opts });
     if (!upd) throw new ApiError(409, "The order status changed. Please refresh and try again.", { code: 'STALE_STATUS' });
     onRollback(() => {
-      // Khôi phục đúng giá trị cũ; trường trước đó chưa có thì gỡ bỏ (không truyền undefined vào $set)
       const back = { status: o.status, paymentStatus: o.paymentStatus };
       const unset = {};
       ['readyAt', 'pickedUpAt', 'paidAt'].forEach((f) => { if (o[f]) back[f] = o[f]; else if (f in set) unset[f] = ''; });
@@ -265,8 +260,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   res.json({ _id: updated._id, status: updated.status, paymentStatus: updated.paymentStatus, readyAt: updated.readyAt, pickedUpAt: updated.pickedUpAt });
 });
 
-// UC-34.4 Handle Order Issue: ghi nhận sự cố của đơn
-// POST /api/orders/:id/issues  body: { description }
+// UC-34.4 Ghi nhận sự cố của đơn
 exports.handleOrderIssue = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
@@ -282,14 +276,12 @@ exports.handleOrderIssue = asyncHandler(async (req, res) => {
   res.status(201).json({ issue: { _id: issue._id, description: issue.description, status: issue.status } });
 });
 
-// UC-34.4 Handle Order Issue: xử lý xong, ghi hướng giải quyết
-// PATCH /api/orders/:id/issues/:issueId  body: { resolution }
+// UC-34.4 Đóng sự cố, ghi hướng xử lý
 exports.resolveOrderIssue = asyncHandler(async (req, res) => {
   const { id, issueId } = req.params;
   if (!isId(id) || !isId(issueId)) throw new ApiError(404, "Issue not found");
   const resolution = text(req.body.resolution, "Resolution", 3, 1000);
   const now = new Date();
-  // Chỉ chuyển được khi sự cố còn "open": bấm lặp hoặc hai admin cùng xử lý không ghi đè nhau
   const o = await Order.findOneAndUpdate(
     { _id: id, 'issues._id': issueId, 'issues.status': 'open' },
     { $set: { 'issues.$.status': 'resolved', 'issues.$.resolution': resolution, 'issues.$.handledBy': req.user.id, 'issues.$.resolvedAt': now } },
@@ -304,9 +296,7 @@ exports.resolveOrderIssue = asyncHandler(async (req, res) => {
   res.json({ issue: { _id: issueId, status: 'resolved', resolution, resolvedAt: now } });
 });
 
-// Admin hủy đơn. POST /api/orders/:id/cancel  body: { reason }
-// Chỉ hủy được đơn chưa hoàn tất. Hoàn kho, đóng giao dịch đang chờ, trả lại lượt dùng mã giảm giá.
-// Đơn đã thanh toán -> ghi bản ghi hoàn tiền (xem ở Manage Refunds).
+// Hủy đơn (khách/staff/admin): kiểm tra quyền và trạng thái, trả kho, trả mã giảm giá, hoàn tiền vào ví
 exports.cancelOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
@@ -335,7 +325,7 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   res.json({ _id: upd._id, status: upd.status, paymentStatus: settled.paymentStatus, refund: settled.refund?.refundedAt ? settled.refund : null });
 });
 
-// View Refund History. GET /api/orders/refunds?q=&from=&to=&page=&limit=
+// Admin xem lịch sử hoàn tiền (lọc theo mã đơn, khoảng ngày)
 exports.listRefunds = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);

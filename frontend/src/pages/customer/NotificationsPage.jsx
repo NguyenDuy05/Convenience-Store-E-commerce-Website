@@ -5,6 +5,7 @@ import { useNotifications, notificationTypes, notificationIcons } from '../../co
 import Icon from '../../components/common/Icon';
 import '../../styles/notifications.css';
 
+// Trang thông báo của người dùng
 export default function NotificationsPage() {
   const { refresh } = useNotifications();
   const navigate = useNavigate();

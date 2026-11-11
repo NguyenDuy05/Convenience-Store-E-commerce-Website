@@ -4,7 +4,7 @@ import Icon from '../common/Icon';
 import { buildTimeline } from '../../utils/orderTimeline';
 import { formatDateTime } from '../../utils/format';
 
-// Timeline dọc các mốc của đơn. Mốc chưa diễn ra hiện mờ; mốc thiếu dữ liệu thời gian ghi rõ thay vì bịa.
+// Timeline các mốc của đơn
 export default function OrderTimeline({ order }) {
   const steps = buildTimeline(order);
   if (steps.length === 0) return <p className="otl-empty">No timeline information is available for this order.</p>;

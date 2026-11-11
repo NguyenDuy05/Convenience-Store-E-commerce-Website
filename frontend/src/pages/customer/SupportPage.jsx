@@ -6,13 +6,16 @@ const COMPLAINT_TYPE = { support: 'Support', complaint: 'Complaint' };
 import '../../styles/support.css';
 
 const emptyForm = { type: 'support', subject: '', message: '' };
+// Định dạng ngày
 const date = (value) => new Date(value).toLocaleString('en-US');
+// Lấy thông báo lỗi từ response API
 const errorMessage = (err) => {
   if (err.response?.status === 401) return 'Your session has expired. Please sign in again.';
   if (err.response?.status === 403) return 'You do not have permission to access this resource.';
   return err.response?.data?.message || 'Unable to connect. Please try again.';
 };
 
+// Khách gửi và xem yêu cầu hỗ trợ / khiếu nại
 export default function SupportPage() {
   const [params, setParams] = useSearchParams();
   const status = params.get('status') || '';

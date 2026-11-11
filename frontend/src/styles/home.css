@@ -1,6 +1,3 @@
-/* Trang chủ: phong cách Corner Aisle (xanh dương, Rubik/Inter, biển treo, kệ hàng).
-   Mọi class bắt đầu bằng "hp-" nên không đụng CSS các trang khác. */
-
 .hp-cart-indicator { position: relative; }
 .hp-cart-count { position: absolute; top: -7px; right: -7px; min-width: 20px; padding: 2px 5px; border: 2px solid white; border-radius: 12px; background: #19244e; color: white; font: 700 10px/14px Inter, sans-serif; text-align: center; }
 @media (max-width: 380px) { .hp.storefront-header .hp-brand > span:last-child { display: none; } }
@@ -77,7 +74,6 @@ body:has(.hp) {
     outline-offset: 3px;
 }
 
-/* Icon */
 .hp-icon {
     font-family: 'Material Symbols Outlined';
     font-weight: 400;
@@ -112,7 +108,6 @@ body:has(.hp) {
     font-size: clamp(110px, 16vw, 190px);
 }
 
-/* Reset nút (thắng CSS button mặc định của dự án) */
 .hp-b {
     all: unset;
     box-sizing: border-box;
@@ -189,12 +184,10 @@ body:has(.hp) {
     font-family: ui-monospace, Consolas, monospace;
 }
 
-/* Trang chủ dùng header riêng nên ẩn NavBar chung (chỉ khi đang ở trang chủ) */
 body:has(.hp) .navbar {
     display: none;
 }
 
-/* ===== Hero ===== */
 .hp-hero {
     padding: 56px 0 56px;
     scroll-margin-top: 0;
@@ -295,7 +288,6 @@ body:has(.hp) .navbar {
     color: var(--on-variant);
 }
 
-/* Khung ảnh hero (để trống) */
 .hp-visual {
     position: relative;
     display: grid;
@@ -409,7 +401,6 @@ body:has(.hp) .navbar {
     box-shadow: 0 10px 24px -8px rgba(12, 24, 66, .45);
 }
 
-/* ===== Lợi ích ===== */
 .hp-perks {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -453,7 +444,6 @@ body:has(.hp) .navbar {
     color: var(--on-variant);
 }
 
-/* ===== Section ===== */
 .hp-section {
     padding: 72px 0;
     scroll-margin-top: calc(var(--hp-head-h) + 8px);
@@ -556,7 +546,6 @@ body:has(.hp) .navbar {
     align-items: center;
 }
 
-/* ===== Khuyến mãi ===== */
 .hp-promos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -615,7 +604,6 @@ body:has(.hp) .navbar {
     color: var(--on-variant);
 }
 
-/* ===== Biển danh mục ===== */
 .hp-signs {
     display: flex;
     flex-wrap: wrap;
@@ -704,7 +692,6 @@ body:has(.hp) .navbar {
     color: #fff;
 }
 
-/* ===== Thanh công cụ ===== */
 .hp-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -799,7 +786,6 @@ body:has(.hp) .navbar {
     color: var(--primary);
 }
 
-/* ===== Lưới + thẻ sản phẩm ===== */
 .hp-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -957,7 +943,6 @@ body:has(.hp) .navbar {
     margin-top: 36px;
 }
 
-/* ===== Cách mua + cửa hàng ===== */
 .hp-how {
     display: grid;
     grid-template-columns: 1.2fr .8fr;
@@ -1031,7 +1016,6 @@ body:has(.hp) .navbar {
     color: rgba(239, 239, 255, .85);
 }
 
-/* ===== Chi tiết sản phẩm (modal) ===== */
 .hp-modal {
     position: fixed;
     inset: 0;
@@ -1259,8 +1243,6 @@ body:has(.hp) .navbar {
     color: var(--primary);
 }
 
-
-/* ===== Header ===== */
 .hp-header {
     position: sticky;
     top: 0;
@@ -1578,7 +1560,6 @@ body:has(.hp) .navbar {
     color: var(--primary);
 }
 
-/* ===== Avatar + menu tài khoản ===== */
 .hp-acct {
     position: relative;
 }
@@ -1663,7 +1644,6 @@ body:has(.hp) .navbar {
     color: #ba1a1a;
 }
 
-/* ===== Footer ===== */
 .hp-footer {
     padding: 56px 0 24px;
     background: #fff;
@@ -1805,7 +1785,6 @@ body:has(.hp) .navbar {
     background: var(--primary-fixed);
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 1100px) {
     .hp-nav {
         display: none;

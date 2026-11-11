@@ -5,6 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { memberCode, memberIdFromCode } = require('../utils/memberCode');
 
+// Lấy khách hàng đang hoạt động theo id
 async function findCustomer(id) {
   const user = await User.findOne({ _id: id, role: 'customer', status: 'active' })
     .select('fullName membership').populate('membership.tierId').lean();
@@ -12,7 +13,7 @@ async function findCustomer(id) {
   return user;
 }
 
-// UC-12.1: Read points and tier for the authenticated customer.
+// UC-12.1 Khách xem điểm và hạng thành viên của mình
 exports.getMyMembership = asyncHandler(async (req, res) => {
   const user = await findCustomer(req.user.id);
   const points = user.membership?.points ?? 0;
@@ -24,7 +25,7 @@ exports.getMyMembership = asyncHandler(async (req, res) => {
     pointsToNextTier: nextTier ? Math.max(0, nextTier.minPoints - lifetimePoints) : 0 });
 });
 
-// UC-12.2: Customer point history, newest first.
+// UC-12.2 Khách xem lịch sử điểm (mới nhất trước)
 exports.getMyPointHistory = asyncHandler(async (req, res) => {
   await findCustomer(req.user.id);
   const page = req.query.page === undefined ? 1 : Number(req.query.page);
@@ -46,7 +47,7 @@ exports.getMyPointHistory = asyncHandler(async (req, res) => {
   res.json({ items, total, page, limit, pages: Math.ceil(total / limit) });
 });
 
-// A member code identifies an account; it does not authorize payment or redemption.
+// Staff tra mã thành viên QUICK-… ra id khách
 exports.lookupMemberCode = asyncHandler(async (req, res) => {
   const id = memberIdFromCode(req.query.code);
   if (!id) throw new ApiError(400, 'Invalid membership code');
@@ -55,16 +56,19 @@ exports.lookupMemberCode = asyncHandler(async (req, res) => {
   res.json({ customerId: String(member._id) });
 });
 
+// Kiểm tra ObjectId hợp lệ
 function validId(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(400, 'Invalid ID');
   return id;
 }
+// Đọc page/limit từ query
 function pagination(query) {
   const page = query.page === undefined ? 1 : Number(query.page);
   const limit = query.limit === undefined ? 10 : Number(query.limit);
   if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(limit) || limit < 1 || limit > 50 || !Number.isSafeInteger((page - 1) * limit)) throw new ApiError(400, 'Invalid pagination');
   return { page, limit };
 }
+// Điều kiện tìm thành viên theo tên / email / SĐT
 function memberFilter(query) {
   const filter = { role: 'customer', status: { $ne: 'deleted' } };
   if (query.q) {
@@ -74,6 +78,7 @@ function memberFilter(query) {
   }
   return filter;
 }
+// UC-39.1/39.2 Admin xem / tìm thành viên
 exports.listMembers = asyncHandler(async (req, res) => {
   const { page, limit } = pagination(req.query);
   const filter = memberFilter(req.query);
@@ -84,12 +89,14 @@ exports.listMembers = asyncHandler(async (req, res) => {
   ]);
   res.json({ items, total, page, limit, pages: Math.ceil(total / limit) });
 });
+// UC-39.3 Admin xem chi tiết thành viên
 exports.getMember = asyncHandler(async (req, res) => {
   const user = await User.findOne({ _id: validId(req.params.id), role: 'customer', status: { $ne: 'deleted' } })
     .select('fullName email phone status membership createdAt').populate('membership.tierId').lean();
   if (!user) throw new ApiError(404, 'Member not found');
   res.json(user);
 });
+// UC-39.4 Danh sách hạng thành viên
 exports.listTiers = asyncHandler(async (req, res) => {
   const [tiers, counts] = await Promise.all([
     MembershipTier.find().sort({ minPoints: 1, sortOrder: 1 }).lean(),
@@ -97,6 +104,7 @@ exports.listTiers = asyncHandler(async (req, res) => {
   ]);
   res.json(tiers.map((tier) => ({ ...tier, memberCount: counts.find((row) => String(row._id) === String(tier._id))?.count || 0 })));
 });
+// Kiểm tra dữ liệu hạng thành viên
 function tierBody(body) {
   const { name, minPoints, discountPercent = 0, description = '', sortOrder = 0 } = body;
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 80) throw new ApiError(400, 'Tier name is required (maximum 80 characters)');
@@ -105,18 +113,20 @@ function tierBody(body) {
   if (typeof description !== 'string' || description.length > 1000 || !Number.isSafeInteger(sortOrder)) throw new ApiError(400, 'Invalid tier description or sort order');
   return { name: name.trim(), minPoints, discountPercent, description: description.trim(), sortOrder };
 }
-// Hai hạng cùng mức điểm tối thiểu sẽ làm việc xếp hạng không rõ ràng
+// Chặn hai hạng có cùng mức điểm tối thiểu
 const assertUniqueMinPoints = async (minPoints, excludeId) => {
   if (await MembershipTier.exists({ minPoints, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
     throw new ApiError(409, 'Another tier already uses this minimum points value');
   }
 };
+// UC-39.4 Thêm hạng thành viên
 exports.createTier = asyncHandler(async (req, res) => {
   const body = tierBody(req.body);
   await assertUniqueMinPoints(body.minPoints);
   const tier = await MembershipTier.create(body);
   res.status(201).json(tier);
 });
+// UC-39.4 Sửa hạng thành viên
 exports.updateTier = asyncHandler(async (req, res) => {
   const id = validId(req.params.id);
   const body = tierBody(req.body);
@@ -125,12 +135,14 @@ exports.updateTier = asyncHandler(async (req, res) => {
   if (!tier) throw new ApiError(404, 'Tier not found');
   res.json(tier);
 });
+// UC-39.4 Xóa hạng thành viên
 exports.deleteTier = asyncHandler(async (req, res) => {
   const id = validId(req.params.id);
   if (await User.exists({ 'membership.tierId': id })) throw new ApiError(409, 'This tier is assigned to members and cannot be deleted');
   if (!await MembershipTier.findByIdAndDelete(id)) throw new ApiError(404, 'Tier not found');
   res.json({ message: 'Tier deleted' });
 });
+// UC-39.5 Admin cộng / trừ điểm (bắt buộc lý do, không để âm)
 exports.adjustPoints = asyncHandler(async (req, res) => {
   const id = validId(req.params.id);
   const { points, reason } = req.body;
@@ -152,6 +164,7 @@ exports.adjustPoints = asyncHandler(async (req, res) => {
   });
   res.json(result);
 });
+// Truy vấn lịch sử điểm dùng chung cho admin
 async function adminHistory(req, res, redemptionOnly = false) {
   const { page, limit } = pagination(req.query);
   const filter = {};
@@ -168,5 +181,7 @@ async function adminHistory(req, res, redemptionOnly = false) {
   ]);
   res.json({ items, total, page, limit, pages: Math.ceil(total / limit) });
 }
+// UC-39.6 Admin xem lịch sử điểm
 exports.listPointHistory = asyncHandler((req, res) => adminHistory(req, res));
+// UC-39.7 Admin xem lịch sử đổi điểm
 exports.listRedemptions = asyncHandler((req, res) => adminHistory(req, res, true));

@@ -1,9 +1,9 @@
 import { formatCurrency } from './format';
 
+// Hai id có giống nhau không
 const sameId = (a, b) => String(a?._id || a) === String(b?._id || b);
 
-// Giá sau khuyến mãi tự động (ước tính cho 1 sản phẩm), cùng cách tính với lúc thanh toán (pricing.service ở backend):
-// áp lần lượt từng khuyến mãi lên phần giá còn lại, làm tròn xuống, có trần maxDiscount.
+// Giá sau khuyến mãi ước tính cho một sản phẩm (cùng cách tính với backend)
 export function estimatePromo(product, promotions) {
     let price = product.price;
     const applied = [];

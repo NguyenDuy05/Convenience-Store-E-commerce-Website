@@ -9,14 +9,20 @@ import { formatCurrency } from '../../utils/format';
 import '../../styles/home.css';
 import '../../styles/promo-list.css';
 
+// Icon Material Symbols của trang khuyến mãi
 const Icon = ({ children }) => <span className="deals-icon" aria-hidden="true">{children}</span>;
+// Mô tả mức giảm của khuyến mãi
 const promoValue = (promotion) => promotion.type === 'percent'
   ? `${promotion.value}% OFF`
   : `Save ${formatCurrency(promotion.value)}`;
+// Điểm xếp hạng khuyến mãi (giảm nhiều hơn xếp trước)
 const promoScore = (promotion) => promotion.type === 'percent' ? Number(promotion.value) : Number(promotion.value) / 1000;
+// Số ngày còn lại của khuyến mãi
 const endsInDays = (endDate) => Math.max(0, Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000));
+// Định dạng ngày
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
+// Thẻ sản phẩm đang giảm giá
 function DealProductCard({ deal }) {
   const { product, offer } = deal;
   return (
@@ -35,6 +41,7 @@ function DealProductCard({ deal }) {
   );
 }
 
+// Thẻ chương trình khuyến mãi
 function CampaignCard({ promotion, index }) {
   const remaining = endsInDays(promotion.endDate);
   return (
@@ -52,6 +59,7 @@ function CampaignCard({ promotion, index }) {
   );
 }
 
+// UC-02.4 Trang khuyến mãi
 export default function PromotionsPage() {
   const navigate = useNavigate();
   const [promotions, setPromotions] = useState([]);

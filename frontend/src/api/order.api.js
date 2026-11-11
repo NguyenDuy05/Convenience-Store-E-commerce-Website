@@ -1,52 +1,55 @@
 import api from './axios';
 
-// UC-08.1 Create Order. Header Idempotency-Key: gửi lại cùng khoá thì server trả lại đúng đơn cũ, không tạo đơn thứ hai.
-// data: { paymentMethod: 'cash'|'vnpay', discountCode?, customerNote?, expectedTotal } -> { order, replayed }
+// Gọi API: tạo đơn (UC-08.1, có Idempotency-Key)
 export const createOrder = (data, idempotencyKey) =>
   api.post(`/orders`, data, idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined);
 
-// UC-08.1 Xem trước đơn: giá, khuyến mãi, mã giảm giá, tồn kho tại thời điểm hiện tại
+// Gọi API: xem trước đơn
 export const previewCheckout = (data) => api.post(`/orders/preview`, data);
 
-// UC-09.1 View Orders (query: status, page, limit) -> { items, total, page, limit, counts, store }
+// Gọi API: đơn của tôi (UC-09.1)
 export const listMyOrders = (params) => api.get(`/orders/my`, { params });
 
-// UC-09.2 View Order Details (404 nếu đơn không tồn tại hoặc không thuộc khách)
+// Gọi API: chi tiết đơn của tôi (UC-09.2)
 export const getMyOrder = (id, params) => api.get(`/orders/my/${id}`, { params });
 
-// UC-09.3 Track Order Status -> { status, statusHistory, updatedAt, serverTime, fulfillment, store, ... }
+// Gọi API: theo dõi đơn (UC-09.3)
 export const trackMyOrder = (id) => api.get(`/orders/my/${id}/tracking`);
 
-// UC-09.4 View Order History (query: status=completed|failed, from, to (ISO), page, limit) -> { items, total, page, limit, summary, store }
+// Gọi API: lịch sử đơn (UC-09.4)
 export const listMyOrderHistory = (params) => api.get(`/orders/my/history`, { params });
 
-// UC-22 Create Store Order
+// Gọi API: tạo đơn tại quầy (UC-22)
 export const createStoreOrder = (data) => api.post(`/orders/store`, data);
+// Gọi API: báo giá hóa đơn tại quầy
 export const quoteStoreOrder = (data) => api.post(`/orders/store/quote`, data);
+// Gọi API: chốt bán tại quầy (POS)
 export const checkoutPosSale = (data) => api.post('/orders/store/checkout', data);
+// Gọi API: staff xem hàng đợi / lịch sử đơn
 export const listStaffOrders = (params) => api.get('/orders/staff', { params });
+// Gọi API: staff xem chi tiết đơn
 export const getStaffOrder = (id) => api.get(`/orders/staff/${id}`);
+// Gọi API: staff chuyển trạng thái đơn
 export const updateStaffOrder = (id, data) => api.patch(`/orders/staff/${id}/status`, data);
+// Gọi API: staff hủy đơn
 export const cancelStaffOrder = (id, data) => api.post(`/orders/staff/${id}/cancel`, data);
 
-// UC-34.1 View Orders + UC-34.2 Search Orders (Admin)
-// params: { q, status, source, paymentStatus, paymentMethod, from, to (ISO), hasIssue: '1', sort, page, limit }
-// -> { items, total, page, limit, counts, openIssueTotal }
+// Gọi API: admin xem / tìm đơn (UC-34.1/34.2)
 export const listOrders = (params) => api.get(`/orders`, { params });
 
-// UC-34.3 View Order Details (Admin) -> đơn đầy đủ: khách, sản phẩm, giao dịch, lịch sử trạng thái, sự cố, nextTransition
+// Gọi API: admin xem chi tiết đơn (UC-34.3)
 export const getOrder = (id, params) => api.get(`/orders/${id}`, { params });
 
-// Chuyển trạng thái đơn theo thứ tự confirmed -> preparing -> ready_for_pickup -> completed. data: { status, note?, cashCollected? }
+// Gọi API: admin chuyển trạng thái đơn
 export const updateOrderStatus = (id, data) => api.patch(`/orders/${id}/status`, data);
 
-// UC-34.4 Handle Order Issue: báo sự cố { description } rồi xử lý xong { resolution }
+// Gọi API: ghi nhận sự cố đơn (UC-34.4)
 export const handleOrderIssue = (id, data) => api.post(`/orders/${id}/issues`, data);
+// Gọi API: đóng sự cố đơn
 export const resolveOrderIssue = (id, issueId, data) => api.patch(`/orders/${id}/issues/${issueId}`, data);
 
-
-// Admin hủy đơn chưa hoàn tất. data: { reason }. Đơn đã thanh toán sẽ được ghi hoàn tiền.
+// Gọi API: admin hủy đơn
 export const cancelOrder = (id, data) => api.post(`/orders/${id}/cancel`, data);
 
-// Admin xem lịch sử hoàn tiền. params: { q, from, to, page, limit } -> { items, total, page, limit, summary }
+// Gọi API: lịch sử hoàn tiền
 export const listRefunds = (params) => api.get(`/orders/refunds`, { params });

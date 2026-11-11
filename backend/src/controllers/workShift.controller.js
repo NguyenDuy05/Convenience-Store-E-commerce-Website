@@ -1,27 +1,24 @@
-// UC-24 Manage Work Shift (Staff): xem ca làm của mình + vào ca / ra ca.
-// Report (BR-35) ghi chính sách ca làm còn TBD, nên CHỈ làm các thao tác mô hình dữ liệu hiện hỗ trợ:
-//   xem lịch/chi tiết ca, vào ca, ra ca. Không làm đăng ký ca, đổi ca, nghỉ giải lao, tăng ca, duyệt ca (BR-41/42).
-// Giờ ca (startTime/endTime "HH:mm") được hiểu theo múi giờ của máy chủ.
 const mongoose = require('mongoose');
 const { WorkShift, ActivityLog, ShiftSlot } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const { RATES, payFor } = require('../config/payroll');
 const ApiError = require('../utils/ApiError');
 
-const CLOCK_IN_EARLY_MIN = 30;   // cho phép vào ca sớm tối đa 30 phút (giả định, report chưa quy định)
-const LATE_GRACE_MIN = 15;       // vào trễ quá 15 phút được đánh dấu "trễ" (chỉ để hiển thị)
+const CLOCK_IN_EARLY_MIN = 30;
+const LATE_GRACE_MIN = 15;
 const MIN = 60 * 1000;
 const STATUSES = ['scheduled', 'in_progress', 'completed', 'missed'];
 
+// Giờ bắt đầu / kết thúc thực tế của ca (ca qua đêm thì cộng sang ngày sau)
 function shiftTimes(s) {
   const at = (hhmm) => { const d = new Date(s.shiftDate); const [h, m] = String(hhmm).split(':').map(Number); d.setHours(h || 0, m || 0, 0, 0); return d; };
   const startAt = at(s.startTime);
   let endAt = at(s.endTime);
-  if (endAt <= startAt) endAt = new Date(endAt.getTime() + 24 * 60 * MIN);   // ca qua đêm
+  if (endAt <= startAt) endAt = new Date(endAt.getTime() + 24 * 60 * MIN);
   return { startAt, endAt };
 }
 
-// Thêm giờ thực tế + các hành động hợp lệ (server quyết định, giao diện không tự suy ra)
+// Thêm giờ thực tế, trễ / về sớm, lương và các thao tác được phép cho một ca
 function enrich(shift, now, hasOtherInProgress = false) {
   const s = shift.toObject ? shift.toObject() : shift;
   const { startAt, endAt } = shiftTimes(s);
@@ -42,16 +39,15 @@ function enrich(shift, now, hasOtherInProgress = false) {
     clockInAt: s.clockInAt, clockOutAt: s.clockOutAt,
     workedMinutes: s.clockInAt && s.clockOutAt ? Math.round((new Date(s.clockOutAt) - new Date(s.clockInAt)) / MIN) : null,
     late: lateMinutes > LATE_GRACE_MIN, lateMinutes,
-    // Lương: chỉ phần làm thật nằm trong giờ ca. estimatedPay = nếu làm đủ ca theo lịch.
     pay: s.clockInAt && s.clockOutAt ? payFor(new Date(Math.max(new Date(s.clockInAt), startAt)), new Date(Math.min(new Date(s.clockOutAt), endAt))) : null,
     estimatedPay: payFor(startAt, endAt).amount,
     earlyLeave: !!s.clockOutAt && new Date(s.clockOutAt) < endAt,
-    overdue: s.status === 'in_progress' && now > endAt,   // quá giờ kết thúc mà chưa ra ca
+    overdue: s.status === 'in_progress' && now > endAt,
     actions,
   };
 }
 
-// Ca 'scheduled' đã qua giờ kết thúc mà chưa vào ca -> 'missed' (cập nhật có điều kiện, an toàn khi gọi lặp)
+// Ca đã qua giờ kết thúc mà chưa vào ca thì chuyển thành vắng (missed)
 async function markMissed(staffId, now) {
   const stale = await WorkShift.find({ staffId, status: 'scheduled', shiftDate: { $lte: now } });
   for (const s of stale) {
@@ -59,6 +55,7 @@ async function markMissed(staffId, now) {
   }
 }
 
+// Đọc ngày từ query; sai định dạng thì báo lỗi 400
 const parseDate = (v, name, endOfDay) => {
   if (!v) return null;
   const d = new Date(v);
@@ -67,7 +64,7 @@ const parseDate = (v, name, endOfDay) => {
   return d;
 };
 
-// UC-24 (24.1, 24.2): ca hiện tại, ca sắp tới và lịch sử ca của chính nhân viên đang đăng nhập
+// UC-24 Nhân viên xem ca hiện tại, ca sắp tới, lịch sử ca và thu nhập tháng này
 exports.listMyShifts = asyncHandler(async (req, res) => {
   const staffId = req.user.id;
   const now = new Date();
@@ -93,11 +90,9 @@ exports.listMyShifts = asyncHandler(async (req, res) => {
   ]);
   const hasInProgress = !!inProgress;
   const upcomingAll = scheduled.filter((s) => shiftTimes(s).endAt > now).map((s) => enrich(s, now, hasInProgress));
-  // Ca hiện tại: ca đang làm; nếu không có thì ca đã/đang đến giờ vào ca (nằm trong khung cho phép)
   const current = inProgress ? enrich(inProgress, now, false) : (upcomingAll.find((s) => s.actions.canClockIn) || null);
   const upcoming = upcomingAll.filter((s) => !current || String(s._id) !== String(current._id)).slice(0, 7);
 
-  // Thu nhập tháng này (ca đã chấm công vào/ra) — chỉ của chính nhân viên
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthShifts = await WorkShift.find({ staffId, shiftDate: { $gte: new Date(monthStart.getTime() - 24 * 60 * MIN) }, clockOutAt: { $exists: true } }).lean();
   const earnings = monthShifts.map((s) => enrich(s, now)).filter((v) => v.pay && v.endAt >= monthStart)
@@ -105,19 +100,21 @@ exports.listMyShifts = asyncHandler(async (req, res) => {
   res.json({ now, current, upcoming, items: items.map((s) => enrich(s, now, hasInProgress)), total, page, limit, rates: RATES, earnings: { ...earnings, month: monthStart } });
 });
 
+// Lấy ca của chính nhân viên đang đăng nhập (403 nếu là ca người khác)
 async function loadOwnShift(req) {
   const { shiftId } = req.body || {};
   if (!mongoose.isValidObjectId(shiftId)) throw new ApiError(400, "Select a valid shift");
   const shift = await WorkShift.findById(shiftId);
   if (!shift) throw new ApiError(404, "Shift not found");
-  if (String(shift.staffId) !== String(req.user.id)) throw new ApiError(403, "You do not have permission to manage this shift");   // 24.0.E1
+  if (String(shift.staffId) !== String(req.user.id)) throw new ApiError(403, "You do not have permission to manage this shift");
   return shift;
 }
+// Ghi nhật ký thao tác ca làm (lỗi ghi nhật ký không làm hỏng thao tác chính)
 const logAction = (req, action, shift) =>
   ActivityLog.create({ actorId: req.user.id, actorRole: 'staff', action, targetType: 'WorkShift', targetId: shift._id, ip: req.ip, detail: { startTime: shift.startTime, endTime: shift.endTime } })
-    .catch(() => {});   // lỗi ghi nhật ký không được làm hỏng thao tác chính
+    .catch(() => {});
 
-// UC-24 (24.3-24.6): vào ca. Chặn trùng/xung đột (24.0.E2): gửi lại khi ca đã vào rồi chỉ trả về trạng thái hiện tại.
+// UC-24 Vào ca (mở trước 30 phút, không vào khi đang ở ca khác)
 exports.clockIn = asyncHandler(async (req, res) => {
   const now = new Date();
   const shift = await loadOwnShift(req);
@@ -130,7 +127,7 @@ exports.clockIn = asyncHandler(async (req, res) => {
   const updated = await WorkShift.findOneAndUpdate(
     { _id: shift._id, staffId: req.user.id, status: 'scheduled' },
     { $set: { status: 'in_progress', clockInAt: now } }, { new: true });
-  if (!updated) {   // có yêu cầu khác vừa vào ca trước (bấm đúp / mạng chậm)
+  if (!updated) {
     const cur = await WorkShift.findById(shift._id);
     return res.status(409).json({ message: "You have already checked in to this shift", shift: enrich(cur, now, false) });
   }
@@ -139,7 +136,7 @@ exports.clockIn = asyncHandler(async (req, res) => {
   res.json({ message: v.late ? `Checked in (late by ${v.lateMinutes} minutes)` : "Checked in", shift: v });
 });
 
-// UC-24: ra ca. Chỉ ra ca khi đang trong ca; ra sớm vẫn được ghi nhận và đánh dấu ra sớm.
+// UC-24 Ra ca (ra sớm vẫn ghi nhận và đánh dấu về sớm)
 exports.clockOut = asyncHandler(async (req, res) => {
   const now = new Date();
   const shift = await loadOwnShift(req);
@@ -159,15 +156,12 @@ exports.clockOut = asyncHandler(async (req, res) => {
   res.json({ message: v.earlyLeave ? "Checked out early" : "Checked out", shift: v });
 });
 
-// ======================= ADMIN: Manage Work Shifts =======================
-// Admin xếp ca cho nhân viên, xem lịch + chấm công của mọi người, sửa / hủy ca chưa bắt đầu,
-// và xem tổng hợp giờ làm theo khoảng ngày. Staff vẫn tự vào ca / ra ca ở UC-24.
 const { User } = require('../models');
 const { logActivity } = require('../services/activity.service');
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const MAX_DATES = 31;
-// "YYYY-MM-DD" -> 00:00 theo giờ máy chủ (cùng quy ước với shiftTimes / seed)
+// Đổi "YYYY-MM-DD" thành 00:00 ngày đó theo giờ máy chủ
 const dayOf = (s, name = 'Shift date') => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ''));
   if (!m) throw new ApiError(400, `${name} is invalid (use YYYY-MM-DD)`);
@@ -175,16 +169,17 @@ const dayOf = (s, name = 'Shift date') => {
   if (d.getMonth() !== Number(m[2]) - 1) throw new ApiError(400, `${name} is invalid`);
   return d;
 };
+// Đổi Date thành chuỗi "YYYY-MM-DD"
 const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-// Ca trùng giờ của cùng nhân viên (tính cả ca qua đêm); bỏ qua ca đang sửa
+// Tìm ca của cùng nhân viên bị trùng giờ (tính cả ca qua đêm)
 async function findOverlap(staffId, startAt, endAt, excludeId) {
-  // shiftDate là 00:00 của ngày bắt đầu ca -> lùi 2 ngày để không sót ca đêm của hôm trước
   const from = new Date(startAt.getTime() - 48 * 60 * MIN), to = new Date(endAt.getTime() + 24 * 60 * MIN);
   const near = await WorkShift.find({ staffId, shiftDate: { $gte: from, $lte: to }, ...(excludeId ? { _id: { $ne: excludeId } } : {}) }).lean();
   return near.find((s) => { const t = shiftTimes(s); return t.startAt < endAt && startAt < t.endAt; }) || null;
 }
 
+// Kiểm tra giờ bắt đầu / kết thúc và ghi chú của ca
 function readShiftBody(body, { partial } = {}) {
   const out = {};
   if (!partial || body.startTime !== undefined) { if (!HHMM.test(String(body.startTime || ''))) throw new ApiError(400, 'Start time is invalid (HH:mm)'); out.startTime = body.startTime; }
@@ -197,9 +192,10 @@ function readShiftBody(body, { partial } = {}) {
   return out;
 }
 
+// Gắn tên, mã nhân viên vào dữ liệu ca
 const withStaff = (view, staff) => ({ ...view, staff: staff ? { _id: staff._id, fullName: staff.fullName, employeeCode: staff.staffInfo?.employeeCode || '' } : null });
 
-// GET /api/work-shifts?from=&to=&staffId=&status=&page=&limit=
+// Admin xem chấm công các ca + tổng hợp giờ làm và lương theo nhân viên
 exports.listShifts = asyncHandler(async (req, res) => {
   const now = new Date();
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -211,7 +207,6 @@ exports.listShifts = asyncHandler(async (req, res) => {
   const to = req.query.to ? new Date(dayOf(req.query.to, 'To date').getTime() + 24 * 60 * MIN - 1) : null;
   if (from && to && from > to) throw new ApiError(400, 'Invalid date range: the start date must be before the end date');
 
-  // Ca đã qua giờ mà chưa vào -> missed (cho mọi nhân viên có ca trong phạm vi)
   const staleOwners = await WorkShift.distinct('staffId', { status: 'scheduled', shiftDate: { $lte: now } });
   for (const id of staleOwners) await markMissed(id, now);
 
@@ -223,7 +218,7 @@ exports.listShifts = asyncHandler(async (req, res) => {
   const [docs, total, all] = await Promise.all([
     WorkShift.find(filter).sort({ shiftDate: 1, startTime: 1 }).skip((page - 1) * limit).limit(limit).lean(),
     WorkShift.countDocuments(filter),
-    WorkShift.find(filter).lean(),   // để tổng hợp theo nhân viên (trong phạm vi lọc)
+    WorkShift.find(filter).lean(),
   ]);
   const ids = [...new Set(all.map((s) => String(s.staffId)))];
   const staff = await User.find({ _id: { $in: ids } }).select('fullName staffInfo').lean();
@@ -250,17 +245,17 @@ exports.listShifts = asyncHandler(async (req, res) => {
   });
 });
 
-// ---------- Ca trống (admin mở, nhân viên tự nhận) ----------
-const RELEASE_HOURS = 12;   // nhân viên tự hủy đăng ký được nếu còn >= 12 giờ trước giờ bắt đầu ca
+const RELEASE_HOURS = 12;
 const MAX_CAPACITY = 20;
 
+// Kiểm tra số nhân viên cần cho ca (1–20)
 function readCapacity(v) {
   const n = Number(v);
   if (!Number.isInteger(n) || n < 1 || n > MAX_CAPACITY) throw new ApiError(400, `Staff needed must be a whole number from 1 to ${MAX_CAPACITY}`);
   return n;
 }
 
-// Gom các lượt đăng ký (WorkShift) theo ca trống
+// Danh sách nhân viên đã nhận của từng ca trống
 async function signupsFor(slotIds) {
   const rows = await WorkShift.find({ slotId: { $in: slotIds } }).lean();
   const users = await User.find({ _id: { $in: [...new Set(rows.map((r) => String(r.staffId)))] } }).select('fullName staffInfo').lean();
@@ -275,6 +270,7 @@ async function signupsFor(slotIds) {
   return by;
 }
 
+// Dữ liệu một ca trống trả về (số chỗ, lương dự kiến, ai đã nhận / mình đã nhận chưa)
 function slotView(slot, signups, now, viewerId) {
   const { startAt, endAt } = shiftTimes(slot);
   const mine = viewerId ? signups.find((x) => String(x.staffId) === String(viewerId)) : null;
@@ -290,7 +286,7 @@ function slotView(slot, signups, now, viewerId) {
   };
 }
 
-// GET /api/work-shifts/slots?from=&to=   (admin) — ca trống trong khoảng ngày + ai đã nhận
+// Admin xem các ca trống trong khoảng ngày và ai đã nhận
 exports.listSlots = asyncHandler(async (req, res) => {
   const now = new Date();
   const from = req.query.from ? dayOf(req.query.from, 'From date') : (() => { const x = new Date(); x.setHours(0, 0, 0, 0); return x; })();
@@ -300,7 +296,7 @@ exports.listSlots = asyncHandler(async (req, res) => {
   res.json({ now, items: slots.map((s) => slotView(s, by.get(String(s._id)) || [], now)) });
 });
 
-// POST /api/work-shifts/slots  body: { dates: ['YYYY-MM-DD'...], startTime, endTime, capacity, note? }  (admin)
+// Admin mở ca trống cho nhiều ngày (giờ, số người cần, ghi chú)
 exports.createSlots = asyncHandler(async (req, res) => {
   const body = req.body || {};
   const fields = readShiftBody(body);
@@ -314,7 +310,6 @@ exports.createSlots = asyncHandler(async (req, res) => {
     if (shiftTimes(row).startAt <= now) throw new ApiError(400, `This shift on ${s} has already started`);
     return row;
   });
-  // Không mở trùng một ca y hệt (cùng ngày + giờ): tăng số người cần ở ca có sẵn thay vì tạo thêm
   const dup = await ShiftSlot.find({ $or: rows.map((r) => ({ shiftDate: r.shiftDate, startTime: r.startTime, endTime: r.endTime })) }).lean();
   if (dup.length) throw new ApiError(409, `A ${fields.startTime}–${fields.endTime} shift is already open on ${dup.map((x) => dayKey(x.shiftDate)).join(', ')}. Edit it to change the number of staff needed.`, { code: 'SLOT_EXISTS' });
   const created = await ShiftSlot.insertMany(rows);
@@ -322,8 +317,7 @@ exports.createSlots = asyncHandler(async (req, res) => {
   res.status(201).json({ items: created.map((s) => slotView(s.toObject(), [], now)) });
 });
 
-// PUT /api/work-shifts/slots/:id  body: { capacity?, note?, startTime?, endTime? }  (admin)
-// Đổi giờ chỉ khi chưa ai nhận; số người cần không được nhỏ hơn số đã nhận.
+// Admin sửa ca trống (đổi giờ chỉ khi chưa ai nhận; số người cần không thấp hơn số đã nhận)
 exports.updateSlot = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const slot = await ShiftSlot.findById(req.params.id);
@@ -349,7 +343,7 @@ exports.updateSlot = asyncHandler(async (req, res) => {
   res.json({ slot: slotView(updated, by.get(String(slot._id)) || [], now) });
 });
 
-// DELETE /api/work-shifts/slots/:id  (admin) — chỉ xóa ca chưa ai nhận
+// Admin xóa ca trống chưa ai nhận
 exports.deleteSlot = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const slot = await ShiftSlot.findOneAndDelete({ _id: req.params.id, filled: 0 });
@@ -361,16 +355,15 @@ exports.deleteSlot = asyncHandler(async (req, res) => {
   res.json({ message: 'Shift removed' });
 });
 
-// GET /api/work-shifts/open?days=14  (staff) — ca trống sắp tới để nhận
+// Nhân viên xem ca trống 14 ngày tới (đánh dấu ca đã đầy / trùng giờ / của mình)
 exports.listOpenSlots = asyncHandler(async (req, res) => {
   const now = new Date();
   const days = Math.min(Math.max(parseInt(req.query.days, 10) || 14, 1), 31);
-  const from = new Date(now); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - 1);   // gồm ca đêm của hôm qua chưa bắt đầu
+  const from = new Date(now); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - 1);
   const to = new Date(now.getTime() + days * 24 * 60 * MIN);
   const slots = (await ShiftSlot.find({ shiftDate: { $gte: from, $lte: to } }).sort({ shiftDate: 1, startTime: 1 }).lean())
     .filter((s) => shiftTimes(s).startAt > now);
   const by = await signupsFor(slots.map((s) => s._id));
-  // Ca của chính nhân viên trong khoảng này -> đánh dấu ca trống bị trùng giờ
   const own = await WorkShift.find({ staffId: req.user.id, shiftDate: { $gte: new Date(from.getTime() - 24 * 60 * MIN), $lte: to } }).lean();
   const ownTimes = own.map((s) => ({ slotId: s.slotId ? String(s.slotId) : null, ...shiftTimes(s) }));
   res.json({
@@ -383,7 +376,7 @@ exports.listOpenSlots = asyncHandler(async (req, res) => {
   });
 });
 
-// POST /api/work-shifts/slots/:id/claim  (staff) — nhận ca. Chống vượt số chỗ bằng tăng "filled" có điều kiện.
+// Nhân viên nhận ca (chống vượt số chỗ khi nhiều người bấm cùng lúc)
 exports.claimSlot = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const now = new Date();
@@ -399,7 +392,7 @@ exports.claimSlot = asyncHandler(async (req, res) => {
   try {
     shift = await WorkShift.create({ staffId: req.user.id, slotId: slot._id, shiftDate: slot.shiftDate, startTime: slot.startTime, endTime: slot.endTime, note: slot.note, createdBy: req.user.id });
   } catch (e) {
-    await ShiftSlot.updateOne({ _id: slot._id, filled: { $gt: 0 } }, { $inc: { filled: -1 } });   // trả lại chỗ
+    await ShiftSlot.updateOne({ _id: slot._id, filled: { $gt: 0 } }, { $inc: { filled: -1 } });
     if (e.code === 11000) throw new ApiError(409, 'You have already taken this shift', { code: 'ALREADY_TAKEN' });
     throw e;
   }
@@ -407,7 +400,7 @@ exports.claimSlot = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Shift taken', shift: enrich(shift, now) });
 });
 
-// POST /api/work-shifts/:id/release  (staff) — hủy nhận ca, còn >= RELEASE_HOURS giờ trước giờ bắt đầu
+// Nhân viên hủy nhận ca (chỉ khi còn ít nhất 12 giờ trước giờ bắt đầu)
 exports.releaseShift = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const shift = await WorkShift.findOne({ _id: req.params.id, staffId: req.user.id });
@@ -422,7 +415,7 @@ exports.releaseShift = asyncHandler(async (req, res) => {
   res.json({ message: 'Shift cancelled' });
 });
 
-// DELETE /api/work-shifts/:id — admin gỡ nhân viên khỏi ca chưa bắt đầu (ca đã chấm công giữ lại làm lịch sử)
+// Admin gỡ nhân viên khỏi ca chưa bắt đầu (trả lại chỗ cho ca trống)
 exports.deleteShift = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const shift = await WorkShift.findOneAndDelete({ _id: req.params.id, status: 'scheduled' });
@@ -430,12 +423,12 @@ exports.deleteShift = asyncHandler(async (req, res) => {
     const exists = await WorkShift.exists({ _id: req.params.id });
     throw new ApiError(exists ? 409 : 404, exists ? 'Shifts that have started or ended are kept as attendance history' : 'Shift not found');
   }
-  if (shift.slotId) await ShiftSlot.updateOne({ _id: shift.slotId, filled: { $gt: 0 } }, { $inc: { filled: -1 } });   // trả chỗ cho ca trống
+  if (shift.slotId) await ShiftSlot.updateOne({ _id: shift.slotId, filled: { $gt: 0 } }, { $inc: { filled: -1 } });
   await logActivity(req, { action: 'SHIFT_DELETE', targetType: 'WorkShift', targetId: shift._id, detail: { date: dayKey(shift.shiftDate), startTime: shift.startTime, endTime: shift.endTime, staffId: shift.staffId } });
   res.json({ message: 'Staff removed from the shift' });
 });
 
-// PATCH /api/work-shifts/:id/close — nhân viên quên ra ca: admin chốt giờ ra (mặc định = giờ kết thúc ca)
+// Admin chốt ca khi nhân viên quên ra ca
 exports.closeShift = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, 'Shift not found');
   const shift = await WorkShift.findById(req.params.id);

@@ -1,5 +1,3 @@
-// UC-33 Manage Categories
-// Delete: chỉ cho xóa khi không còn Product nào thuộc category (kiểm tra ở service)
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 

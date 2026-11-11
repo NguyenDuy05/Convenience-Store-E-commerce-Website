@@ -5,10 +5,11 @@ import { formatCurrency, formatDateTime } from '../../utils/format';
 import Receipt from '../../components/staff/Receipt';
 import '../../styles/store-order.css';
 
+// Lấy thông báo lỗi từ response API
 const msg = (e, d) => e.response?.data?.message || d;
 const QUICK = [10000, 20000, 50000, 100000, 200000, 500000];
 
-// UC-23.1 Process Cash Payment / UC-23.2 Process Card & E-wallet Payment / Print Receipt
+// UC-23 Staff thu tiền đơn tại quầy và in hóa đơn
 export default function StaffPaymentPage() {
   const [params] = useSearchParams();
   const [orders, setOrders] = useState([]);
@@ -20,8 +21,8 @@ export default function StaffPaymentPage() {
   const [received, setReceived] = useState('');
   const [card, setCard] = useState({ method: 'card', reference: '' });
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState(null);       // { type, title, text }
-  const [paid, setPaid] = useState(null);             // { orderId, orderCode, change }
+  const [message, setMessage] = useState(null);
+  const [paid, setPaid] = useState(null);
   const [receiptFor, setReceiptFor] = useState('');
 
   const load = useCallback((term = '') => {

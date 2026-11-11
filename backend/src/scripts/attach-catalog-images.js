@@ -1,5 +1,3 @@
-// Attach existing SKU-named library photos only to products with no assigned photo.
-// Run: node src/scripts/attach-catalog-images.js --apply (omit --apply to preview).
 const fs = require('node:fs');
 const path = require('node:path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
@@ -7,6 +5,7 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const images = require('../services/productImages.service');
 
+// Gắn ảnh trong thư viện ảnh cho các sản phẩm chưa có ảnh (theo mã SKU)
 async function main() {
   const apply = process.argv.includes('--apply');
   const catalog = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../data/products.json'), 'utf8'));

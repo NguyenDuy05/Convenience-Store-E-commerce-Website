@@ -7,7 +7,9 @@ const payment = require('../services/payment.service');
 const ACTIVE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 const HISTORY = ['completed', 'cancelled', 'failed'];
 const NEXT = { confirmed: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
+// Thông tin khách của đơn để staff xem (id, tên, SĐT)
 const customerOf = (customer) => customer ? { _id: customer._id, fullName: customer.fullName, phone: customer.phone || '' } : null;
+// Staff xem hàng đợi / lịch sử đơn (đơn online và đơn tại quầy)
 exports.list = asyncHandler(async (req, res) => {
   const page = Number(req.query.page || 1), limit = Number(req.query.limit || 20);
   if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new ApiError(400, 'Invalid page or page size');
@@ -24,6 +26,7 @@ exports.list = asyncHandler(async (req, res) => {
   ]);
   res.json({ items: items.map((order) => ({ ...order, customerId: undefined, customer: customerOf(order.customerId), itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0) })), total, page, limit, counts: Object.fromEntries(groups.map((g) => [g._id, g.count])) });
 });
+// Staff xem chi tiết đơn để chuẩn bị và giao hàng
 exports.get = asyncHandler(async (req, res) => {
   if (!/^[a-f\d]{24}$/i.test(req.params.id)) throw new ApiError(404, 'Order not found');
   const order = await Order.findById(req.params.id).populate({ path: 'items.productId', select: 'images unit' }).lean();

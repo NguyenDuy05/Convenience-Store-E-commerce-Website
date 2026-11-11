@@ -1,21 +1,22 @@
 import api from './axios';
 
+// Phát sự kiện giỏ hàng thay đổi để header cập nhật số lượng
 const publishCart = (response) => {
   window.dispatchEvent(new CustomEvent('quick:cart-updated', { detail: { itemCount: response.data.itemCount } }));
   return response;
 };
 
-// UC-07.1 View Cart
+// Gọi API: xem giỏ hàng (UC-07.1)
 export const getCart = (params) => api.get(`/cart`, { params });
 
-// UC-07.2 Add Product
+// Gọi API: thêm sản phẩm vào giỏ (UC-07.2)
 export const addCartItem = (data) => api.post(`/cart/items`, data).then(publishCart);
 
-// UC-07.3 Update Cart Item
+// Gọi API: đổi số lượng (UC-07.3)
 export const updateCartItem = (productId, data) => api.put(`/cart/items/${productId}`, data).then(publishCart);
 
-// UC-07.4 Remove Cart Item
+// Gọi API: xóa sản phẩm khỏi giỏ (UC-07.4)
 export const removeCartItem = (productId) => api.delete(`/cart/items/${productId}`).then(publishCart);
 
-// Tính năng đặc biệt: 4 giỏ hàng gợi ý theo ngân sách (ngoài catalog UC)
+// Gọi API: gợi ý giỏ hàng theo ngân sách (backend chưa làm)
 export const getCartSuggestions = (params) => api.get(`/cart/suggestions`, { params });

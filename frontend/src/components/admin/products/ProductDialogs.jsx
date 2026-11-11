@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { vnd } from './productUtils';
 
+// Khung hộp thoại
 function Modal({ title, icon, tone = 'primary', onClose, children, footer }) {
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -22,7 +23,7 @@ function Modal({ title, icon, tone = 'primary', onClose, children, footer }) {
     );
 }
 
-// Xác nhận Deactivate / Activate / Delete
+// Hộp xác nhận bật / tắt bán hoặc xóa sản phẩm
 export function ConfirmDialog({ title, icon = 'help', tone = 'primary', confirmLabel, product, children, busy, error, onConfirm, onClose }) {
     return (
         <Modal title={title} icon={icon} tone={tone} onClose={onClose} footer={<>
@@ -36,7 +37,7 @@ export function ConfirmDialog({ title, icon = 'help', tone = 'primary', confirmL
     );
 }
 
-// UC-32.6 Update Product Price
+// UC-32.6 Hộp đổi giá sản phẩm
 export function PriceDialog({ product, busy, error, onSubmit, onClose }) {
     const [value, setValue] = useState(String(product.price));
     const [note, setNote] = useState('');

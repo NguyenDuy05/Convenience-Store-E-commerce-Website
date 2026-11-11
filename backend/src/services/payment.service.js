@@ -1,4 +1,3 @@
-// UC-08.2 Make Payment: tạo giao dịch online (VNPay), xử lý kết quả cổng trả về, hết hạn đơn chưa thanh toán.
 const { Order, Transaction } = require('../models');
 const ApiError = require('../utils/ApiError');
 const stock = require('./stock.service');
@@ -7,12 +6,13 @@ const wallet = require('./wallet.service');
 const mock = require('./mock.service');
 const { notifyOrder } = require('./notification.service');
 
+// Thời gian giữ hàng chờ thanh toán (mặc định 15 phút)
 const ttlMs = () => (parseInt(process.env.PAYMENT_TTL_MINUTES, 10) || 15) * 60 * 1000;
+// Hạn thanh toán của một đơn
 const expiresAtOf = (order) => new Date(new Date(order.createdAt).getTime() + ttlMs());
 const ONLINE = ['vnpay'];
 
-// Đơn quá hạn thanh toán -> failed + hoàn kho + đóng các giao dịch đang chờ. Mỗi đơn chỉ xử lý một lần
-// (ai chuyển được trạng thái pending_payment -> failed trước thì người đó hoàn kho).
+// Đơn quá hạn thanh toán: chuyển failed, trả kho, đóng giao dịch đang chờ, hoàn ví
 async function expireStaleOrders({ customerId, now = new Date(), limit = 100 } = {}) {
   const filter = { status: 'pending_payment', createdAt: { $lt: new Date(now.getTime() - ttlMs()) } };
   if (customerId) filter.customerId = customerId;
@@ -40,7 +40,7 @@ async function expireStaleOrders({ customerId, now = new Date(), limit = 100 } =
   return count;
 }
 
-// Chạy nền mỗi phút (gọi từ server.js)
+// Chạy nền mỗi phút: hủy đơn quá hạn, đối soát ví, cộng điểm còn sót
 function startExpiryJob(intervalMs = 60 * 1000) {
   let running = false;
   const timer = setInterval(() => {
@@ -55,7 +55,7 @@ function startExpiryJob(intervalMs = 60 * 1000) {
   return timer;
 }
 
-// Hệ thống tự mở sự cố trên đơn khi thanh toán bất thường để admin xử lý ở UC-34.4. Cùng nội dung chỉ tạo một lần.
+// Tự mở sự cố trên đơn khi thanh toán bất thường để admin xử lý
 async function raiseSystemIssue(orderId, description) {
   try {
     await Order.updateOne({ _id: orderId, 'issues.description': { $ne: description } }, { $push: { issues: { description, status: 'open' } } });
@@ -64,9 +64,10 @@ async function raiseSystemIssue(orderId, description) {
   }
 }
 
+// Sinh mã tham chiếu giao dịch gửi sang cổng (mã đơn + số lần thử)
 const txnRefFor = (order, attempt) => `${order.orderCode.replace(/-/g, '')}T${attempt}`;
 
-// Khách bấm thanh toán online cho một đơn pending_payment. Trả { paymentUrl, txnRef, expiresAt, method, reused }.
+// Bắt đầu thanh toán online: tạo giao dịch chờ và link VNPay (dùng lại link cũ nếu còn hạn)
 async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
   if (!ONLINE.includes(method)) throw new ApiError(400, "Website payments use VNPay only");
   const useMock = mock.enabled();
@@ -83,7 +84,6 @@ async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
 
   const expiresAt = expiresAtOf(fresh);
 
-  // E4: nếu còn giao dịch đang chờ kết quả thì KHÔNG tạo giao dịch thứ hai (tránh khách bị trừ tiền hai lần)
   const pending = await Transaction.findOne({ orderId: fresh._id, status: 'pending' }).lean();
   if (pending) {
     if (pending.method === method && pending.paymentUrl) {
@@ -116,7 +116,6 @@ async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
     await Transaction.updateOne({ _id: txn._id }, { $set: { paymentUrl } });
     return { paymentUrl, txnRef, expiresAt, method, reused: false };
   } catch (err) {
-    // Chưa có link thì chưa thể có khoản tiền nào bị trừ: đóng giao dịch này để khách thử lại được ngay
     await Transaction.updateOne({ _id: txn._id, status: 'pending' }, { $set: { status: 'failed', failureReason: `Could not create payment link: ${err.message}` } });
     if (err instanceof ApiError) throw err;
     console.error("Payment link creation failed:", err);
@@ -124,9 +123,7 @@ async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
   }
 }
 
-// Áp kết quả cổng thanh toán (return hoặc IPN, đã kiểm tra chữ ký). AN TOÀN KHI GỌI LẠI NHIỀU LẦN:
-// chỉ lần đầu chuyển giao dịch pending -> success/failed mới đổi đơn. Trả { result, order? }.
-// result: success | failed | pending | duplicate | unknown_txn | amount_mismatch | late_success
+// Xác nhận đơn đã nhận tiền: chuyển confirmed, gửi thông báo (gọi lại nhiều lần vẫn an toàn)
 async function confirmReceivedPayment(txn, duplicate = false) {
   const now = txn.paidAt || new Date();
   const order = await Order.findOneAndUpdate({ _id: txn.orderId, status: 'pending_payment', checkoutReady: { $ne: false } }, {
@@ -153,15 +150,14 @@ async function confirmReceivedPayment(txn, duplicate = false) {
   return { result: duplicate ? 'duplicate' : 'late_success', txn };
 }
 
+// Áp kết quả từ cổng thanh toán: thành công / thất bại / chờ; tiền về muộn thì mở sự cố
 async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) {
   const txn = await Transaction.findOne({ txnRef }).lean();
   if (!txn) return { result: 'unknown_txn' };
-  if (Number(amount) !== Number(txn.amount)) {                                            // số tiền không khớp -> không tin
+  if (Number(amount) !== Number(txn.amount)) {
     await raiseSystemIssue(txn.orderId, `The gateway reported ${amount}đ instead of the transaction amount ${txn.amount}đ (reference ${txnRef}). Payment reconciliation is required.`);
     return { result: 'amount_mismatch', txn };
   }
-  // Callback gửi lặp -> bỏ qua. NGOẠI LỆ: giao dịch đã bị đóng là 'failed' (hết hạn / admin hủy đơn / khách thoát cổng) nhưng cổng báo
-  // THÀNH CÔNG -> tiền thật đã bị trừ, phải ghi nhận để admin xử lý (UC-41.4), tuyệt đối không được bỏ qua.
   const lateSuccess = txn.status === 'failed' && outcome === 'success';
   if (txn.status !== 'pending' && !lateSuccess) {
     if (txn.status === 'success' && outcome === 'success') return confirmReceivedPayment(txn, true);
@@ -185,7 +181,6 @@ async function applyGatewayResult({ txnRef, outcome, amount, gateway, reason }) 
     return confirmReceivedPayment(claimed);
   }
 
-  // failed: đóng giao dịch; đơn vẫn chờ thanh toán (giữ hàng) để khách thử lại hoặc đổi cổng cho đến khi hết hạn
   const claimed = await Transaction.findOneAndUpdate(
     { _id: txn._id, status: 'pending' }, { $set: { ...toSet, status: 'failed', failureReason: reason || "Payment unsuccessful" } }, { new: true },
   );

@@ -7,13 +7,16 @@ import '../../styles/qk-tokens.css';
 import '../../styles/profile.css';
 
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
+// Lấy thông báo lỗi từ response API
 const messageOf = (error, fallback) => error.response?.data?.message || fallback;
 const ROLE_LABEL = { customer: 'Customer', staff: 'Staff', admin: 'Admin' };
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+// Đổi ngày sang dạng YYYY-MM-DD cho ô chọn ngày
 const toDateInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+// Ngày hôm nay dạng YYYY-MM-DD
 const today = () => new Date().toISOString().slice(0, 10);
 
-// Thu nhỏ ảnh về 256x256 (cắt giữa) rồi mã hóa JPEG để lưu gọn trong avatarUrl
+// Thu nhỏ ảnh đại diện về 256x256 JPEG trước khi lưu
 function resizeImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -32,16 +35,19 @@ function resizeImage(file) {
   });
 }
 
+// Định dạng ngày giờ
 const fmtDate = (d) => (d ? new Date(d).toLocaleString() : '—');
+// Chữ cái đầu của họ tên (cho avatar)
 const initials = (name = '') =>
   name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase() || '').join('') || '?';
 
+// Dòng thông báo thành công / lỗi
 function Message({ msg }) {
   if (!msg.text) return null;
   return <p className={`pf-msg ${msg.type}`} role={msg.type === 'error' ? 'alert' : 'status'}>{msg.text}</p>;
 }
 
-// Dùng chung cho Customer (UC-06), Staff (UC-17), Admin (UC-28). Customer có thêm sidebar tài khoản.
+// Trang hồ sơ dùng chung khách / staff / admin: sửa thông tin, ảnh, đổi mật khẩu
 export default function ProfileView() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +125,6 @@ export default function ProfileView() {
 
   const setF = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
   const setP = (key) => (e) => setPw((p) => ({ ...p, [key]: e.target.value }));
-  // Đổi/xóa ảnh đại diện: lưu ngay, giữ nguyên các thông tin đã lưu (không kéo theo phần đang gõ dở)
   const saveAvatar = async (avatarUrl) => {
     setAvatarBusy(true); setProfileMsg({ type: '', text: '' });
     try {
@@ -274,7 +279,6 @@ export default function ProfileView() {
     </>
   );
 
-  // Customer: có breadcrumb + sidebar tài khoản. Staff/Admin đã có khung riêng nên chỉ hiện nội dung.
   if (loading || isCustomer) {
     return (
       <div className="pf">

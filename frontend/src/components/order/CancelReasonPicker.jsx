@@ -1,7 +1,5 @@
 import '../../styles/cancel-reason.css';
 
-// Lý do hủy đơn có sẵn để người dùng chọn nhanh; "Other" cho phép tự nhập.
-// customer: khách tự hủy (chỉ trước khi staff bắt đầu chuẩn bị) | store: staff/admin hủy.
 export const CANCEL_REASONS = {
   customer: [
     'I changed my mind',
@@ -22,9 +20,10 @@ export const CANCEL_REASONS = {
 };
 export const OTHER = '__other__';
 
-// value = { choice, other }. Trả về lý do cuối cùng để gửi lên server ('' nếu chưa hợp lệ).
+// Lý do hủy cuối cùng từ lựa chọn (chọn sẵn hoặc Other tự nhập)
 export const reasonText = ({ choice, other }) => (choice === OTHER ? other.trim() : choice || '');
 
+// Danh sách lý do hủy đơn có sẵn + mục Other để tự nhập
 export default function CancelReasonPicker({ kind = 'customer', value, onChange, disabled, name = 'cancel-reason' }) {
   const options = CANCEL_REASONS[kind] || CANCEL_REASONS.customer;
   const pick = (choice) => onChange({ ...value, choice });

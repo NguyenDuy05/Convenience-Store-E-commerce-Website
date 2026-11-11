@@ -1,6 +1,5 @@
 import PortalShell from '../layout/PortalShell';
 
-// Menu nhân viên: cùng giao diện với admin, các mục khớp routes /staff/...
 export const STAFF_GROUPS = [
     { title: 'Main', items: [{ to: '/staff', label: 'Dashboard', icon: 'space_dashboard', end: true }] },
     {
@@ -28,6 +27,7 @@ export const STAFF_GROUPS = [
     { title: 'Work', items: [{ to: '/staff/shifts', label: 'Work Shifts', icon: 'schedule' }, { to: '/staff/notifications', label: "Notifications", icon: 'notifications' }] },
 ];
 
+// Khung trang staff: menu bên trái theo nhóm chức năng
 export default function StaffShell({ crumbs, children }) {
     return <PortalShell tag="STAFF" roleLabel="Staff" groups={STAFF_GROUPS} profilePath="/staff/profile" crumbs={crumbs}>{children}</PortalShell>;
 }

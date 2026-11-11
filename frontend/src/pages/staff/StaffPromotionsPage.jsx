@@ -6,15 +6,18 @@ import { formatCurrency } from '../../utils/format';
 import '../../styles/staff-promotions.css';
 
 const SCOPE_LABEL = { all: 'All products', category: 'By category', product: 'By product' };
+// Định dạng ngày
 const fmtDate = (d) => new Date(d).toLocaleDateString('en-US');
+// Mô tả mức giảm của khuyến mãi
 const valueText = (p) => (p.type === 'percent' ? `Save ${p.value}%` : `Save ${formatCurrency(p.value)}`);
+// Mô tả phạm vi áp dụng của khuyến mãi
 const scopeDetail = (p) => {
   if (p.scope === 'category') return p.categories.map((c) => c.name).filter(Boolean).join(', ');
   if (p.scope === 'product') return p.products.map((x) => x.name).filter(Boolean).join(', ');
   return '';
 };
 
-// UC-20.1 View Promotions, UC-20.2 Apply Promotion
+// UC-20 Staff xem khuyến mãi và tính thử cho hóa đơn
 export default function StaffPromotionsPage() {
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +26,12 @@ export default function StaffPromotionsPage() {
   const [search, setSearch] = useState('');
 
   const [selectedId, setSelectedId] = useState('');
-  const [lines, setLines] = useState([]);           // [{ product, quantity }]
+  const [lines, setLines] = useState([]);
   const [pq, setPq] = useState('');
   const [found, setFound] = useState([]);
   const [finding, setFinding] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [result, setResult] = useState(null);       // successful application result
+  const [result, setResult] = useState(null);
   const [applyError, setApplyError] = useState('');
 
   const load = () => {

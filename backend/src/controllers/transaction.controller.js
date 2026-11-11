@@ -5,7 +5,8 @@ const ApiError = require('../utils/ApiError');
 
 const STATUSES = ['pending', 'success', 'failed', 'refunded'];
 const METHODS = ['cash', 'card', 'vnpay', 'wallet'];
-const MAX_RANGE_DAYS = 366;   // giới hạn khoảng ngày tìm kiếm (UC-23.0.E2)
+const MAX_RANGE_DAYS = 366;
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const POPULATE = [
@@ -14,17 +15,17 @@ const POPULATE = [
   { path: 'processedBy', select: 'fullName email' },
 ];
 
-// BR-22: Staff chỉ xem giao dịch của cửa hàng được phân công. Hệ thống hiện chỉ có 1 cửa hàng (Store) và
-// Transaction/Order chưa có storeId, nên mọi giao dịch đều thuộc phạm vi này. Khi mở rộng nhiều cửa hàng,
-// chỉ cần trả về điều kiện lọc theo cửa hàng của nhân viên tại đây (áp dụng cho cả danh sách lẫn chi tiết).
+// Phạm vi giao dịch staff được xem (hiện chỉ có 1 cửa hàng nên xem tất cả)
 const scopeFilter = () => ({});
 
-// Che dữ liệu nhạy cảm khi Staff xem (UC-23.0.E4)
+// Che email khi staff xem
 const maskEmail = (e) => (e ? e.replace(/^(.{1,2})[^@]*(@.*)$/, '$1***$2') : e);
+// Che mã giao dịch cổng, chỉ giữ vài ký tự cuối
 const maskTail = (v, keep = 4) => (v && String(v).length > keep ? `${'*'.repeat(String(v).length - keep)}${String(v).slice(-keep)}` : v);
+// Che số điện thoại khi staff xem
 const maskPhone = (v) => maskTail(v, 3);
 
-// Chỉ trả các trường được phép hiển thị: không trả gateway.raw (select:false) và không lộ dữ liệu thanh toán nhạy cảm
+// Dữ liệu giao dịch trả về (staff thấy liên hệ đã che, không lộ dữ liệu cổng)
 function serialize(t, role = 'admin') {
   const o = t.toObject ? t.toObject() : t;
   const g = o.gateway || {};
@@ -52,6 +53,7 @@ function serialize(t, role = 'admin') {
   };
 }
 
+// Đọc ngày từ query; sai định dạng thì báo lỗi 400
 function parseDate(value, name, endOfDay) {
   if (!value) return null;
   const d = new Date(value);
@@ -60,16 +62,15 @@ function parseDate(value, name, endOfDay) {
   return d;
 }
 
-// Tiền đã thu trong hôm nay (giờ VN): giao dịch thành công có thời điểm thanh toán từ 00:00 hôm nay.
-// Giao dịch đã hoàn tiền (refunded) không tính.
 const VN_OFFSET = 7 * 3600 * 1000, DAY = 86400000;
+// Tổng tiền đã thu trong hôm nay (từ 00:00 giờ VN), không tính giao dịch đã hoàn
 async function collectedToday(now = new Date()) {
   const start = new Date(Math.floor((now.getTime() + VN_OFFSET) / DAY) * DAY - VN_OFFSET);
   const rows = await Transaction.find({ status: 'success', $or: [{ paidAt: { $gte: start } }, { paidAt: { $exists: false }, createdAt: { $gte: start } }] }).select('amount').lean();
   return { amount: rows.reduce((s, t) => s + t.amount, 0), count: rows.length, since: start };
 }
 
-// UC-35.1 View Transactions (tìm theo mã giao dịch / mã đơn, trạng thái, phương thức, khoảng ngày)
+// UC-35.1 Xem / tìm giao dịch (admin thấy tổng tiền; staff chỉ thấy tiền thu hôm nay)
 exports.listTransactions = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -106,7 +107,6 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   res.json({
     items: items.map((t) => serialize(t, req.user.role)),
     total, page, limit,
-    // Staff chỉ xem tiền thu được TRONG HÔM NAY (từ 00:00 giờ VN, qua ngày về 0); tổng theo bộ lọc chỉ admin thấy
     summary: {
       ...(req.user.role === 'admin' ? { successAmount: agg.reduce((s, t) => s + t.amount, 0) } : {}),
       successCount: agg.length,
@@ -115,14 +115,13 @@ exports.listTransactions = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-35.2 View Transaction Details (chỉ đọc, không sửa dữ liệu thanh toán/đơn hàng)
+// UC-35.2 Xem chi tiết một giao dịch
 exports.getTransaction = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) throw new ApiError(404, "Transaction not found");
   const txn = await Transaction.findOne({ _id: req.params.id, ...scopeFilter(req) }).populate(POPULATE);
   if (!txn) throw new ApiError(404, "Transaction not found");
 
   const out = serialize(txn, req.user.role);
-  // Các giao dịch khác của cùng đơn (lần thử trước / thử lại) để đối soát
   const siblings = await Transaction.find({ orderId: out.orderId, _id: { $ne: txn._id } })
     .select('method amount status txnRef createdAt paidAt').sort({ createdAt: -1 });
   const timeline = [{ label: "Transaction created", at: out.createdAt }];

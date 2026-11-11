@@ -1,4 +1,3 @@
-/* Trang "Kết quả đặt hàng / thanh toán". Class bắt đầu bằng "pres-". */
 .pres { font-family: var(--qk-font-body); color: var(--qk-text); padding: 24px 0; }
 .pres-card { max-width: 560px; margin: 0 auto; padding: 36px 28px; border-radius: 16px; background: var(--qk-surface); box-shadow: var(--qk-shadow-md); text-align: center; }
 .pres-icon { display: inline-flex; width: 84px; height: 84px; border-radius: 50%; align-items: center; justify-content: center; margin-bottom: 8px; }

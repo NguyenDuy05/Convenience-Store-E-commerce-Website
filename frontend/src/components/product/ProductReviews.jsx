@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { listProductReviews } from '../../api/review.api';
 import Icon from '../common/Icon';
 
-// Display stars, including fractional ratings such as 4.3
+// Hiển thị số sao (kể cả số lẻ)
 export function Stars({ value = 0, size = 18 }) {
     const pct = Math.max(0, Math.min(5, value)) * 20;
     return (
@@ -12,10 +12,11 @@ export function Stars({ value = 0, size = 18 }) {
     );
 }
 
+// Định dạng ngày đánh giá
 const fmtDate = (d) => new Date(d).toLocaleDateString('en-US');
 const PAGE = 5;
 
-// UC-40.1 View Product Reviews: public product rating and paginated review list.
+// UC-40.1 Điểm trung bình và danh sách đánh giá của sản phẩm
 export default function ProductReviews({ productId, ratingAvg = 0, ratingCount = 0 }) {
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(1);

@@ -1,4 +1,4 @@
-// Avatar mặc định: vòng tròn viền + hình người đặc (đầu tròn, thân bán nguyệt), màu theo currentColor.
+// Icon avatar mặc định (SVG)
 export default function UserAvatarIcon({ size = 32, className = '' }) {
   return (
     <svg className={className} width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" style={{ display: 'block', flexShrink: 0 }}>

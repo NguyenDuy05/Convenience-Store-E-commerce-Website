@@ -7,7 +7,7 @@ import GoogleButton from '../../components/auth/GoogleButton';
 
 const roleHome = { customer: '/', staff: '/staff', admin: '/admin' };
 
-// UC-03 / UC-14 / UC-26 Login
+// UC-03/14/26 Trang đăng nhập
 export default function LoginPage() {
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();

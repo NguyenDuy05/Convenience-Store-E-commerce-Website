@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/format';
 import { matchesProductSearch, normalizeProductSearch } from '../../utils/productSearch';
 import '../../styles/product-search.css';
 
+// Ô tìm kiếm sản phẩm có gợi ý
 export default function ProductSearchInput({
   products = [], value, onChange, placeholder, ariaLabel = 'Search products',
   toForProduct = (product) => `/products/${product._id}`,

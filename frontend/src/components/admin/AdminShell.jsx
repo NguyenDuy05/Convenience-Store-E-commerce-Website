@@ -1,6 +1,5 @@
 import PortalShell from '../layout/PortalShell';
 
-// Menu admin (QUICK). Sửa menu tại đây.
 export const ADMIN_GROUPS = [
     { title: 'Main', items: [{ to: '/admin', label: 'Dashboard', icon: 'space_dashboard', end: true }] },
     {
@@ -33,6 +32,7 @@ export const ADMIN_GROUPS = [
     { title: 'Finance', items: [{ to: '/admin/payments', label: 'Payments', icon: 'payments' }, { to: '/admin/refunds', label: 'Refunds', icon: 'currency_exchange' }] },
 ];
 
+// Khung trang admin: menu bên trái theo nhóm chức năng
 export default function AdminShell({ crumbs, children }) {
     return <PortalShell tag="ADMIN" roleLabel="Administrator" groups={ADMIN_GROUPS} profilePath="/admin/profile" crumbs={crumbs}>{children}</PortalShell>;
 }

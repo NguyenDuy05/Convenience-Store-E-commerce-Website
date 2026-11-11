@@ -1,25 +1,25 @@
 import api from './axios';
 
-// UC-02.4, 21.1 View Promotions (đang hoạt động)
+// Gọi API: khuyến mãi đang chạy
 export const listPromotions = (params) => api.get(`/promotions`, { params });
 
-// UC-21.2 Apply Promotion
+// Gọi API: tính thử khuyến mãi cho hóa đơn
 export const applyPromotion = (data) => api.post(`/promotions/apply`, data);
 
-// UC-37.1 View Promotions (tất cả trạng thái)
+// Gọi API: admin xem tất cả khuyến mãi
 export const listAllPromotions = (params) => api.get(`/promotions/manage`, { params });
 
-// UC-37.2 Create Promotion
+// Gọi API: tạo khuyến mãi
 export const createPromotion = (data) => api.post(`/promotions`, data);
 
-// UC-37.3 Update Promotion
+// Gọi API: sửa khuyến mãi
 export const updatePromotion = (id, data) => api.put(`/promotions/${id}`, data);
 
-// UC-37.4 Activate Promotion
+// Gọi API: kích hoạt khuyến mãi
 export const activatePromotion = (id, data) => api.patch(`/promotions/${id}/activate`, data);
 
-// UC-37.5 Suspend Promotion
+// Gọi API: tạm ngưng khuyến mãi
 export const suspendPromotion = (id, data) => api.patch(`/promotions/${id}/suspend`, data);
 
-// UC-37.6 Delete Promotion
+// Gọi API: xóa khuyến mãi
 export const deletePromotion = (id) => api.delete(`/promotions/${id}`);

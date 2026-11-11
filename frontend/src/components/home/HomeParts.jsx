@@ -1,8 +1,9 @@
 import { CATEGORY_IMAGES, catMeta, productImage, promoValueText, scopeText, daysLeft, money } from './homeConfig';
 
+// Icon Material Symbols của trang chủ
 export const Icon = ({ name, size = '' }) => <span className={`hp-icon ${size}`} aria-hidden="true">{name}</span>;
 
-// Ô ảnh: có ảnh thì hiện ảnh, chưa có thì hiện ô trống theo màu danh mục
+// Ảnh sản phẩm (chưa có ảnh thì hiện ô màu theo danh mục)
 export function Media({ product, cat }) {
     const src = productImage(product);
     if (src) return <img className="hp-img" src={src} alt={product.name} loading="lazy" width="240" height="240" />;
@@ -10,7 +11,7 @@ export function Media({ product, cat }) {
     return <span className="hp-ph" style={{ '--tint': m.tint }}><Icon name={m.icon} size="xl" /></span>;
 }
 
-// Product card (View Products)
+// Thẻ sản phẩm trên trang chủ
 export function ProductTile({ product, cat, deal, onOpen }) {
     const out = (product.stockQuantity ?? 0) <= 0;
     return (
@@ -34,7 +35,7 @@ export function ProductTile({ product, cat, deal, onOpen }) {
     );
 }
 
-// Promotion card (View Promotions)
+// Thẻ khuyến mãi trên trang chủ
 export function PromoCard({ promo, active, onPick }) {
     const left = daysLeft(promo.endDate);
     return (
@@ -55,7 +56,7 @@ export function PromoCard({ promo, active, onPick }) {
     );
 }
 
-// Hanging aisle sign for a category
+// Biển danh mục trên trang chủ
 export function CategorySign({ cat, count, active, onClick }) {
     const m = catMeta(cat?.slug);
     const img = cat ? CATEGORY_IMAGES[cat.slug] : '';

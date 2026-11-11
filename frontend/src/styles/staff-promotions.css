@@ -1,5 +1,3 @@
-/* Trang Staff > Khuyến mãi (UC-20). Cùng ngôn ngữ thiết kế với trang "Chi tiết đơn hàng" (odetail-).
-   Class bắt đầu bằng "spt-". Dùng biến --qk-* của dự án; nếu chưa khai báo thì dùng giá trị dự phòng. */
 .spt {
     --spt-primary: var(--qk-primary, #0058bc);
     --spt-primary-dark: var(--qk-primary-dark, #004494);
@@ -57,7 +55,6 @@
 .spt-input:focus { box-shadow: 0 0 0 2px var(--spt-primary); background: var(--spt-surface); }
 .spt-search { display: flex; gap: 8px; max-width: 420px; flex: 1; }
 
-/* ----- Danh sách khuyến mãi ----- */
 .spt-promos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .spt-promo { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 12px; background: var(--spt-surface); box-shadow: var(--spt-shadow-sm); border: 2px solid transparent; }
 .spt-promo.selected { border-color: var(--spt-primary); background: var(--spt-surface-low); }
@@ -70,7 +67,6 @@
 .spt-chip.warn { background: var(--spt-tertiary-fixed); color: var(--spt-on-tertiary-fixed); }
 .spt-promo .spt-btn { margin-top: auto; }
 
-/* ----- Áp dụng vào đơn ----- */
 .spt-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; }
 .spt-side { display: flex; flex-direction: column; gap: 16px; }
 @media (max-width: 900px) { .spt-grid { grid-template-columns: minmax(0, 1fr); } .spt-head h1 { font-size: 24px; line-height: 30px; } }

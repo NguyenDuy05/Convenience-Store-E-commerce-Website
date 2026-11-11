@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { listStores } from '../../api/store.api';
 import { addReview } from '../../api/review.api';
 
+// Form đánh giá cửa hàng
 export default function StoreReviewForm({ onSubmitted }) {
   const [stores, setStores] = useState([]);
   const [form, setForm] = useState({ storeId: '', rating: 5, comment: '' });

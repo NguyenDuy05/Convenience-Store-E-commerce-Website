@@ -1,6 +1,6 @@
 import TransactionManager from '../../components/transaction/TransactionManager';
 
-// UC-23 Manage Transactions (Staff): UC-23.1 View, UC-23.2 Search, UC-23.3 View Details (chỉ đọc)
+// UC-23 Staff xem giao dịch (tiền thu hôm nay)
 export default function StaffTransactionsPage() {
   return (
     <TransactionManager

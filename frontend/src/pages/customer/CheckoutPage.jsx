@@ -14,8 +14,7 @@ import { formatCurrency } from '../../utils/format';
 import { CHECKOUT_METHODS } from '../../utils/orderMeta';
 import CartIcon from '../../components/common/CartIcon';
 
-// UC-08.1 Create Order: xem lại đơn (giá/khuyến mãi tính ở server), chọn cách thanh toán, đặt hàng.
-// Đơn online: sau khi tạo đơn chuyển sang cổng thanh toán (UC-08.2). Tiền mặt: xác nhận ngay.
+// UC-08.1 Trang đặt hàng: xem lại đơn, mã giảm giá, ví, đặt hàng
 export default function CheckoutPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -28,11 +27,11 @@ export default function CheckoutPage() {
   const [note, setNote] = useState('');
   const [codeInput, setCodeInput] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
-  const [notice, setNotice] = useState('');        // thông báo cần khách chú ý (giá đổi, hết hàng...)
+  const [notice, setNotice] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const submittingRef = useRef(false);             // chặn bấm đúp trước cả khi state kịp cập nhật
-  const keyRef = useRef(newIdempotencyKey());      // giữ nguyên khi gửi lại do lỗi mạng; đổi sau lỗi "dứt khoát"
+  const submittingRef = useRef(false);
+  const keyRef = useRef(newIdempotencyKey());
 
   const handleAuth = useCallback(async (err) => {
     if (err.response?.status !== 401) return false;
@@ -69,7 +68,7 @@ export default function CheckoutPage() {
         discountCode: appliedCode || undefined,
         customerNote: note.trim() || undefined,
         expectedTotal: summary.totalAmount,
-        expectedWalletAmount: Math.min(summary.walletBalance || 0, summary.totalAmount),        // để server phát hiện giá đã đổi
+        expectedWalletAmount: Math.min(summary.walletBalance || 0, summary.totalAmount),
       }, keyRef.current);
       order = res.data.order;
     } catch (err) {
@@ -77,7 +76,6 @@ export default function CheckoutPage() {
       const status = err.response?.status;
       const data = err.response?.data || {};
       if (!err.response || status >= 500 || data.code === 'CHECKOUT_PROCESSING') {
-        // Không biết đơn đã tạo chưa: GIỮ nguyên khoá, bấm lại sẽ nhận đúng đơn cũ nếu đã tạo (không đặt trùng)
         setSubmitError("No response received. You can select “Place order” again; duplicate orders will not be created.");
       } else {
         keyRef.current = newIdempotencyKey();
@@ -92,13 +90,11 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Đơn đã tạo. Tiền mặt -> xong. Online -> sang cổng thanh toán.
     if (order.paymentStatus === 'paid') { navigate(`/payment/result?orderId=${order._id}`, { replace: true }); return; }
     try {
       const pay = await createOnlinePayment({ orderId: order._id, method });
       window.location.href = pay.data.paymentUrl;
     } catch (err) {
-      // Đơn đã giữ hàng nhưng chưa tạo được link: đưa khách tới trang thanh toán để thử lại, không mất đơn
       navigate(`/orders/${order._id}/pay`, { replace: true, state: { error: err.response?.data?.message || "Could not connect to the payment gateway. You can try again." } });
     }
   };

@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => require('./config/migrations').run())
   .then(() => {
-    require('./services/payment.service').startExpiryJob();   // mỗi phút: đơn quá hạn thanh toán -> failed + hoàn kho
+    require('./services/payment.service').startExpiryJob();
     return app.listen(PORT, () => console.log(`Server chạy tại http://localhost:${PORT}`));
   })
   .catch((err) => { console.error(err); process.exit(1); });

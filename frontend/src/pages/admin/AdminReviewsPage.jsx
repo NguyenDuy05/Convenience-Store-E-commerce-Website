@@ -12,6 +12,7 @@ const HIDE_REASONS = [
   { value: 'customer_request', label: 'Customer requested removal or review is under dispute', detail: 'Removal request submitted through the customer account' },
 ];
 
+// UC-40 Admin xem, ẩn và xử lý đánh giá vi phạm
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState([]);
   const [stores, setStores] = useState([]);

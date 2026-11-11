@@ -1,4 +1,4 @@
-// Khoá chống đặt trùng cho mỗi lần bấm "Đặt hàng"
+// Tạo khóa chống đặt trùng cho mỗi lần bấm đặt hàng
 export const newIdempotencyKey = () =>
   (typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()

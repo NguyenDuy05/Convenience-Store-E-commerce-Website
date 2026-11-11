@@ -5,6 +5,7 @@ import { Badge, Confirm, Notice, STATUS_TONE, useAction, useFetch } from '../../
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 
+// Form thêm / sửa cửa hàng
 function StoreEditor({ store, busy, error, onSave, onCancel }) {
   const [f, setF] = useState({ name: store?.name || '', address: store?.address || '', phone: store?.phone || '', website: store?.website || '' });
   const [err, setErr] = useState('');
@@ -32,6 +33,7 @@ function StoreEditor({ store, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// Form sửa giờ mở cửa 7 ngày
 function HoursEditor({ store, busy, error, onSave, onCancel }) {
   const initial = DAYS.map((_, day) => { const h = (store.openingHours || []).find((x) => x.day === day) || {}; return { day, openTime: h.openTime || '07:00', closeTime: h.closeTime === '24:00' ? '00:00' : h.closeTime || '00:00', isClosed: !!h.isClosed }; });
   const [rows, setRows] = useState(initial);
@@ -61,10 +63,11 @@ function HoursEditor({ store, busy, error, onSave, onCancel }) {
   </section>;
 }
 
+// UC-31 Admin quản lý cửa hàng
 export default function AdminStoresPage() {
   const { data, loading, error, reload } = useFetch(listStores, {});
   const act = useAction(reload);
-  const [panel, setPanel] = useState(null); // { type: 'add'|'edit'|'hours'|'close'|'open', store }
+  const [panel, setPanel] = useState(null);
   const [reason, setReason] = useState('');
   const open = (type, store) => { act.setError(''); act.setSuccess(''); setReason(''); setPanel({ type, store }); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const run = async (op, notice) => { if (await act.run(op, notice)) setPanel(null); };

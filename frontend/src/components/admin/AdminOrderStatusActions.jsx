@@ -12,7 +12,7 @@ const WAIT_TEXT = {
   failed: "This order failed or expired and cannot be processed. If money was charged, record an issue for review.",
 };
 
-// Chuyển đơn sang bước kế tiếp. order.nextTransition = { to, needsCashConfirm } từ server (null nếu không còn bước nào).
+// Nút chuyển đơn sang bước kế tiếp (đơn tiền mặt phải xác nhận đã thu)
 export default function AdminOrderStatusActions({ order, onChanged, onAuthError }) {
   const next = order.nextTransition;
   const [note, setNote] = useState('');
@@ -35,7 +35,7 @@ export default function AdminOrderStatusActions({ order, onChanged, onAuthError 
     } catch (err) {
       if (await onAuthError(err)) return;
       setError(err.response?.data?.message || "Could not update the status. Please try again.");
-      if (['STALE_STATUS', 'INVALID_TRANSITION'].includes(err.response?.data?.code)) await onChanged();   // người khác vừa đổi: tải lại
+      if (['STALE_STATUS', 'INVALID_TRANSITION'].includes(err.response?.data?.code)) await onChanged();
     } finally { lock.current = false; setBusy(false); }
   };
 

@@ -7,19 +7,21 @@ const { logActivity } = require('../services/activity.service');
 
 const STATUSES = ['open', 'in_progress', 'resolved'];
 const TYPES = ['support', 'complaint'];
-// Luồng xử lý khiếu nại: mới -> đang xử lý -> đã giải quyết (đã giải quyết là kết thúc, không mở lại)
 const TRANSITIONS = { open: ['in_progress', 'resolved'], in_progress: ['resolved'], resolved: [] };
 const NOT_FOUND = 'Support request not found';
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Kiểm tra ObjectId hợp lệ
 const isId = (v) => mongoose.isValidObjectId(v);
 
+// Lấy tên người dùng theo danh sách id
 const userMap = async (ids) => {
   const list = [...new Set(ids.filter(Boolean).map(String))];
   const users = list.length ? await User.find({ _id: { $in: list } }).select('fullName email').lean() : [];
   return new Map(users.map((u) => [String(u._id), u]));
 };
 
-// Chi tiết đầy đủ của một yêu cầu (dùng cho GET và kết quả sau khi xử lý)
+// Chi tiết đầy đủ một yêu cầu hỗ trợ (kèm các trạng thái được chuyển tiếp)
 async function detailOf(r, role) {
   const [users, order] = await Promise.all([
     userMap([r.customerId, r.handledBy, ...r.responses.map((x) => x.responderId)]),
@@ -44,8 +46,7 @@ async function detailOf(r, role) {
   };
 }
 
-// UC-19.3 Handle Customer Complaint: danh sách (catalog tài liệu ghi UC-19.3; code cũ ghi UC-20.3)
-// GET /api/support?status=&type=&q=&page=&limit=   (staff, admin)
+// UC-19.3 Staff xem danh sách yêu cầu hỗ trợ / khiếu nại
 exports.listSupportRequests = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
@@ -93,8 +94,7 @@ exports.listSupportRequests = asyncHandler(async (req, res) => {
   });
 });
 
-// UC-19.3: xem một yêu cầu/khiếu nại kèm trạng thái hiện tại và các bước chuyển được phép
-// GET /api/support/:id
+// UC-19.3 Xem chi tiết một yêu cầu / khiếu nại
 exports.getSupportRequest = asyncHandler(async (req, res) => {
   if (!isId(req.params.id)) throw new ApiError(404, NOT_FOUND);
   const r = await SupportRequest.findById(req.params.id).lean();
@@ -102,11 +102,7 @@ exports.getSupportRequest = asyncHandler(async (req, res) => {
   res.json(await detailOf(r, req.user.role));
 });
 
-// UC-19.3: phản hồi và/hoặc chuyển trạng thái
-// PATCH /api/support/:id/handle   header Idempotency-Key   body: { message?, status? }
-// - Trạng thái phải theo luồng (409 INVALID_TRANSITION kèm danh sách được phép); "resolved" bắt buộc có phản hồi cho khách.
-// - Gửi lại cùng Idempotency-Key (lỗi mạng) không ghi trùng phản hồi; hai người xử lý cùng lúc thì chỉ một người thành công.
-// - Chưa có chính sách thông báo được duyệt nên không gửi thông báo (notification: 'not_required'); trạng thái đã LƯU luôn tách bạch với thông báo.
+// UC-19.3 Staff phản hồi và / hoặc chuyển trạng thái khiếu nại
 exports.handleComplaint = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isId(id)) throw new ApiError(404, NOT_FOUND);
@@ -122,7 +118,6 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   const r = await SupportRequest.findById(id).lean();
   if (!r) throw new ApiError(404, NOT_FOUND);
 
-  // Gửi lại do lỗi mạng: phản hồi với khoá này đã được lưu -> trả lại trạng thái hiện tại, không ghi thêm
   if (key && r.responses.some((x) => x.requestKey === key)) {
     return res.json({ ...(await detailOf(r, req.user.role)), replayed: true, notification: 'not_required' });
   }
@@ -142,7 +137,6 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   const update = { $set: set };
   if (message) update.$push = { responses: { responderId: req.user.id, message, createdAt: now, ...(key ? { requestKey: key } : {}) } };
 
-  // Điều kiện status hiện tại + chưa có khoá này: không ghi đè khi người khác vừa xử lý, không ghi trùng khi gửi song song
   const cond = { _id: id, status: r.status, ...(key ? { 'responses.requestKey': { $ne: key } } : {}) };
   const updated = await SupportRequest.findOneAndUpdate(cond, update, { new: true });
   if (!updated) {
@@ -158,7 +152,7 @@ exports.handleComplaint = asyncHandler(async (req, res) => {
   res.json({ ...(await detailOf(plain, req.user.role)), replayed: false, notification: 'not_required' });
 });
 
-// Customer support submission and personal request history.
+// Khách gửi yêu cầu hỗ trợ / khiếu nại
 exports.submitSupportRequest = asyncHandler(async (req, res) => {
   const { subject, message, type = 'support', orderId } = req.body || {};
   if (typeof subject !== 'string' || !subject.trim() || subject.trim().length > 200)
@@ -179,6 +173,7 @@ exports.submitSupportRequest = asyncHandler(async (req, res) => {
   res.status(201).json(created);
 });
 
+// Khách xem các yêu cầu hỗ trợ của mình
 exports.listMySupportRequests = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);

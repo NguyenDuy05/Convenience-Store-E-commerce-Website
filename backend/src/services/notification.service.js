@@ -16,11 +16,12 @@ const events = {
   status_updated: ["Order update", "Your order status has changed."],
   order_expired: ["Order payment expired", "The payment deadline has passed. You can place a new order."],
 };
+// Escape HTML khi chèn vào email
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Định dạng tiền VND cho email
 const money = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0);
 
-// Gọi sau khi lưu/commit. Lỗi gửi mail không được làm thất bại nghiệp vụ đã hoàn tất.
-// Thông báo trong web được lưu độc lập với cấu hình email.
+// Gửi email + thông báo trong web khi đơn đổi trạng thái (lỗi gửi không làm hỏng nghiệp vụ)
 exports.notifyOrder = async (orderOrId, event, { amount, txnRef } = {}) => {
   try {
     const order = orderOrId && typeof orderOrId === 'object' && orderOrId.orderCode
@@ -57,7 +58,6 @@ exports.notifyOrder = async (orderOrId, event, { amount, txnRef } = {}) => {
     const result = await mail.sendMail({ to: customer.email, subject: `${title} - ${order.orderCode}`, text, html });
     return { sent: true, messageId: result.messageId };
   } catch (error) {
-    // Chỉ ghi mã lỗi, tránh lộ thông tin SMTP hoặc nội dung email vào log.
     console.error('Order notification failed:', event, error.code || error.name);
     return { sent: false };
   }

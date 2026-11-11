@@ -1,12 +1,11 @@
-// UC-30.6 View Staff Activity History. Nhật ký thao tác chung, ghi từ middleware/service. Chỉ ghi thêm.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const activityLogSchema = new Schema({
   actorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   actorRole: { type: String, enum: ['customer', 'staff', 'admin'] },
-  action: { type: String, required: true },                   // PRODUCT_UPDATE, ORDER_STATUS_CHANGE, STOCK_ADJUST...
-  targetType: String,                                         // Product, Order, User...
+  action: { type: String, required: true },
+  targetType: String,
   targetId: Schema.Types.ObjectId,
   detail: Schema.Types.Mixed,
   ip: String,

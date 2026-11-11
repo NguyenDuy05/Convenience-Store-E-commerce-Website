@@ -11,7 +11,7 @@ import { COMPLAINT_TABS, COMPLAINT_TYPE } from '../../utils/complaintMeta';
 
 const LIMIT = 20;
 
-// UC-19.3 Handle Customer Complaint (Staff): list complaints and support requests, filtered by status and type
+// UC-19.3 Staff xem danh sách khiếu nại / yêu cầu hỗ trợ
 export default function StaffComplaintsPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();

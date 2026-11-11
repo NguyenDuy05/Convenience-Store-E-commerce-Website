@@ -11,7 +11,7 @@ import { formatCurrency, formatDate, formatDateTime } from '../../utils/format';
 import { CUSTOMER_STATUS } from '../../utils/complaintMeta';
 import { PAYMENT_METHOD } from '../../utils/orderMeta';
 
-// UC-19.2 View Customer Details (Staff): thông tin tối thiểu + tóm tắt đơn hàng/khiếu nại. Chỉ xem.
+// UC-19.2 Staff xem chi tiết khách
 export default function StaffCustomerDetailPage() {
   const { id } = useParams();
   const { logout } = useAuth();

@@ -2,9 +2,10 @@ const { Notification, NotificationSettings } = require('../models');
 
 const DEFAULTS = { orders: true, payments: true, staffOrders: true, vouchers: true, promotions: true };
 exports.DEFAULTS = DEFAULTS;
+// Đọc cấu hình thông báo tự động
 exports.getSettings = async () => ({ ...DEFAULTS, ...((await NotificationSettings.findById('global').lean()) || {}) });
 
-// Unique source keys make retries and simultaneous gateway callbacks safe.
+// Tạo thông báo trong web một lần duy nhất cho mỗi sự kiện
 async function insertOnce(sourceKey, fields) {
   try {
     return await Notification.findOneAndUpdate({ sourceKey }, { $setOnInsert: { ...fields, sourceKey } }, { upsert: true, new: true, runValidators: true });
@@ -14,6 +15,7 @@ async function insertOnce(sourceKey, fields) {
   }
 }
 
+// Tạo thông báo cho khách / staff khi đơn đổi trạng thái hoặc thanh toán
 exports.orderEvent = async (order, event, title, message, eventKey = '') => {
   try {
     const settings = await exports.getSettings();
@@ -41,12 +43,14 @@ exports.orderEvent = async (order, event, title, message, eventKey = '') => {
   }
 };
 
+// Gỡ thông báo khuyến mãi khi khuyến mãi bị tắt / xóa
 exports.withdrawOffer = async (offer, type) => {
   try {
     await Notification.updateMany({ type, sourceKey: new RegExp(`^${type}:${offer._id}:`), status: 'published' }, { $set: { status: 'archived' } });
   } catch (error) { console.error('Offer withdrawal failed:', error.code || error.name); }
 };
 
+// Thông báo cho khách khi có khuyến mãi mới
 exports.announceOffer = async (offer, type) => {
   try {
     const settings = await exports.getSettings();

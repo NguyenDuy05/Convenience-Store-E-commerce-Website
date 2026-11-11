@@ -13,6 +13,7 @@ import { newIdempotencyKey as newKey } from '../../utils/idempotency';
 import '../../styles/pos.css';
 
 const METHODS = { cash: 'Cash', card: 'Card terminal', vnpay: 'VNPay QR' };
+// POS bán tại quầy: chọn sản phẩm, gắn thành viên, khuyến mãi, thu tiền, in hóa đơn
 export default function StoreOrderPage() {
   const { user } = useAuth();
   const storageKey = `quick-pos-pending:${user.id}`;
@@ -25,7 +26,7 @@ export default function StoreOrderPage() {
   const [category, setCategory] = useState(''), [query, setQuery] = useState(''), [search, setSearch] = useState(''), [page, setPage] = useState(1), [reload, setReload] = useState(0);
   const [promotionId, setPromotionId] = useState(initial.current?.request?.promotionId || '');
   const [note, setNote] = useState(initial.current?.request?.customerNote || '');
-  const [member, setMember] = useState(initial.current?.member || null);   // thành viên tích điểm (tùy chọn)
+  const [member, setMember] = useState(initial.current?.member || null);
   const [quote, setQuote] = useState(initial.current?.quote || null), [quoting, setQuoting] = useState(false), [loading, setLoading] = useState(true);
   const [method, setMethod] = useState(initial.current?.request?.method || 'cash');
   const [received, setReceived] = useState(initial.current?.request?.received ?? ''), [reference, setReference] = useState(initial.current?.request?.reference || ''), [approved, setApproved] = useState(!!initial.current?.request?.paymentConfirmed);

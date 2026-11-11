@@ -9,8 +9,10 @@ import '../../styles/product-list.css';
 import '../../styles/home.css';
 
 const PAGE_SIZE = 12;
+// Icon Material Symbols của trang sản phẩm
 const Icon = ({ children }) => <span className="catalog-icon" aria-hidden="true">{children}</span>;
 
+// Thẻ sản phẩm trong danh sách
 function ProductTile({ product, compact }) {
   const inStock = Number(product.stockQuantity) > 0;
   return (
@@ -40,6 +42,7 @@ function ProductTile({ product, compact }) {
   );
 }
 
+// UC-02.1/02.3 Danh sách và tìm kiếm sản phẩm (lọc danh mục, giá, còn hàng)
 export default function ProductListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

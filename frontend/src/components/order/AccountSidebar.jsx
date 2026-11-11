@@ -16,10 +16,11 @@ const links = [
   { to: '/support', label: "Support", icon: 'help_center' },
 ];
 
+// Chữ cái đầu của họ tên (cho avatar)
 const initials = (name = '') =>
   name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase() || '').join('') || '?';
 
-// Cột tài khoản bên trái trang đơn hàng. activeCount = số đơn đang xử lý (hiện trên mục "Đơn hàng").
+// Cột menu tài khoản bên trái các trang của khách
 export default function AccountSidebar({ activeCount = 0 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();

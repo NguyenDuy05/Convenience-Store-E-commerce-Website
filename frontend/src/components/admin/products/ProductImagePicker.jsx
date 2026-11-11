@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../../api/axios';
 import './product-image-picker.css';
 
+// Chọn ảnh sản phẩm từ thư viện ảnh
 export default function ProductImagePicker({ value, onChange, disabled }) {
   const [library, setLibrary] = useState([]);
   const [query, setQuery] = useState('');

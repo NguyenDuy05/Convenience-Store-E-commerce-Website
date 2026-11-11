@@ -7,14 +7,17 @@ const { logActivity } = require('../services/activity.service');
 
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Dữ liệu nhân viên trả về cho admin
 const view = (u) => ({
   _id: u._id, fullName: u.fullName, email: u.email, phone: u.phone || null, status: u.status,
   employeeCode: u.staffInfo?.employeeCode || null, position: u.staffInfo?.position || null, hiredAt: u.staffInfo?.hiredAt || null,
   lastLoginAt: u.lastLoginAt || null, createdAt: u.createdAt,
 });
 
+// Lấy nhân viên chưa bị xóa theo id (404 nếu không có)
 async function loadStaff(id) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Staff not found');
   const u = await User.findOne({ _id: id, role: 'staff', status: { $ne: 'deleted' } });
@@ -22,6 +25,7 @@ async function loadStaff(id) {
   return u;
 }
 
+// Kiểm tra ngày vào làm (không ở tương lai)
 function parseHiredAt(v) {
   if (v === undefined || v === null || v === '') return undefined;
   const d = new Date(v);
@@ -30,6 +34,7 @@ function parseHiredAt(v) {
   return d;
 }
 
+// Kiểm tra các trường chung khi thêm / sửa nhân viên
 function parseCommon(body = {}) {
   const str = (v) => (typeof v === 'string' ? v.trim() : '');
   const fullName = str(body.fullName);
@@ -42,13 +47,14 @@ function parseCommon(body = {}) {
   return { fullName, phone: phone || undefined, position: position || undefined, hiredAt: parseHiredAt(body.hiredAt) };
 }
 
+// Sinh mã nhân viên tiếp theo (ST001, ST002…)
 async function nextEmployeeCode() {
   const last = await User.find({ role: 'staff', 'staffInfo.employeeCode': /^ST\d+$/ }).select('staffInfo.employeeCode').lean();
   const max = last.reduce((m, u) => Math.max(m, parseInt(u.staffInfo.employeeCode.slice(2), 10) || 0), 0);
   return `ST${String(max + 1).padStart(4, '0')}`;
 }
 
-// UC-30.1 View Staff. GET /api/staff?q=&status=active|locked&page=&limit=
+// UC-30.1 Admin xem / tìm nhân viên
 exports.listStaff = asyncHandler(async (req, res) => {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -67,7 +73,7 @@ exports.listStaff = asyncHandler(async (req, res) => {
   res.json({ items: docs.map(view), total, page, limit });
 });
 
-// UC-30.2 Add Staff
+// UC-30.2 Thêm nhân viên
 exports.addStaff = asyncHandler(async (req, res) => {
   const data = parseCommon(req.body);
   const email = typeof req.body?.email === 'string' ? req.body.email.toLowerCase().trim() : '';
@@ -91,7 +97,7 @@ exports.addStaff = asyncHandler(async (req, res) => {
   res.status(201).json(view(u));
 });
 
-// UC-30.3 Update Staff (email và mật khẩu không đổi ở đây)
+// UC-30.3 Sửa thông tin nhân viên (không đổi email, mật khẩu)
 exports.updateStaff = asyncHandler(async (req, res) => {
   const u = await loadStaff(req.params.id);
   const data = parseCommon(req.body);
@@ -103,7 +109,7 @@ exports.updateStaff = asyncHandler(async (req, res) => {
   res.json(view(u));
 });
 
-// UC-30.4 Lock Staff Account
+// UC-30.4 Khóa tài khoản nhân viên
 exports.lockStaff = asyncHandler(async (req, res) => {
   const u = await loadStaff(req.params.id);
   if (u.status === 'locked') throw new ApiError(409, 'This account is already locked');
@@ -114,7 +120,7 @@ exports.lockStaff = asyncHandler(async (req, res) => {
   res.json(view(u));
 });
 
-// UC-30.5 Unlock Staff Account
+// UC-30.5 Mở khóa tài khoản nhân viên
 exports.unlockStaff = asyncHandler(async (req, res) => {
   const u = await loadStaff(req.params.id);
   if (u.status !== 'locked') throw new ApiError(409, 'This account is not locked');
@@ -126,7 +132,7 @@ exports.unlockStaff = asyncHandler(async (req, res) => {
   res.json(view(u));
 });
 
-// UC-30.6 View Staff Activity History. GET /api/staff/:id/activity?page=&limit=
+// UC-30.6 Xem nhật ký thao tác của nhân viên
 exports.getStaffActivity = asyncHandler(async (req, res) => {
   const u = await loadStaff(req.params.id);
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);

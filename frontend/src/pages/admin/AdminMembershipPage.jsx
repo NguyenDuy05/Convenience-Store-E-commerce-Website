@@ -4,11 +4,15 @@ import Icon from '../../components/common/Icon';
 import * as api from '../../api/membership.api';
 import '../../styles/admin-membership.css';
 
+// Định dạng số
 const num = (n) => new Intl.NumberFormat('en-US').format(n ?? 0);
+// Định dạng ngày
 const date = (d) => d ? new Date(d).toLocaleString('en-US') : '-';
 const emptyTier = { name: '', minPoints: 0, discountPercent: 0, description: '', sortOrder: 0 };
+// Lấy thông báo lỗi từ response API
 const message = (e) => e.response?.data?.message || 'Unable to complete this request. Please try again.';
 
+// UC-39 Admin quản lý thành viên, hạng, điểm
 export default function AdminMembershipPage() {
   const [tab, setTab] = useState('overview');
   const [tiers, setTiers] = useState([]);

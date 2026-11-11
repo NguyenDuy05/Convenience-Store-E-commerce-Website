@@ -1,4 +1,3 @@
-/* Trang danh sách khiếu nại của staff (UC-19.3). Class bắt đầu bằng "scmp-". */
 .scmp { font-family: var(--qk-font-body); color: var(--qk-text); }
 .scmp-head { margin-bottom: 16px; }
 .scmp-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; letter-spacing: -.01em; }

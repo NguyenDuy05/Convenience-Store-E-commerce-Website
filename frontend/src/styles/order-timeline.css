@@ -4,7 +4,6 @@
 .otl-step { position: relative; display: flex; gap: 16px; padding-bottom: 24px; }
 .otl-step:last-child { padding-bottom: 0; }
 
-/* Đường nối giữa các mốc */
 .otl-step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--qk-surface-high); }
 .otl-step:last-child::before { display: none; }
 .otl-step.done::before { background: var(--qk-secondary); }

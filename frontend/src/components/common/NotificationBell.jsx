@@ -5,6 +5,7 @@ import { useNotifications, notificationPath, notificationIcons } from '../../con
 import Icon from './Icon';
 import '../../styles/notifications.css';
 
+// Chuông thông báo: số chưa đọc + danh sách thông báo mới
 export default function NotificationBell() {
   const { user } = useAuth();
   const { items, unreadCount, loading, error, refresh, markRead, markAll } = useNotifications();

@@ -7,12 +7,14 @@ import { BRAND_NAME, money, catMeta } from './homeConfig';
 import '../../styles/home-store.css';
 
 const ALL = '__all__';
+// Chữ viết tắt của tên sản phẩm (dùng khi chưa có ảnh)
 const lettersOf = (text) => {
   const value = String(text || '').normalize('NFC');
   if (typeof Intl.Segmenter === 'function') return [...new Intl.Segmenter('vi', { granularity: 'grapheme' }).segment(value)].map((part) => part.segment);
   return Array.from(value);
 };
 
+// Sản phẩm trên kệ hàng ở trang chủ
 function ShelfProduct({ product, category, deal, onOpen }) {
   const out = Number(product.stockQuantity || 0) <= 0;
   return (
@@ -32,6 +34,7 @@ function ShelfProduct({ product, category, deal, onOpen }) {
   );
 }
 
+// Khu kệ hàng sản phẩm trên trang chủ
 export default function ProductStoreSection({
   products, allProducts, categories, categoryId, onChooseCategory, deals, onOpen,
   query, setQuery, sort, setSort, onlyStock, setOnlyStock, onlyDeal, setOnlyDeal,

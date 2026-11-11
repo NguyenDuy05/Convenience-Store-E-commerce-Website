@@ -1,4 +1,3 @@
-/* Trang khách hàng của staff (UC-19.1). Class bắt đầu bằng "scus-". */
 .scus { font-family: var(--qk-font-body); color: var(--qk-text); }
 .scus-head { margin-bottom: 16px; }
 .scus-head h1 { margin: 0; font-family: var(--qk-font-display); font-size: 28px; line-height: 36px; letter-spacing: -.01em; }

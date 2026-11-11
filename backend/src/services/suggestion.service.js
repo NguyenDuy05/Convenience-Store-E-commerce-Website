@@ -1,16 +1,16 @@
-// Tính năng đặc biệt: giỏ hàng gợi ý theo ngân sách. Trả về 4 giỏ cho cùng một ngân sách.
-// Điểm ưu tiên: khách cũ = số lần chính họ đã mua; khách mới = tổng số lượng bán ra toàn hệ thống (best-seller).
-// Cần Order.items.productId, Order.customerId đã có index; Product.mealType: main | light | snack | beverage.
-
-exports.basketMain = async (/* userId, budget */) => {           // 1. món no quen thuộc (Greedy theo tần suất, mealType = main)
+// Gợi ý giỏ món chính theo ngân sách (chưa triển khai)
+exports.basketMain = async () => {
   throw new Error("Not implemented");
 };
-exports.basketSnack = async (/* userId, budget */) => {          // 2. ăn vặt quen thuộc (mealType = snack)
+// Gợi ý giỏ ăn vặt theo ngân sách (chưa triển khai)
+exports.basketSnack = async () => {
   throw new Error("Not implemented");
 };
-exports.basketHotCombo = async (/* budget */) => {               // 3. combo hot: các cặp hay được mua chung trong toàn hệ thống
+// Gợi ý combo hay được mua chung (chưa triển khai)
+exports.basketHotCombo = async () => {
   throw new Error("Not implemented");
 };
-exports.basketMix = async (/* userId, budget */) => {            // 4. mix cân bằng main + snack, bỏ bớt món cho vừa ngân sách (0/1 Knapsack)
+// Gợi ý giỏ kết hợp món chính + ăn vặt (chưa triển khai)
+exports.basketMix = async () => {
   throw new Error("Not implemented");
 };

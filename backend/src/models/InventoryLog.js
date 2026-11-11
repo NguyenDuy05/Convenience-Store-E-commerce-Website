@@ -1,5 +1,3 @@
-// UC-34.6 View Inventory History, UC-19.3 Adjust, UC-19.7 Manage Damaged Products
-// Chỉ ghi thêm, không sửa/xóa.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -11,10 +9,10 @@ const inventoryLogSchema = new Schema({
     enum: ['receive', 'sale', 'release', 'adjust', 'stocktake', 'damaged', 'expired'],
     required: true,
   },
-  quantityChange: { type: Number, required: true },         // + nhập / - xuất
-  quantityAfter: { type: Number, required: true },          // tổng tồn của sản phẩm sau thay đổi
+  quantityChange: { type: Number, required: true },
+  quantityAfter: { type: Number, required: true },
   reason: String,
-  orderId: { type: Schema.Types.ObjectId, ref: 'Order' },   // type = sale | release
+  orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
   releaseClaimedAt: Date,
   releaseOf: { type: Schema.Types.ObjectId, ref: 'InventoryLog' },
   stocktakeId: { type: Schema.Types.ObjectId, ref: 'Stocktake' },

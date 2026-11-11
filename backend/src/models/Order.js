@@ -1,20 +1,16 @@
-// UC-09, UC-10, UC-22, UC-35. Đơn nhận tại cửa hàng (không giao hàng).
-// Admin có thể hủy đơn (cancelled); đơn đã thanh toán sẽ có bản ghi hoàn tiền (refund) và paymentStatus = refunded.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Snapshot sản phẩm tại thời điểm đặt: đổi giá / đổi tên / xóa Product sau này không làm sai đơn cũ
 const orderItemSchema = new Schema({
   productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   name: { type: String, required: true },
   sku: String,
   unitPrice: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1 },
-  discountAmount: { type: Number, default: 0, min: 0 },     // giảm giá khuyến mãi áp trên dòng này
+  discountAmount: { type: Number, default: 0, min: 0 },
   lineTotal: { type: Number, required: true, min: 0 },
 }, { _id: false });
 
-// UC-10.3 Track Order Status
 const statusHistorySchema = new Schema({
   status: String,
   changedBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -22,7 +18,6 @@ const statusHistorySchema = new Schema({
   note: String,
 }, { _id: false });
 
-// UC-35.4 Handle Order Issue
 const issueSchema = new Schema({
   description: { type: String, required: true },
   reportedBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -33,18 +28,18 @@ const issueSchema = new Schema({
 }, { timestamps: true });
 
 const orderSchema = new Schema({
-  orderCode: { type: String, required: true, unique: true },   // dạng CM-20261008-0001 (dùng Counter), khách đọc cho nhân viên khi nhận hàng
+  orderCode: { type: String, required: true, unique: true },
   source: { type: String, enum: ['online', 'store'], required: true },
-  customerId: {                                                // khách vãng lai mua tại quầy (UC-22) thì để trống
+  customerId: {
     type: Schema.Types.ObjectId, ref: 'User', index: true,
     required: function () { return this.source === 'online'; },
   },
-  createdBy: { type: Schema.Types.ObjectId, ref: 'User' },     // staff tạo đơn tại quầy (UC-22)
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
 
   items: { type: [orderItemSchema], validate: v => v.length > 0 },
 
   subtotal: { type: Number, required: true, min: 0 },
-  appliedPromotions: [{                                        // UC-21.2 Apply Promotion
+  appliedPromotions: [{
     promotionId: { type: Schema.Types.ObjectId, ref: 'Promotion' },
     name: String,
     amount: Number,
@@ -56,7 +51,7 @@ const orderSchema = new Schema({
     code: String,
     amount: { type: Number, default: 0 },
   },
-  pointsUsed: { type: Number, default: 0, min: 0 },            // đổi điểm thành tiền giảm trực tiếp
+  pointsUsed: { type: Number, default: 0, min: 0 },
   discountReservationVersion: Number,
   discountReleasedAt: Date,
   pointsDiscount: { type: Number, default: 0, min: 0 },
@@ -67,10 +62,6 @@ const orderSchema = new Schema({
   checkoutReady: { type: Boolean, default: true },
   pointsEarned: { type: Number, default: 0, min: 0 },
 
-  // pending_payment: chờ khách thanh toán online | confirmed: đã xác nhận (đã trả, hoặc chọn trả tiền mặt khi nhận)
-  // preparing: cửa hàng đang chuẩn bị | ready_for_pickup: chờ khách đến lấy | completed: đã giao khách
-  // failed: thanh toán online lỗi / hết hạn (hệ thống tự chuyển, không phải khách hủy)
-  // cancelled: admin hủy đơn (UC-34 Cancel Order)
   status: {
     type: String,
     enum: ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'failed', 'cancelled'],
@@ -85,7 +76,7 @@ const orderSchema = new Schema({
   paidTransactionId: { type: Schema.Types.ObjectId, ref: 'Transaction' },
   cancelledAt: Date,
   cancelReason: String,
-  refund: {                                                    // Manage Refunds: hoàn tiền khi hủy đơn đã thanh toán
+  refund: {
     amount: Number,
     method: String,
     reason: String,
@@ -94,7 +85,7 @@ const orderSchema = new Schema({
   },
 
   customerNote: String,
-  idempotencyKey: String,                                      // khoá chống đặt trùng khi khách bấm 2 lần / gửi lại do lỗi mạng (UC-08.1)
+  idempotencyKey: String,
   checkoutHash: String,
   readyAt: Date,
   preparationStartsAt: Date,
@@ -103,9 +94,9 @@ const orderSchema = new Schema({
 }, { timestamps: true });
 
 orderSchema.index({ customerId: 1, idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } });
-orderSchema.index({ customerId: 1, createdAt: -1 });         // UC-10.1 / 10.4 lịch sử đơn + giỏ gợi ý cá nhân hóa
-orderSchema.index({ 'items.productId': 1 });                 // gợi ý "Combo hot" / best-seller
+orderSchema.index({ customerId: 1, createdAt: -1 });
+orderSchema.index({ 'items.productId': 1 });
 orderSchema.index({ 'refund.refundedAt': -1 }, { sparse: true });
-orderSchema.index({ status: 1, createdAt: -1 });             // UC-35.1 / 35.2
+orderSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);

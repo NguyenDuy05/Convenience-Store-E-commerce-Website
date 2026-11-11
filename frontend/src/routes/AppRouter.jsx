@@ -11,7 +11,6 @@ import AdminLayout from '../layouts/AdminLayout';
 
 import NotFoundPage from '../pages/NotFoundPage';
 
-// Guest
 import ProductListPage from '../pages/guest/ProductListPage';
 import ProductDetailPage from '../pages/guest/ProductDetailPage';
 import PromotionsPage from '../pages/guest/PromotionsPage';
@@ -20,7 +19,6 @@ import RegisterPage from '../pages/guest/RegisterPage';
 import ForgotPasswordPage from '../pages/guest/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/guest/ResetPasswordPage';
 
-// Customer
 import ProfilePage from '../pages/customer/ProfilePage';
 import AddressPage from '../pages/customer/AddressPage';
 import CartPage from '../pages/customer/CartPage';
@@ -35,7 +33,6 @@ import MyReviewsPage from '../pages/customer/MyReviewsPage';
 import MembershipPage from '../pages/customer/MembershipPage';
 import SupportPage from '../pages/customer/SupportPage';
 
-// Staff
 import StaffDashboardPage from '../pages/staff/StaffDashboardPage';
 import StoreOrderPage from '../pages/staff/StoreOrderPage';
 import StaffPaymentPage from '../pages/staff/StaffPaymentPage';
@@ -52,7 +49,6 @@ import StaffProfilePage from '../pages/staff/StaffProfilePage';
 import StaffOrdersPage from '../pages/staff/StaffOrdersPage';
 import StaffOrderDetailPage from '../pages/staff/StaffOrderDetailPage';
 
-// Admin
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
 import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
@@ -76,12 +72,13 @@ import AdminProfilePage from '../pages/admin/AdminProfilePage';
 import NotificationsPage from '../pages/customer/NotificationsPage';
 import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage';
 
+// Tải trang chủ theo kiểu lazy
 const HomePage = lazy(() => import('../pages/guest/HomePage'));
 
+// Khai báo toàn bộ đường dẫn của web theo vai trò
 export default function AppRouter() {
   return (
     <Routes>
-      {/* Guest */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Suspense fallback={<div role="status" style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#EAF6FF' }}>Loading store…</div>}><HomePage /></Suspense>} />
         <Route path="/products" element={<ProductListPage />} />
@@ -94,7 +91,6 @@ export default function AppRouter() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
-      {/* Customer */}
       <Route
         element={
           <ProtectedRoute roles={['customer']}>
@@ -119,7 +115,6 @@ export default function AppRouter() {
         <Route path="/notifications" element={<NotificationsPage />} />
       </Route>
 
-      {/* Staff */}
       <Route
         path="/staff"
         element={
@@ -150,7 +145,6 @@ export default function AppRouter() {
         <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 
-      {/* Admin */}
       <Route
         path="/admin"
         element={
@@ -184,7 +178,6 @@ export default function AppRouter() {
         <Route path="inbox" element={<NotificationsPage />} />
       </Route>
 
-      {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

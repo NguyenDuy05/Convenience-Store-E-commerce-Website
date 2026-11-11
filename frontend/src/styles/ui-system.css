@@ -36,7 +36,6 @@ button:disabled { cursor: not-allowed; }
 .ui-empty p { margin: 0; }
 .ui-pagination { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 26px; font-size: 13px; }
 
-/* One storefront frame, shared by browsing, account and checkout pages. */
 .storefront-shell { display: flex; flex-direction: column; min-height: 100dvh; background: var(--ui-bg); }
 .hp.storefront-header { width: 100%; margin: 0; position: sticky; top: 0; z-index: 80; overflow: visible; }
 .storefront-header .hp-header { position: static; }
@@ -55,7 +54,6 @@ button:disabled { cursor: not-allowed; }
 .storefront-footer nav { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; }
 .storefront-footer nav a { color: #475569; }
 
-/* Shared portal frame; a real drawer keeps every admin/staff route reachable on mobile. */
 .portal-shell { color: var(--qk-text); font-family: var(--qk-font-body); }
 .portal-shell .review-sidebar { background: #fff; border-right: 1px solid var(--ui-border); box-shadow: none; }
 .portal-shell .review-topbar { box-shadow: none; border-bottom: 1px solid var(--ui-border); }
@@ -122,7 +120,6 @@ button:disabled { cursor: not-allowed; }
 .storefront-contact { width: 100%; border-top: 1px solid #edf1f7; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; color: #64748b; font-size: 12px; font-style: normal; }
 .storefront-contact > span:first-child { flex: 1; min-width: 220px; }
 
-/* Nút về Dashboard trên header (staff/admin) — cùng kiểu với nút chuông thông báo */
 .dash-trigger { position: relative; display: inline-grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; border: 1px solid #e2e7f0; background: #fff; color: #344866; text-decoration: none; transition: background .15s, color .15s; }
 .dash-trigger:hover, .dash-trigger.on { background: #eaf1ff; color: #0058bc; }
 .dash-trigger .review-material-icon, .dash-trigger .hp-icon { font-size: 22px; }

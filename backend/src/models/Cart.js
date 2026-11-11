@@ -1,4 +1,3 @@
-// UC-08 Manage Cart. Mỗi customer 1 giỏ. Không lưu giá: luôn lấy giá hiện tại của Product, giá chốt khi tạo Order.
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -12,7 +11,7 @@ const cartSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   items: [cartItemSchema],
   revision: { type: Number, default: 0 },
-  budget: { type: Number, min: 0 },                         // ngân sách khách nhập cho tính năng giỏ hàng gợi ý
+  budget: { type: Number, min: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Cart', cartSchema);

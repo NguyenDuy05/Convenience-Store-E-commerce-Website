@@ -1,6 +1,3 @@
-// Dashboard admin / staff: số liệu tổng hợp từ dữ liệu thật (Order, Product, StockBatch, User, Store, Promotion).
-// Doanh thu / số đơn chỉ tính đơn "hợp lệ" = đã xác nhận trở đi (không tính pending_payment, failed, cancelled).
-// Múi giờ cố định Việt Nam (UTC+7) để "hôm nay" khớp ngày của cửa hàng.
 const { Order, Product, StockBatch, User, Store, Promotion } = require('../models');
 const ApiError = require('../utils/ApiError');
 
@@ -11,17 +8,22 @@ const ALL_STATUSES = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pi
 const PRESETS = { today: 1, '7d': 7, '30d': 30, '90d': 90 };
 const MAX_CUSTOM_DAYS = 366;
 
+// 00:00 theo giờ Việt Nam của ngày chứa thời điểm cho trước
 const startOfDayVN = (d) => new Date(Math.floor((d.getTime() + VN_OFFSET) / DAY) * DAY - VN_OFFSET);
-const vnParts = (d) => new Date(d.getTime() + VN_OFFSET);                       // đọc bằng getUTC* = giờ VN
-const dayKey = (d) => vnParts(d).toISOString().slice(0, 10);                    // YYYY-MM-DD (VN)
+// Dời thời điểm sang giờ Việt Nam để đọc ngày / giờ
+const vnParts = (d) => new Date(d.getTime() + VN_OFFSET);
+// Chuỗi ngày "YYYY-MM-DD" theo giờ Việt Nam
+const dayKey = (d) => vnParts(d).toISOString().slice(0, 10);
+// Giờ trong ngày (0–23) theo giờ Việt Nam
 const hourOf = (d) => vnParts(d).getUTCHours();
+// Đổi "YYYY-MM-DD" thành 00:00 ngày đó theo giờ Việt Nam
 const parseDayVN = (s) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s || ''))) return null;
     const d = new Date(`${s}T00:00:00+07:00`);
     return Number.isNaN(d.getTime()) ? null : d;
 };
 
-// range: today | 7d | 30d | 90d | custom (kèm from, to dạng YYYY-MM-DD). Trả về khoảng [from, to) và khoảng liền trước cùng độ dài.
+// Tính khoảng thời gian báo cáo (hôm nay / 7 / 30 / 90 ngày / tùy chọn) và kỳ trước để so sánh
 function resolveRange({ range = '7d', from, to } = {}, now = new Date()) {
     let start; let end; let key = range;
     if (range === 'custom') {
@@ -40,17 +42,18 @@ function resolveRange({ range = '7d', from, to } = {}, now = new Date()) {
     return { key, from: start, to: end, prevFrom: new Date(start - span), prevTo: start, hourly: span <= DAY, days: Math.round(span / DAY) };
 }
 
-const pctChange = (cur, prev) => (prev > 0 ? Math.round(((cur - prev) / prev) * 1000) / 10 : null);   // null = chưa có kỳ trước để so sánh
+// Phần trăm thay đổi so với kỳ trước (null nếu kỳ trước bằng 0)
+const pctChange = (cur, prev) => (prev > 0 ? Math.round(((cur - prev) / prev) * 1000) / 10 : null);
+// Tổng theo một hàm lấy giá trị
 const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
 
-// Hàm thuần (không đụng DB) để dễ kiểm thử.
+// Tính toàn bộ số liệu dashboard từ dữ liệu đã tải (doanh thu, đơn, biểu đồ, top sản phẩm…)
 function buildReport({ range, orders, prevOrders, products, categoriesById, expiry, counts, recent, queue, now = new Date() }) {
     const sales = orders.filter((o) => SALE_STATUSES.includes(o.status));
     const prevSales = prevOrders.filter((o) => SALE_STATUSES.includes(o.status));
     const revenue = sum(sales, (o) => o.totalAmount);
     const prevRevenue = sum(prevSales, (o) => o.totalAmount);
 
-    // --- biểu đồ doanh thu: theo giờ (1 ngày) hoặc theo ngày ---
     const series = [];
     const index = new Map();
     if (range.hourly) {
@@ -65,17 +68,14 @@ function buildReport({ range, orders, prevOrders, products, categoriesById, expi
         if (row) { row.sales += o.totalAmount; row.orders += 1; }
     });
 
-    // --- trạng thái đơn trong kỳ ---
     const statusCounts = Object.fromEntries(ALL_STATUSES.map((s) => [s, 0]));
     orders.forEach((o) => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
 
-    // --- kênh bán ---
     const channels = ['online', 'store'].map((c) => {
         const list = sales.filter((o) => o.source === c);
         return { key: c, orders: list.length, sales: sum(list, (o) => o.totalAmount) };
     });
 
-    // --- theo danh mục & top sản phẩm (từ snapshot dòng hàng của các đơn hợp lệ) ---
     const catAgg = new Map(); const prodAgg = new Map();
     const prodMap = new Map(products.map((p) => [String(p._id), p]));
     sales.forEach((o) => o.items.forEach((it) => {
@@ -91,7 +91,6 @@ function buildReport({ range, orders, prevOrders, products, categoriesById, expi
     const salesByCategory = [...catAgg.values()].sort((a, b) => b.revenue - a.revenue).map((c) => ({ ...c, share: catTotal ? Math.round((c.revenue / catTotal) * 1000) / 10 : 0 }));
     const topProducts = [...prodAgg.values()].sort((a, b) => b.units - a.units || b.revenue - a.revenue).slice(0, 5);
 
-    // --- tồn kho ---
     const active = products.filter((p) => p.status === 'active');
     const outOfStock = active.filter((p) => p.stockQuantity <= 0);
     const lowStock = active.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold);
@@ -117,6 +116,7 @@ function buildReport({ range, orders, prevOrders, products, categoriesById, expi
     };
 }
 
+// Tải dữ liệu từ database rồi dựng báo cáo dashboard
 async function loadDashboard(query = {}, now = new Date()) {
     const range = resolveRange(query, now);
     const orderFields = 'orderCode source customerId status totalAmount createdAt items.productId items.name items.sku items.quantity items.lineTotal';

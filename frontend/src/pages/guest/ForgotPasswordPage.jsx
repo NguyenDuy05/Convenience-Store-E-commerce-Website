@@ -4,7 +4,7 @@ import { forgotPassword } from '../../api/auth.api';
 import AuthShell, { Icon } from '../../components/auth/AuthShell';
 import AuthField from '../../components/auth/AuthField';
 
-// UC-05 / UC-16 Forgot Password: nhập email để nhận link đặt lại mật khẩu
+// UC-05/16 Nhập email để nhận link đặt lại mật khẩu
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [fieldError, setFieldError] = useState('');

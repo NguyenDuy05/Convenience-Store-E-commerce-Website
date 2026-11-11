@@ -1,10 +1,8 @@
-// UC-01, 03-07, 14-17, 20, 26-30  (Customer / Staff / Admin dùng chung 1 collection, phân biệt bằng role)
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// UC-07 Manage Customer Address (embed: địa chỉ chỉ thuộc về 1 user)
 const addressSchema = new Schema({
-  label: { type: String, trim: true },            // Nhà, Công ty...
+  label: { type: String, trim: true },
   receiverName: { type: String, required: true, trim: true },
   phone: { type: String, required: true, trim: true },
   addressLine: { type: String, required: true, trim: true },
@@ -14,38 +12,33 @@ const addressSchema = new Schema({
 const userSchema = new Schema({
   role: { type: String, enum: ['customer', 'staff', 'admin'], required: true, index: true },
   fullName: { type: String, required: true, trim: true },
-  // Email không bắt buộc với thành viên đăng ký tại quầy (chỉ có số điện thoại). Có email thì không được trùng (index bên dưới).
   email: { type: String, lowercase: true, trim: true },
   phone: { type: String, trim: true, index: true },
-  passwordHash: { type: String, required: true, select: false },   // bcrypt
-  avatarUrl: String,                                                 // URL ảnh hoặc data URL (ảnh đã thu nhỏ)
+  passwordHash: { type: String, required: true, select: false },
+  avatarUrl: String,
   dateOfBirth: Date,
-  googleId: String,                                                  // đăng nhập bằng Google (Google user id)
+  googleId: String,
 
-  // active | locked (staff bị admin khóa / customer bị khóa do nhập sai) | deleted (xóa mềm)
   status: { type: String, enum: ['active', 'locked', 'deleted'], default: 'active', index: true },
   failedLoginCount: { type: Number, default: 0 },
-  lockedUntil: Date,                                                // UC-29.5 Unlock Customer Account
+  lockedUntil: Date,
   lastLoginAt: Date,
-  signupChannel: { type: String, enum: ['online', 'google', 'counter'] },   // nơi tạo tài khoản
-  registeredBy: { type: Schema.Types.ObjectId, ref: 'User' },             // staff tạo hộ (đăng ký tại quầy)
+  signupChannel: { type: String, enum: ['online', 'google', 'counter'] },
+  registeredBy: { type: Schema.Types.ObjectId, ref: 'User' },
 
-  // UC-05, UC-16 Forgot Password (chỉ lưu hash của token)
   passwordReset: {
     tokenHash: { type: String, select: false },
     expiresAt: Date,
   },
 
-  // --- chỉ dùng cho customer ---
   addresses: [addressSchema],
-  membership: {                                                     // UC-12, UC-39
+  membership: {
     earnedOrders: { type: [{ orderId: Schema.Types.ObjectId, points: Number, balanceAfter: Number, _id: false }], default: [], select: false },
     tierId: { type: Schema.Types.ObjectId, ref: 'MembershipTier' },
-    points: { type: Number, default: 0, min: 0 },                   // điểm hiện có (dùng để đổi)
-    lifetimePoints: { type: Number, default: 0, min: 0 },           // tổng điểm tích lũy (dùng xét hạng)
+    points: { type: Number, default: 0, min: 0 },
+    lifetimePoints: { type: Number, default: 0, min: 0 },
   },
 
-  // --- chỉ dùng cho staff ---
   staffInfo: {
     employeeCode: String,
     position: String,
@@ -53,7 +46,6 @@ const userSchema = new Schema({
   },
 }, { timestamps: true });
 
-// Email duy nhất nhưng chỉ áp cho tài khoản CÓ email (thành viên tại quầy có thể chỉ có số điện thoại)
 userSchema.index({ email: 1 }, { name: 'email_1', unique: true, partialFilterExpression: { email: { $type: 'string' } } });
 
 module.exports = mongoose.model('User', userSchema);

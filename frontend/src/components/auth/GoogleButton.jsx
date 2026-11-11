@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 let scriptPromise = null;
 
-// Nạp thư viện Google Identity Services 1 lần duy nhất
+// Nạp thư viện Google Identity Services (một lần)
 function loadGsi() {
     if (window.google?.accounts?.id) return Promise.resolve(window.google);
     if (!scriptPromise) {
@@ -20,7 +20,7 @@ function loadGsi() {
     return scriptPromise;
 }
 
-// Nút "Continue with Google". text: 'signin_with' | 'signup_with' | 'continue_with'
+// Nút đăng nhập bằng Google
 export default function GoogleButton({ text = 'continue_with', onCredential }) {
     const box = useRef(null);
     const handler = useRef(onCredential);

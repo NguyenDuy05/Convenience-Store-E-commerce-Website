@@ -1,14 +1,13 @@
-// Chạy sau khi import JSON: tạo các collection còn rỗng + toàn bộ index (email unique, tìm kiếm sản phẩm...)
-// Chạy: node src/scripts/init-db.js
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const M = require('../models');
 
+// Tạo đủ collection và index trong database
 async function init() {
   await connectDB();
   for (const [name, model] of Object.entries(M)) {
-    try { await model.createCollection(); } catch (e) { /* collection đã tồn tại thì bỏ qua */ }
+    try { await model.createCollection(); } catch (e) { }
     await model.syncIndexes();
     console.log('OK', name, '->', model.collection.name);
   }

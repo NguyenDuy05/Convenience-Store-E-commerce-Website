@@ -5,7 +5,7 @@ import AuthShell, { Icon } from '../../components/auth/AuthShell';
 import AuthField from '../../components/auth/AuthField';
 import GoogleButton from '../../components/auth/GoogleButton';
 
-// UC-01 Register
+// UC-01 Trang đăng ký
 export default function RegisterPage() {
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export default function RegisterPage() {
         phone: form.phone.trim() || undefined,
         password: form.password,
       });
-      navigate('/', { replace: true });   // đăng ký xong tự đăng nhập luôn
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Could not create your account. Please try again.');
     } finally {
@@ -49,7 +49,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Google: tài khoản mới sẽ được tạo tự động, nếu email đã có thì đăng nhập luôn
   const onGoogle = async (credential) => {
     setError('');
     try {

@@ -7,8 +7,10 @@ const MAX_ADDRESSES = 10;
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const EMPTY = { label: '', receiverName: '', phone: '', addressLine: '', isDefault: false };
 
+// Lấy thông báo lỗi từ response API
 const messageOf = (error, fallback) => error.response?.data?.message || fallback;
 
+// Kiểm tra form địa chỉ
 function validate(form) {
   const errors = {};
   if (!form.receiverName.trim()) errors.receiverName = 'Receiver name is required';
@@ -18,6 +20,7 @@ function validate(form) {
   return errors;
 }
 
+// Form thêm / sửa địa chỉ
 function AddressForm({ initial, busy, onSubmit, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY, ...initial });
   const [errors, setErrors] = useState({});
@@ -60,13 +63,14 @@ function AddressForm({ initial, busy, onSubmit, onCancel }) {
   );
 }
 
+// UC-07 Khách quản lý địa chỉ
 export default function AddressPage() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [editing, setEditing] = useState(null); // null | 'new' | address object
+  const [editing, setEditing] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);

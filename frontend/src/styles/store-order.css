@@ -1,5 +1,3 @@
-/* Trang Staff > Tạo đơn tại quầy (UC-21). Cùng ngôn ngữ thiết kế với trang "Chi tiết đơn hàng" (odetail-).
-   Class bắt đầu bằng "sop-". Dùng biến --qk-* của dự án; nếu chưa khai báo thì dùng giá trị dự phòng. */
 .sop {
     --sop-primary: var(--qk-primary, #0058bc);
     --sop-primary-dark: var(--qk-primary-dark, #004494);

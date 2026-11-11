@@ -15,7 +15,7 @@ const ISSUE_TEXT = {
   insufficient_stock: (n) => `Only ${n} items available. Please reduce the quantity`,
 };
 
-// UC-07 Manage Cart: xem, đổi số lượng, xóa sản phẩm (UC-07.1, 07.3, 07.4). Thêm sản phẩm làm ở trang chi tiết sản phẩm (UC-07.2).
+// UC-07 Giỏ hàng: xem, đổi số lượng, xóa sản phẩm
 export default function CartPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
-  const [rowError, setRowError] = useState({}); // { [productId]: message }
+  const [rowError, setRowError] = useState({});
 
   const handleAuth = useCallback(async (err) => {
     if (err.response?.status !== 401) return false;

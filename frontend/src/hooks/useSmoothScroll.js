@@ -6,7 +6,7 @@ import 'lenis/dist/lenis.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Only the homepage owns this instance. Touch devices keep native momentum.
+// Cuộn mượt cho trang chủ (thiết bị cảm ứng giữ cuộn gốc)
 export default function useSmoothScroll(enabled = true) {
   const instance = useRef(null);
   useEffect(() => {

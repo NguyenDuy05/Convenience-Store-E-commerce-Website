@@ -4,7 +4,7 @@ import { resetPassword } from '../../api/auth.api';
 import AuthShell, { Icon } from '../../components/auth/AuthShell';
 import AuthField from '../../components/auth/AuthField';
 
-// UC-05 / UC-16 Forgot Password: đặt mật khẩu mới từ link trong email (?token=...)
+// UC-05/16 Đặt mật khẩu mới từ link trong email
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
   const token = params.get('token') || '';

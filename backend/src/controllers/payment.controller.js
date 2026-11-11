@@ -7,18 +7,19 @@ const vnpay = require('../services/vnpay.service');
 const mock = require('../services/mock.service');
 const { notifyOrder } = require('../services/notification.service');
 
+// Địa chỉ web frontend (để chuyển trang sau thanh toán)
 const frontend = () => process.env.FRONTEND_URL || 'http://localhost:5173';
-// Trang kết quả KHÔNG tin tham số trên URL: nó đọc lại trạng thái đơn từ server
+// Link trang kết quả thanh toán của một đơn
 const resultUrl = (orderId) => `${frontend()}/payment/result${orderId ? `?orderId=${orderId}` : '?error=unknown'}`;
 
+// Lấy IP của khách gửi cho VNPay
 const clientIp = (req) => {
   const raw = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || '127.0.0.1';
   const ip = raw.replace(/^::ffff:/, '');
   return ip === '::1' ? '127.0.0.1' : ip;
 };
 
-// UC-08.2 Make Payment (catalog tài liệu; code cũ ghi UC-09.2): tạo link thanh toán VNPay cho đơn đang chờ thanh toán.
-// Body: { orderId, method: 'vnpay' }. Gọi lại khi còn giao dịch đang chờ cùng cổng -> trả lại đúng link cũ (không tạo giao dịch mới).
+// UC-08.2 Tạo link thanh toán VNPay cho đơn đang chờ thanh toán
 exports.createOnlinePayment = asyncHandler(async (req, res) => {
   const { orderId, method, returnTo = 'web' } = req.body;
   if (!['web', 'mobile'].includes(returnTo)) throw new ApiError(400, 'Invalid payment return destination');
@@ -29,13 +30,13 @@ exports.createOnlinePayment = asyncHandler(async (req, res) => {
   res.json(out);
 });
 
-// Áp kết quả đã xác thực chữ ký và trả về orderId để chuyển trang
+// Áp kết quả thanh toán đã xác thực chữ ký, trả về id đơn
 async function applyVerified(v) {
   const r = await payment.applyGatewayResult(v);
   return { ...r, orderId: r.txn ? String(r.txn.orderId) : undefined };
 }
 
-// VNPay chuyển TRÌNH DUYỆT của khách về đây sau khi thanh toán. Cũng áp kết quả (IPN không tới được khi chạy localhost).
+// VNPay chuyển trình duyệt về: kiểm tra chữ ký, ghi nhận kết quả, chuyển tới trang kết quả
 exports.vnpayReturn = asyncHandler(async (req, res) => {
   const v = vnpay.verifyCallback(req.query);
   if (!v.valid) return res.redirect(`${frontend()}/payment/result?error=invalid_signature`);
@@ -43,8 +44,7 @@ exports.vnpayReturn = asyncHandler(async (req, res) => {
   res.redirect(resultUrl(r.orderId));
 });
 
-// A fixed app scheme prevents open redirects. The app still reads its owned order
-// from the API; neither a deep link nor an unsigned URL can mark an order paid.
+// VNPay chuyển về cho app mobile: ghi nhận kết quả rồi mở app bằng deep link cố định
 exports.vnpayMobileReturn = asyncHandler(async (req, res) => {
   const v = vnpay.verifyCallback(req.query);
   if (!v.valid) return res.redirect('quickstore://payment-result?error=invalid_signature');
@@ -52,7 +52,7 @@ exports.vnpayMobileReturn = asyncHandler(async (req, res) => {
   res.redirect(r.orderId ? `quickstore://payment-result?orderId=${encodeURIComponent(r.orderId)}` : 'quickstore://payment-result?error=unknown');
 });
 
-// VNPay gọi SERVER báo kết quả (IPN). Phản hồi theo mã VNPay quy định.
+// VNPay gọi server báo kết quả (IPN), trả mã phản hồi theo quy định VNPay
 exports.vnpayIpn = asyncHandler(async (req, res) => {
   const v = vnpay.verifyCallback(req.query);
   if (!v.valid) return res.json({ RspCode: '97', Message: 'Invalid signature' });
@@ -63,9 +63,10 @@ exports.vnpayIpn = asyncHandler(async (req, res) => {
   res.json({ RspCode: '00', Message: 'Confirm Success' });
 });
 
-// ---- Cổng giả lập (chỉ khi PAYMENT_MOCK=true) ----
+// Escape HTML cho trang thanh toán giả lập
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Trang thanh toán giả lập (chỉ bật khi PAYMENT_MOCK=true)
 exports.mockPay = asyncHandler(async (req, res) => {
   if (!mock.enabled()) return res.status(404).json({ message: "Page not found" });
   const txn = await Transaction.findOne({ txnRef: String(req.query.txnRef || '') }).lean();
@@ -83,6 +84,7 @@ ${btn('success', "Payment successful", '#356b0a')}${btn('failed', "Payment faile
 </div></body></html>`);
 });
 
+// Nhận kết quả từ trang giả lập (có chữ ký) và xử lý như cổng thật
 exports.mockComplete = asyncHandler(async (req, res) => {
   if (!mock.enabled()) return res.status(404).json({ message: "Page not found" });
   const { txnRef, result, sig } = req.query;
@@ -97,10 +99,11 @@ exports.mockComplete = asyncHandler(async (req, res) => {
   res.redirect(resultUrl(r.orderId || String(txn.orderId)));
 });
 
-// ---------- Staff: thu tiền tại quầy (UC-23) ----------
 const { logActivity } = require('../services/activity.service');
+// Escape ký tự đặc biệt để tìm kiếm bằng regex
 const escapeRx = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Lấy đơn tại quầy đang chờ thu tiền (404/409 nếu không thu được)
 async function loadPayableStoreOrder(orderId) {
   if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
   await payment.expireStaleOrders();
@@ -111,7 +114,7 @@ async function loadPayableStoreOrder(orderId) {
   return order;
 }
 
-// Ghi nhận đã thu tiền: đơn tại quầy giao hàng ngay nên chuyển thẳng sang completed. Chỉ một yêu cầu thắng (điều kiện trạng thái).
+// Ghi nhận đã thu tiền đơn tại quầy: chuyển sang hoàn tất và tạo giao dịch
 async function settleStoreOrder({ order, staffId, method, extra }) {
   const now = new Date();
   const claimed = await Order.findOneAndUpdate(
@@ -135,7 +138,7 @@ async function settleStoreOrder({ order, staffId, method, extra }) {
   }
 }
 
-// GET /api/payments/orders?q=  Đơn tại quầy đang chờ thanh toán (mới nhất trước), tìm theo mã đơn
+// Staff xem các đơn tại quầy đang chờ thu tiền
 exports.listStoreOrdersToPay = asyncHandler(async (req, res) => {
   await payment.expireStaleOrders();
   const filter = { source: 'store', status: 'pending_payment', paymentStatus: 'unpaid' };
@@ -145,7 +148,7 @@ exports.listStoreOrdersToPay = asyncHandler(async (req, res) => {
   res.json({ items: items.map((o) => ({ ...o, expiresAt: payment.expiresAtOf(o) })), total: items.length });
 });
 
-// UC-23.1 Process Cash Payment. body: { orderId, received }
+// UC-23.1 Thu tiền mặt (tính tiền thối)
 exports.processCashPayment = asyncHandler(async (req, res) => {
   const order = await loadPayableStoreOrder(req.body?.orderId);
   const received = Number(req.body?.received);
@@ -156,8 +159,7 @@ exports.processCashPayment = asyncHandler(async (req, res) => {
   res.status(201).json({ order: out.order, transaction: out.transaction, change: received - order.totalAmount });
 });
 
-// UC-23.2 Process Card/E-wallet Payment. body: { orderId, method: card|vnpay, reference, outcome?: success|failed, reason? }
-// Thanh toán thực hiện trên máy POS / ví của khách; nhân viên nhập mã chuẩn chi hoặc báo thất bại để ghi nhận giao dịch lỗi.
+// UC-23.2 Thu tiền bằng thẻ / ví điện tử (ghi mã giao dịch)
 exports.processCardPayment = asyncHandler(async (req, res) => {
   const order = await loadPayableStoreOrder(req.body?.orderId);
   const method = req.body?.method || 'card';
@@ -178,7 +180,7 @@ exports.processCardPayment = asyncHandler(async (req, res) => {
   res.status(201).json({ order: out.order, transaction: out.transaction, outcome });
 });
 
-// Print Receipt: dữ liệu hóa đơn của đơn đã thanh toán. GET /api/payments/receipt/:orderId (staff, admin)
+// Dữ liệu hóa đơn để in của đơn đã thanh toán
 exports.getReceipt = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   if (!mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
@@ -201,8 +203,8 @@ exports.getReceipt = asyncHandler(async (req, res) => {
   });
 });
 
-// ---------- Admin: Manage Payments (UC-41) ----------
 const POP = [{ path: 'orderId', select: 'orderCode source status paymentStatus totalAmount' }, { path: 'customerId', select: 'fullName email' }, { path: 'processedBy', select: 'fullName' }];
+// Đọc ngày từ query; sai định dạng thì báo lỗi 400
 const dateOf = (v, label, end) => {
   if (!v) return null;
   const d = new Date(v);
@@ -211,6 +213,7 @@ const dateOf = (v, label, end) => {
   return d;
 };
 
+// Dữ liệu một giao dịch trả về cho trang Payments của admin
 function paymentView(t) {
   const g = t.gateway || {};
   return {
@@ -224,6 +227,7 @@ function paymentView(t) {
   };
 }
 
+// Truy vấn giao dịch theo trạng thái + tổng tiền đã thu / đã hoàn / thực nhận
 async function listByStatus(req, res, forcedStatus) {
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
@@ -251,17 +255,19 @@ async function listByStatus(req, res, forcedStatus) {
     Transaction.countDocuments(filter),
     Transaction.aggregate([{ $match: filter }, { $group: { _id: '$status', amount: { $sum: '$amount' } } }]),
   ]);
-  // Tách tiền đã thu (success) và tiền đã hoàn vào ví (refunded); giao dịch lỗi/đang chờ không tính là tiền
   const sumOf = (s) => agg.find((g) => g._id === s)?.amount || 0;
   const collected = sumOf('success') + sumOf('refunded'), refunded = sumOf('refunded');
   res.json({ items: docs.map(paymentView), total, page, limit, summary: { totalAmount: collected, collectedAmount: collected, refundedAmount: refunded, netAmount: collected - refunded } });
 }
 
-exports.listPayments = asyncHandler((req, res) => listByStatus(req, res, null));          // UC-41.1
-exports.listFailedPayments = asyncHandler((req, res) => listByStatus(req, res, 'failed'));    // UC-41.2
-exports.listPendingPayments = asyncHandler((req, res) => listByStatus(req, res, 'pending'));  // UC-41.3
+// UC-41.1 Admin xem tất cả giao dịch thanh toán
+exports.listPayments = asyncHandler((req, res) => listByStatus(req, res, null));
+// UC-41.2 Admin xem giao dịch thất bại
+exports.listFailedPayments = asyncHandler((req, res) => listByStatus(req, res, 'failed'));
+// UC-41.3 Admin xem giao dịch đang chờ
+exports.listPendingPayments = asyncHandler((req, res) => listByStatus(req, res, 'pending'));
 
-// UC-41.4 Handle Payment Error. PATCH /api/payments/admin/:id/resolve  body: { action: confirm_paid|mark_failed|dismiss, note }
+// UC-41.4 Admin xử lý giao dịch lỗi: xác nhận đã trả / đánh dấu thất bại / bỏ qua
 exports.handlePaymentError = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, "Transaction not found");

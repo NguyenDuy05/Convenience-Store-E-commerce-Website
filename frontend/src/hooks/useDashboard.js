@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getAdminDashboard, getStaffDashboard } from '../api/dashboard.api';
 
-// Lấy số liệu dashboard thật từ server. kind: 'admin' | 'staff'. params: { range, from, to }.
-// Khi đổi khoảng ngày / bấm làm mới vẫn giữ dữ liệu cũ trên màn hình (chỉ bật cờ refreshing).
+// Hook tải số liệu dashboard admin / staff theo khoảng ngày
 export default function useDashboard(kind, params) {
     const [data, setData] = useState(null);
     const [error, setError] = useState('');

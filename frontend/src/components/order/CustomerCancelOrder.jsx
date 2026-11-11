@@ -2,7 +2,7 @@ import { useState } from 'react';
 import api from '../../api/axios';
 import CancelReasonPicker, { reasonText } from './CancelReasonPicker';
 
-// Khách tự hủy đơn: chỉ khi đơn còn chờ thanh toán / vừa xác nhận (staff chưa bắt đầu chuẩn bị).
+// Khách tự hủy đơn (chỉ khi staff chưa bắt đầu chuẩn bị)
 export default function CustomerCancelOrder({ order, onChanged }) {
   const [open, setOpen] = useState(false);
   const [pick, setPick] = useState({ choice: '', other: '' });

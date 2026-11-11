@@ -6,9 +6,10 @@ const { logActivity } = require('../services/activity.service');
 
 const PHONE_RE = /^(\+?84|0)\d{9,10}$/;
 const MIN_PASSWORD = 8;
-const MAX_AVATAR_CHARS = 400000;   // ~300KB ảnh (data URL base64)
+const MAX_AVATAR_CHARS = 400000;
 const DATA_IMAGE_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
 
+// Kiểm tra ngày sinh hợp lệ (không ở tương lai)
 function parseDateOfBirth(value) {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new ApiError(400, 'Date of birth is invalid');
@@ -20,7 +21,7 @@ function parseDateOfBirth(value) {
   return d;
 }
 
-// Dùng chung cho Customer (UC-06), Staff (UC-17), Admin (UC-28): chỉ thao tác trên tài khoản của chính mình.
+// Lấy tài khoản của chính người đang đăng nhập
 async function loadMe(userId, withPassword = false) {
   const query = User.findById(userId);
   if (withPassword) query.select('+passwordHash');
@@ -29,6 +30,7 @@ async function loadMe(userId, withPassword = false) {
   return user;
 }
 
+// Dữ liệu hồ sơ trả về (kèm mã thành viên với khách)
 const toProfile = (u) => ({
   id: u._id,
   role: u.role,
@@ -43,12 +45,12 @@ const toProfile = (u) => ({
   ...(u.role === 'staff' ? { staffInfo: u.staffInfo || {} } : {}),
 });
 
-// UC-06.1 / 17.1 / 28.1 View Profile
+// UC-06.1/17.1/28.1 Xem hồ sơ cá nhân
 exports.getProfile = asyncHandler(async (req, res) => {
   res.json(toProfile(await loadMe(req.user.id)));
 });
 
-// UC-06.2 / 17.2 / 28.2 Update Profile (email và vai trò không được sửa)
+// UC-06.2/17.2/28.2 Sửa hồ sơ (họ tên, SĐT, ngày sinh, ảnh đại diện)
 exports.updateProfile = asyncHandler(async (req, res) => {
   const { fullName, phone, avatarUrl, dateOfBirth } = req.body || {};
   const name = typeof fullName === 'string' ? fullName.trim() : '';
@@ -75,7 +77,7 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   res.json(toProfile(user));
 });
 
-// UC-06.3 / 17.3 / 28.3 Change Password
+// UC-06.3/17.3/28.3 Đổi mật khẩu (phải nhập đúng mật khẩu cũ)
 exports.changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body || {};
   if (typeof currentPassword !== 'string' || !currentPassword) throw new ApiError(400, 'Current password is required');
@@ -96,7 +98,7 @@ exports.changePassword = asyncHandler(async (req, res) => {
   }
 
   user.passwordHash = await bcrypt.hash(newPassword, 10);
-  user.passwordReset = undefined;   // vô hiệu hóa link đặt lại mật khẩu đang chờ
+  user.passwordReset = undefined;
   await user.save();
   await logActivity(req, { action: 'PASSWORD_CHANGE', targetType: 'User', targetId: user._id });
   res.json({ message: 'Password changed' });

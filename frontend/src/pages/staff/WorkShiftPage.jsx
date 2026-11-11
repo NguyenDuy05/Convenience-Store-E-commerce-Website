@@ -5,15 +5,20 @@ import '../../styles/work-shift.css';
 
 const LIMIT = 10;
 const STATUS_LABEL = { scheduled: "Upcoming", in_progress: "In progress", completed: "Completed", missed: "Missed shift" };
+// Định dạng giờ:phút
 const hm = (d) => (d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—');
+// Định dạng ngày kèm thứ
 const dayText = (d) => new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+// Đổi số phút thành "8h 00m"
 const dur = (min) => (min == null ? '—' : `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m`);
 const EMPTY = { status: '', from: '', to: '' };
+// Định dạng tiền VND
 const vnd = (v) => `${Math.round(v || 0).toLocaleString('vi-VN')} ₫`;
 
+// Nhãn trạng thái ca
 const Chip = ({ status }) => <span className={`wsp-chip ${status}`}>{STATUS_LABEL[status] || status}</span>;
 
-// UC-24 Manage Work Shift (Staff): xem ca làm, vào ca, ra ca
+// UC-24 Nhân viên nhận ca, vào / ra ca, xem lịch sử và thu nhập
 export default function WorkShiftPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,9 +27,9 @@ export default function WorkShiftPage() {
   const [filters, setFilters] = useState(EMPTY);
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState(null);     // { type: 'success' | 'error', title, text }
+  const [notice, setNotice] = useState(null);
   const [clock, setClock] = useState(new Date());
-  const [openSlots, setOpenSlots] = useState(null);   // ca trống admin mở để nhân viên tự nhận
+  const [openSlots, setOpenSlots] = useState(null);
 
   const load = useCallback((silent = false) => {
     if (!silent) setLoading(true);
@@ -40,7 +45,7 @@ export default function WorkShiftPage() {
   const loadOpen = useCallback(() => listOpenSlots({ days: 14 }).then((r) => setOpenSlots(r.data)).catch(() => setOpenSlots({ items: [], error: true })), []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { loadOpen(); }, [loadOpen]);
-  useEffect(() => {          // đồng hồ + làm mới nhẹ mỗi phút để trạng thái nút luôn theo giờ thực
+  useEffect(() => {
     const t = setInterval(() => { setClock(new Date()); }, 30000);
     const r = setInterval(() => { load(true); loadOpen(); }, 60000);
     return () => { clearInterval(t); clearInterval(r); };
@@ -52,9 +57,8 @@ export default function WorkShiftPage() {
     fn({ shiftId: shift._id })
       .then((res) => setNotice({ type: 'success', title: res.data.message, text: `Recorded at: ${hm(new Date())}` }))
       .catch((err) => setNotice({ type: 'error', title: "Could not complete", text: err.response?.data?.message || `${okTitle} failed. Check the shift status before trying again.` }))
-      .finally(() => { setBusy(false); load(true); });   // luôn tải lại để hiện trạng thái thật sau khi thao tác
+      .finally(() => { setBusy(false); load(true); });
   };
-  // Nhận ca / hủy nhận ca: luôn tải lại cả ca trống lẫn ca của tôi để thấy số chỗ thật
   const slotAct = (fn, okTitle, okText) => {
     setBusy(true); setNotice(null);
     fn().then(() => setNotice({ type: 'success', title: okTitle, text: okText }))

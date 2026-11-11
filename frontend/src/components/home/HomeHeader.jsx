@@ -11,7 +11,6 @@ import UserAvatarIcon from '../common/UserAvatarIcon';
 
 const NAV = [['top', "Home"], ['products', "Products"], ['promotions', "Offers"], ['store', "Store"]];
 const roleHome = { customer: '/profile', staff: '/staff', admin: '/admin' };
-// Menu tài khoản mở ra khi bấm avatar (header chỉ còn icon, gọn hơn)
 const ACCOUNT_LINKS = [
     ['/profile', 'person', 'My profile'],
     ['/orders', 'receipt_long', 'My orders'],
@@ -23,7 +22,7 @@ const ACCOUNT_LINKS = [
     ['/support', 'support_agent', 'Support'],
 ];
 
-// Header: top info bar + main bar (logo, menu, search, cart, account)
+// Header cửa hàng: logo, menu, tìm kiếm, giỏ hàng, chuông, avatar + menu tài khoản
 export default function HomeHeader({ store, info, q, setQ, active, onNav, onSearch, products = [] }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();

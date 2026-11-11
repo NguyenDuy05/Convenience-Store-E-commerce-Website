@@ -1,13 +1,13 @@
 import api from './axios';
 
-// UC-33.1 View Categories (dùng chung cho menu Guest/Customer)
+// Gọi API: danh sách danh mục (UC-33.1)
 export const listCategories = (params) => api.get(`/categories`, { params });
 
-// UC-33.2 Add Category
+// Gọi API: thêm danh mục (UC-33.2)
 export const createCategory = (data) => api.post(`/categories`, data);
 
-// UC-33.3 Update Category
+// Gọi API: sửa danh mục (UC-33.3)
 export const updateCategory = (id, data) => api.put(`/categories/${id}`, data);
 
-// UC-33.4 Delete Category
+// Gọi API: xóa danh mục (UC-33.4)
 export const deleteCategory = (id) => api.delete(`/categories/${id}`);

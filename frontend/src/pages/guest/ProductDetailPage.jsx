@@ -15,7 +15,7 @@ import { formatCurrency } from '../../utils/format';
 import { estimatePromo } from '../../utils/promoPrice';
 
 const MEAL = { main: "Main meals", light: "Light meals", snack: "Snacks", beverage: "Drinks" };
-// UC-02.2 View Product Details
+// UC-02.2 Chi tiết sản phẩm
 export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);

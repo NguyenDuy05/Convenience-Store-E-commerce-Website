@@ -8,13 +8,13 @@ import useAuth from '../../hooks/useAuth';
 import { addCartItem } from '../../api/cart.api';
 import CartIcon from '../common/CartIcon';
 
-// Khối "Thêm vào giỏ" trên trang chi tiết sản phẩm (UC-07.2). Chỉ tài khoản khách hàng mới mua được.
+// Khối chọn số lượng + thêm vào giỏ ở trang chi tiết sản phẩm
 export default function AddToCart({ product }) {
   const { user } = useAuth();
   const location = useLocation();
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [added, setAdded] = useState(null);   // { itemCount }
+  const [added, setAdded] = useState(null);
   const [error, setError] = useState('');
 
   const stock = product.stockQuantity || 0;

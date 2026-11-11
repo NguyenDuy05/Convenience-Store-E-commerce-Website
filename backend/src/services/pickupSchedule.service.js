@@ -1,10 +1,13 @@
 const VIETNAM_OFFSET = 7 * 60 * 60 * 1000;
+// Đổi "HH:mm" thành số phút trong ngày
 const minutes = value => {
   const match = /^(\d{2}):(\d{2})$/.exec(value || '');
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 };
+// Mô tả giờ mở cửa sắp tới
 const formatOpening = date => new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(date));
 
+// Cửa hàng có đang mở không và khi nào bắt đầu chuẩn bị đơn
 function pickupSchedule(store, now = new Date()) {
   if (store?.status === 'closed') return { isOpen: false, acceptingOrders: false, nextOpenAt: null, notice: 'The store is temporarily closed.' };
   if (!store?.openingHours?.length) return { isOpen: true, acceptingOrders: true, nextOpenAt: null, notice: '' };

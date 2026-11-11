@@ -12,6 +12,7 @@ const NAV = [
     { to: '/admin/customers', label: 'Customers', icon: 'group' },
 ];
 
+// Khung trang admin cũ (sidebar + nội dung)
 export default function AdminLayout({ children }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -25,7 +26,6 @@ export default function AdminLayout({ children }) {
 
     return (
         <div className="admin-layout">
-            {/* Sidebar */}
             <aside className="admin-sidebar">
                 <div className="admin-sidebar-brand">
                     <span className="admin-brand-text">Admin</span>
@@ -58,7 +58,6 @@ export default function AdminLayout({ children }) {
                 </div>
             </aside>
 
-            {/* Top Bar */}
             <header className="admin-topbar">
                 <div className="admin-topbar-left">
                     <span className="admin-breadcrumb">Admin Panel</span>
@@ -82,7 +81,6 @@ export default function AdminLayout({ children }) {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="admin-main">{children}</main>
         </div>
     );

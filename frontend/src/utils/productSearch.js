@@ -1,3 +1,4 @@
+// Chuẩn hóa từ khóa tìm kiếm (bỏ dấu, chữ thường)
 export function normalizeProductSearch(value = '') {
   return String(value)
     .toLowerCase()
@@ -7,6 +8,7 @@ export function normalizeProductSearch(value = '') {
     .trim();
 }
 
+// Sản phẩm có khớp từ khóa tìm kiếm không
 export function matchesProductSearch(product, query = '') {
   const tokens = normalizeProductSearch(query).split(/\s+/).filter(Boolean);
   if (!tokens.length) return true;

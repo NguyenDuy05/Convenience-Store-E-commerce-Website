@@ -12,7 +12,7 @@ import RegisterMemberForm from '../../components/staff/RegisterMemberForm';
 
 const LIMIT = 20;
 
-// UC-19.1 View Customers (Staff): chỉ xem, thông tin liên hệ được che bớt
+// UC-19.1 Staff xem khách hàng và đăng ký thành viên
 export default function StaffCustomersPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -42,7 +42,6 @@ export default function StaffCustomersPage() {
   }, [q, status, hasComplaint, sort, setParams]);
 
   useEffect(() => { setQInput(q); }, [q]);
-  // Chờ 400ms sau lần gõ cuối mới tìm; từ khóa cần tối thiểu 2 ký tự (hoặc để trống để xem tất cả)
   useEffect(() => {
     const t = qInput.trim();
     if (t === q || t.length === 1) return undefined;

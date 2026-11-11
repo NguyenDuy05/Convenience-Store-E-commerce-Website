@@ -1,4 +1,3 @@
-// English support and complaint labels matching the SupportRequest model enums
 export const COMPLAINT_STATUS = {
   open: { label: 'Open', tone: 'warn' },
   in_progress: { label: 'In progress', tone: 'info' },
@@ -11,7 +10,6 @@ export const COMPLAINT_TABS = [
   { key: 'in_progress', label: 'In progress' },
   { key: 'resolved', label: 'Resolved' },
 ];
-// Labels and hints for status transitions
 export const STATUS_ACTION = {
   in_progress: { label: 'Start handling', hint: 'Mark this request as in progress' },
   resolved: { label: 'Resolved', hint: 'Close the request; a customer response is required' },

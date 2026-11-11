@@ -6,7 +6,7 @@ import OrderStatusBadge from './OrderStatusBadge';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { paymentSummary } from '../../utils/orderMeta';
 
-// Một dòng đơn trong lịch sử. fromPath được truyền sang trang chi tiết để nút "Quay lại" về đúng bộ lọc.
+// Một dòng đơn trong lịch sử đơn
 export default function OrderHistoryRow({ order, fromPath }) {
   const d = new Date(order.createdAt);
   const summary = order.items.map((i) => `${i.name} ×${i.quantity}`).join(', ');

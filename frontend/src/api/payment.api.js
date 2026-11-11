@@ -1,35 +1,34 @@
 import api from './axios';
 
-// UC-08.2 Make Payment (tạo link VNPay). data: { orderId, method: 'vnpay' } -> { paymentUrl, txnRef, expiresAt }
+// Gọi API: tạo link thanh toán VNPay (UC-08.2)
 export const createOnlinePayment = (data) => api.post(`/payments/online`, data);
 
-// VNPay chuyển hướng trình duyệt về sau khi thanh toán
+// Gọi API: kết quả VNPay chuyển về
 export const vnpayReturn = (params) => api.get(`/payments/vnpay/return`, { params });
 
-// VNPay gọi server báo kết quả (IPN)
+// Gọi API: IPN của VNPay
 export const vnpayIpn = (params) => api.get(`/payments/vnpay/ipn`, { params });
 
-
-// UC-23.1 Process Cash Payment
+// Gọi API: thu tiền mặt (UC-23.1)
 export const processCashPayment = (data) => api.post(`/payments/cash`, data);
 
-// UC-23.2 Process Card/E-wallet Payment
+// Gọi API: thu tiền thẻ / ví (UC-23.2)
 export const processCardPayment = (data) => api.post(`/payments/card`, data);
 
-// UC-41.1 View Payment Transactions
+// Gọi API: tất cả giao dịch (UC-41.1)
 export const listPayments = (params) => api.get(`/payments/admin`, { params });
 
-// UC-41.2 View Failed Payments
+// Gọi API: giao dịch thất bại (UC-41.2)
 export const listFailedPayments = (params) => api.get(`/payments/admin/failed`, { params });
 
-// UC-41.3 View Pending Payments
+// Gọi API: giao dịch đang chờ (UC-41.3)
 export const listPendingPayments = (params) => api.get(`/payments/admin/pending`, { params });
 
-// UC-41.4 Handle Payment Error
+// Gọi API: xử lý giao dịch lỗi (UC-41.4)
 export const handlePaymentError = (id, data) => api.patch(`/payments/admin/${id}/resolve`, data);
 
-// Staff: đơn tại quầy đang chờ thu tiền. params: { q } -> { items, total }
+// Gọi API: đơn tại quầy chờ thu tiền
 export const listStoreOrdersToPay = (params) => api.get(`/payments/orders`, { params });
 
-// Print Receipt: dữ liệu hóa đơn của đơn đã thanh toán
+// Gọi API: dữ liệu hóa đơn để in
 export const getReceipt = (orderId) => api.get(`/payments/receipt/${orderId}`);

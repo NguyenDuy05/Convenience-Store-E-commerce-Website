@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Hiệu ứng cuộn của trang chủ
 export default function useHomeStoryAnimations(rootRef, refreshKey = '') {
   useLayoutEffect(() => {
     const root = rootRef.current;

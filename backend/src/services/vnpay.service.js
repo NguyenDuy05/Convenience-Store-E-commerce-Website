@@ -1,7 +1,6 @@
-// Tích hợp VNPay (sandbox/production), API phiên bản 2.1.0, ký HMAC-SHA512.
-// Tài liệu: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html
 const crypto = require('crypto');
 
+// Đọc cấu hình VNPay từ .env
 const cfg = () => ({
   tmnCode: process.env.VNPAY_TMN_CODE,
   secret: process.env.VNPAY_HASH_SECRET,
@@ -9,24 +8,25 @@ const cfg = () => ({
   returnUrl: process.env.VNPAY_RETURN_URL || `http://localhost:${process.env.PORT || 5000}/api/payments/vnpay/return`,
 });
 
+// Đã có mã TMN và secret của VNPay chưa
 exports.isConfigured = () => !!(cfg().tmnCode && cfg().secret);
 
-// Giờ Việt Nam (GMT+7) dạng yyyyMMddHHmmss, không phụ thuộc múi giờ máy chủ
+// Thời gian theo giờ Việt Nam dạng yyyyMMddHHmmss
 const vnTime = (date) => new Date(date.getTime() + 7 * 3600 * 1000).toISOString().replace(/[-:T]/g, '').slice(0, 14);
 
-// Sắp xếp theo tên tham số + mã hóa giá trị (khoảng trắng -> '+'), đúng cách VNPay ký
+// Sắp xếp và mã hóa tham số đúng cách VNPay ký
 const canonical = (params) => Object.keys(params).sort()
   .map((k) => `${k}=${encodeURIComponent(params[k]).replace(/%20/g, '+')}`).join('&');
 
+// Ký HMAC-SHA512 dữ liệu gửi VNPay
 const sign = (params, secret) => crypto.createHmac('sha512', secret).update(Buffer.from(canonical(params), 'utf-8')).digest('hex');
 
-// Bỏ dấu tiếng Việt: vnp_OrderInfo không nên chứa ký tự đặc biệt
+// Bỏ dấu tiếng Việt cho nội dung đơn gửi VNPay
 const plain = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9 ]/g, ' ');
 
 // Tạo URL chuyển khách sang trang thanh toán VNPay
 exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new Date(), expireAt, returnTo = 'web' }) => {
   const { tmnCode, secret, url, returnUrl } = cfg();
-  // Config is server-owned; never accept a callback URL from the client.
   const callback = returnTo === 'mobile'
     ? process.env.VNPAY_MOBILE_RETURN_URL || new URL('/api/payments/vnpay/mobile-return', returnUrl).href
     : returnUrl;
@@ -38,7 +38,7 @@ exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new
     vnp_Version: '2.1.0',
     vnp_Command: 'pay',
     vnp_TmnCode: tmnCode,
-    vnp_Amount: Math.round(amount) * 100,           // VNPay yêu cầu nhân 100
+    vnp_Amount: Math.round(amount) * 100,
     vnp_CurrCode: 'VND',
     vnp_TxnRef: txnRef,
     vnp_OrderInfo: plain(orderInfo || `Thanh toan don hang ${txnRef}`),
@@ -54,10 +54,9 @@ exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new
   return `${url}?${canonical(rest)}&vnp_SecureHash=${vnp_SecureHash}`;
 };
 
-const OUTCOME_PENDING = ['07']; // "Trừ tiền thành công nhưng giao dịch bị nghi ngờ": chờ rà soát, chưa xác nhận đơn
+const OUTCOME_PENDING = ['07'];
 
-// Kiểm tra chữ ký của dữ liệu VNPay gửi về (return hoặc IPN) TRƯỚC khi tin kết quả.
-// Trả { valid, txnRef, amount, outcome: 'success'|'failed'|'pending', gateway }.
+// Kiểm tra chữ ký dữ liệu VNPay trả về và đổi mã phản hồi thành thành công / thất bại / chờ
 exports.verifyCallback = (query) => {
   const { secret } = cfg();
   const { vnp_SecureHash: received, vnp_SecureHashType, ...params } = query || {};
@@ -92,5 +91,5 @@ exports.verifyCallback = (query) => {
   };
 };
 
-// Dùng cho test
+// Hàm ký VNPay (xuất ra để kiểm thử)
 exports._sign = (params, secret) => sign(params, secret);

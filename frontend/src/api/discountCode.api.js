@@ -1,22 +1,22 @@
 import api from './axios';
 
-// Kiểm tra mã giảm giá khi checkout (ngoài catalog UC)
+// Gọi API: kiểm tra mã giảm giá
 export const validateDiscountCode = (data) => api.post(`/discount-codes/validate`, data);
 
-// UC-38.1 View Discount Codes
+// Gọi API: danh sách mã (UC-38.1)
 export const listDiscountCodes = (params) => api.get(`/discount-codes`, { params });
 
-// UC-38.2 Create Discount Code
+// Gọi API: tạo mã (UC-38.2)
 export const createDiscountCode = (data) => api.post(`/discount-codes`, data);
 
-// UC-38.3 Update Discount Code
+// Gọi API: sửa mã (UC-38.3)
 export const updateDiscountCode = (id, data) => api.put(`/discount-codes/${id}`, data);
 
-// UC-38.4 Activate Discount Code
+// Gọi API: kích hoạt mã (UC-38.4)
 export const activateDiscountCode = (id, data) => api.patch(`/discount-codes/${id}/activate`, data);
 
-// UC-38.5 Suspend Discount Code
+// Gọi API: tạm ngưng mã (UC-38.5)
 export const suspendDiscountCode = (id, data) => api.patch(`/discount-codes/${id}/suspend`, data);
 
-// UC-38.6 Delete Discount Code
+// Gọi API: xóa mã (UC-38.6)
 export const deleteDiscountCode = (id) => api.delete(`/discount-codes/${id}`);

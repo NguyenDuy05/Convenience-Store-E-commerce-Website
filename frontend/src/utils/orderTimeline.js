@@ -1,5 +1,3 @@
-// Dựng danh sách mốc cho timeline theo dõi đơn từ trạng thái hiện tại + statusHistory.
-// Chỉ hiện thời gian khi hệ thống có ghi nhận; không tự bịa thời gian cho mốc thiếu dữ liệu.
 const FLOW = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup', 'completed'];
 
 const STEP_TEXT = {
@@ -12,12 +10,12 @@ const STEP_TEXT = {
   cancelled: { title: "Order cancelled", desc: "The store cancelled this order. If paid, your payment will be refunded." },
 };
 
-// state: done | current | upcoming | error
+// Dựng các mốc timeline của đơn (đã qua / hiện tại / sắp tới / lỗi)
 export function buildTimeline({ status, statusHistory = [], paymentMethod }) {
   const times = {};
   [...statusHistory]
     .sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt))
-    .forEach((h) => { times[h.status] = h.changedAt; }); // lấy lần gần nhất của mỗi trạng thái
+    .forEach((h) => { times[h.status] = h.changedAt; });
 
   const make = (key, state) => ({ key, state, title: STEP_TEXT[key].title, desc: STEP_TEXT[key].desc, time: times[key] || null });
 
@@ -26,7 +24,6 @@ export function buildTimeline({ status, statusHistory = [], paymentMethod }) {
   }
 
   if (status === 'cancelled') {
-    // Các mốc đơn đã đi qua trước khi bị hủy + mốc hủy
     const reached = FLOW.filter((key) => times[key]).map((key) => make(key, 'done'));
     return [...reached, make('cancelled', 'error')];
   }
@@ -36,7 +33,6 @@ export function buildTimeline({ status, statusHistory = [], paymentMethod }) {
 
   const steps = [];
   FLOW.forEach((key, i) => {
-    // Đơn trả tiền mặt có thể bắt đầu ở "đã xác nhận": không bịa mốc "chờ thanh toán" nếu không có dữ liệu
     if (key === 'pending_payment' && cur > 0 && !times[key] && paymentMethod === 'cash') return;
     let state = 'upcoming';
     if (status === 'completed' || i < cur) state = 'done';

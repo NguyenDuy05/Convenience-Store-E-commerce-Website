@@ -1,7 +1,4 @@
-// Lương theo giờ của nhân viên ca. Đổi mức lương bằng biến môi trường (backend/.env) nếu cần.
-//   Ca ngày  (06:00–22:00): PAY_DAY_RATE   (mặc định 25.000 ₫/giờ)
-//   Ca đêm   (22:00–06:00): PAY_NIGHT_RATE (mặc định 32.000 ₫/giờ)
-// Chỉ trả cho thời gian làm THẬT nằm trong giờ ca: vào sớm / ở lại quá giờ không tính; vào trễ / về sớm bị trừ.
+// Đọc mức lương từ biến môi trường; sai hoặc âm thì dùng giá trị mặc định
 const num = (v, d) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : d);
 
 const RATES = {
@@ -12,7 +9,7 @@ const RATES = {
 };
 const MIN = 60 * 1000;
 
-// Số phút ban đêm (22:00–06:00, giờ máy chủ) nằm trong [from, to)
+// Đếm số phút nằm trong khung giờ đêm 22:00–06:00 của khoảng thời gian [from, to)
 function nightMinutes(from, to) {
   if (!(to > from)) return 0;
   let total = 0;
@@ -26,7 +23,7 @@ function nightMinutes(from, to) {
   return Math.round(total);
 }
 
-// Lương cho khoảng [from, to): { dayMinutes, nightMinutes, amount }
+// Tính lương cho khoảng thời gian làm việc: tách phút ngày / phút đêm và nhân với mức lương tương ứng
 function payFor(from, to) {
   if (!from || !to || !(to > from)) return { dayMinutes: 0, nightMinutes: 0, amount: 0 };
   const all = Math.round((to - from) / MIN);

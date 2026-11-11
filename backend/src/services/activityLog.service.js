@@ -1,7 +1,6 @@
 const { ActivityLog } = require('../models');
 
-// Ghi nhật ký thao tác (UC-30.6). Không để lỗi ghi log làm hỏng request chính.
-// Dùng: await log(req, 'PRODUCT_UPDATE', { type: 'Product', id: product._id }, { before, after })
+// Ghi nhật ký thao tác (bản cũ, dùng cho sản phẩm)
 exports.log = async (req, action, target = {}, detail) => {
   try {
     await ActivityLog.create({

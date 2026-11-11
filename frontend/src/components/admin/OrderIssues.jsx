@@ -5,13 +5,12 @@ import Icon from '../common/Icon';
 import { handleOrderIssue, resolveOrderIssue } from '../../api/order.api';
 import { formatDateTime } from '../../utils/format';
 
-// UC-34.4 Handle Order Issue: danh sách sự cố của đơn, ghi nhận sự cố mới, ghi hướng xử lý khi xong.
-// onChanged() để trang cha tải lại đơn; onAuthError(err) trả true nếu đã xử lý lỗi 401.
+// UC-34.4 Danh sách sự cố của đơn, ghi sự cố mới và ghi hướng xử lý
 export default function OrderIssues({ orderId, issues, onChanged, onAuthError }) {
   const [desc, setDesc] = useState('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
-  const [openId, setOpenId] = useState('');          // sự cố đang mở form xử lý
+  const [openId, setOpenId] = useState('');
   const [resolution, setResolution] = useState('');
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState('');
@@ -45,7 +44,7 @@ export default function OrderIssues({ orderId, issues, onChanged, onAuthError })
     } catch (err) {
       if (await onAuthError(err)) return;
       setResolveError(err.response?.data?.message || "Could not save the resolution. Please try again.");
-      if (err.response?.status === 409) { setOpenId(''); await onChanged(); }   // người khác đã xử lý: tải lại
+      if (err.response?.status === 409) { setOpenId(''); await onChanged(); }
     } finally { busy.current = false; setResolving(false); }
   };
 

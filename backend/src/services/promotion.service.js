@@ -1,11 +1,6 @@
-// Calculate discounts from authoritative Product prices rather than client-provided amounts.
-// Discount rules (stacking and rounding are unspecified in the project report):
-//  - Apply at most one promotion per order; promotions do not stack.
-//  - 'percent': apply value% to eligible lines, capped by maxDiscount when set, rounded down to whole VND.
-//  - 'fixed'  : apply value VND once per order, capped at the eligible subtotal.
-//  - Allocate the discount proportionally across eligible lines; the last line receives the remainder.
 const { Promotion } = require('../models');
 
+// Dòng hàng có thuộc phạm vi của khuyến mãi không
 const isEligibleLine = (promo, line) => {
   if (promo.scope === 'all') return true;
   if (promo.scope === 'category') return promo.categoryIds.some((id) => String(id) === String(line.categoryId));
@@ -13,17 +8,17 @@ const isEligibleLine = (promo, line) => {
   return false;
 };
 
-// Active promotions outside their date range are unavailable
+// Khuyến mãi có đang chạy không (đang bật và trong khoảng ngày)
 exports.isRunning = (promo, now = new Date()) =>
   promo.status === 'active' && promo.startDate <= now && promo.endDate >= now;
 
+// Lấy các khuyến mãi đang chạy
 exports.findRunning = (filter = {}) => {
   const now = new Date();
   return Promotion.find({ ...filter, status: 'active', startDate: { $lte: now }, endDate: { $gte: now } });
 };
 
-// lines: [{ productId, categoryId, name, unitPrice, quantity }]
-// Returns { applicable, reason?, eligibleSubtotal, discount, lines:[{...,lineSubtotal,discountAmount,lineTotal,eligible}] }
+// Tính khuyến mãi cho các dòng hàng: có áp dụng không và giảm bao nhiêu
 exports.evaluate = (promo, lines) => {
   const out = lines.map((l) => ({
     ...l,

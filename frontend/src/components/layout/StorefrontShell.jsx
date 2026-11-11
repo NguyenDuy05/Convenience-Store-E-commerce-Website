@@ -5,6 +5,7 @@ import { BRAND_NAME, openInfo } from '../home/homeConfig';
 import { listStores } from '../../api/store.api';
 import '../../styles/home.css';
 
+// Khung trang phía khách: header cửa hàng + nội dung + footer
 export default function StorefrontShell({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
