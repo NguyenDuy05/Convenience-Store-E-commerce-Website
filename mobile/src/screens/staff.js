@@ -9,10 +9,14 @@ import CancelSheet, { reasonVi } from '../components/CancelSheet';
 import { Badge, Banner, Button, Card, Chip, Divider, Empty, ErrorView, Field, H, Icon, Loading, Muted, Row, Screen, SectionTitle, Stepper, T, Text, Thumb } from '../components/ui';
 import { colors, radius } from '../theme';
 import { errMsg, formatCurrency, formatDate, formatDateTime, formatTime, newIdempotencyKey } from '../utils/format';
-import { PAYMENT_METHOD, PAYMENT_STATUS } from '../utils/orderMeta';
+import { PAYMENT_METHOD } from '../utils/orderMeta';
 import { StatusBadge } from './orders';
 
-const NEXT_LABEL = { preparing: 'Bắt đầu chuẩn bị', ready_for_pickup: 'Đã chuẩn bị xong', completed: 'Khách đã nhận hàng' };
+// Giống web: confirmed → preparing (nhân viên xác nhận và bắt đầu chuẩn bị) → ready_for_pickup → completed
+const NEXT_LABEL = { preparing: 'Xác nhận & bắt đầu chuẩn bị', ready_for_pickup: 'Đã chuẩn bị xong', completed: 'Xác nhận khách đã nhận' };
+const NEXT_NOTICE = { preparing: 'Đã xác nhận đơn, bắt đầu chuẩn bị.', ready_for_pickup: 'Đã chuẩn bị xong. Khách đã được báo đến nhận hàng.', completed: 'Đã xác nhận khách nhận hàng. Đơn được lưu vào lịch sử.' };
+// Tình trạng thanh toán hiển thị cho nhân viên (giống web)
+const payText = (o) => (o.paymentStatus === 'paid' ? 'Đã thanh toán' : o.paymentStatus === 'refunded' ? 'Đã hoàn tiền vào ví khách' : o.status === 'cancelled' ? 'Đơn đã hủy' : o.paymentMethod === 'cash' ? 'Thu tiền mặt khi nhận' : 'Chờ thanh toán online');
 const NEXT_ICON = { preparing: 'cube-outline', ready_for_pickup: 'checkmark-done-outline', completed: 'bag-check-outline' };
 const CANCELLABLE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 const SHIFT_STATUS = { scheduled: ['Sắp tới', 'info'], in_progress: ['Đang làm', 'warn'], completed: ['Hoàn thành', 'success'], missed: ['Vắng', 'error'] };
@@ -107,12 +111,14 @@ export function StaffHomeScreen({ navigation }) {
 const ORDER_TABS = [['active', 'Đang xử lý'], ['confirmed', 'Mới'], ['preparing', 'Đang chuẩn bị'], ['ready_for_pickup', 'Chờ nhận'], ['pending_payment', 'Chờ thanh toán'], ['history', 'Lịch sử']];
 export function StaffOrdersScreen({ navigation, route }) {
   const [status, setStatus] = useState(route.params?.status || 'active');
+  const [source, setSource] = useState('all');
   const [q, setQ] = useState('');
   const dq = useDebounced(q.trim());
   useEffect(() => { if (route.params?.status) setStatus(route.params.status); }, [route.params?.status]);
-  const d = useLoad(async () => (await A.staff.orders({ status, source: status === 'history' ? 'all' : 'online', q: dq || undefined, limit: 50 })).data, [status, dq], { reloadOnFocus: true });
-  // Tự làm mới hàng đợi mỗi 30 giây
-  useEffect(() => { const t = setInterval(() => d.refresh(), 30000); return () => clearInterval(t); }, [d.refresh]);
+  const history = status === 'history';
+  const d = useLoad(async () => (await A.staff.orders({ status, source: history ? source : 'online', q: dq || undefined, limit: 50 })).data, [status, source, dq], { reloadOnFocus: true });
+  // Tự làm mới hàng đợi mỗi 20 giây như web
+  useEffect(() => { const t = setInterval(() => d.refresh(), 20000); return () => clearInterval(t); }, [d.refresh]);
   const counts = d.data?.counts || {};
   const count = (k) => (k === 'active' ? ['confirmed', 'preparing', 'ready_for_pickup', 'pending_payment'].reduce((n, x) => n + (counts[x] || 0), 0) : k === 'history' ? undefined : counts[k] || 0);
   return (
@@ -123,6 +129,10 @@ export function StaffOrdersScreen({ navigation, route }) {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {ORDER_TABS.map(([k, l]) => <Chip key={k} label={l} count={count(k)} active={status === k} onPress={() => setStatus(k)} />)}
         </ScrollView>
+        {history ? (
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[['all', 'Tất cả'], ['store', 'Tại quầy'], ['online', 'Online']].map(([k, l]) => <Chip key={k} label={l} active={source === k} onPress={() => setSource(k)} />)}
+          </View>) : null}
       </View>
       <FlatList data={d.data?.items || []} keyExtractor={(o) => o._id} contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 10 }}
         refreshing={d.refreshing} onRefresh={d.refresh}
@@ -131,7 +141,8 @@ export function StaffOrdersScreen({ navigation, route }) {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><T style={{ fontWeight: '800', color: colors.primary }}>{o.orderCode}</T><StatusBadge status={o.status} /></View>
             <T numberOfLines={1}>{o.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')}</T>
             <Muted>{o.source === 'store' ? 'Tại quầy' : 'Online'} · {o.customer?.fullName || 'Khách lẻ'} · {formatTime(o.createdAt)} {formatDate(o.createdAt)}</Muted>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Muted>{PAYMENT_STATUS[o.paymentStatus]?.label}</Muted><T style={{ fontWeight: '800' }}>{formatCurrency(o.totalAmount)}</T></View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Muted style={o.paymentStatus === 'paid' ? { color: colors.secondary, fontWeight: '700' } : null}>{payText(o)}</Muted><T style={{ fontWeight: '800' }}>{formatCurrency(o.totalAmount)}</T></View>
+            {!history && o.status === 'confirmed' ? <Button title="Xác nhận & chuẩn bị" icon="checkmark-circle-outline" small onPress={() => navigation.navigate('StaffOrderDetail', { id: o._id })} /> : null}
           </Card>)}
         ListEmptyComponent={d.loading ? <Loading /> : d.error ? <ErrorView message={d.error} onRetry={d.reload} /> : <Empty icon="receipt-outline" title="Không có đơn" text="Không có đơn nào ở mục này." />} />
     </SafeAreaView>
@@ -144,16 +155,25 @@ export function StaffOrderDetailScreen({ route }) {
   const d = useLoad(async () => (await A.staff.order(id)).data, [id], { reloadOnFocus: true });
   const [busy, setBusy] = useState(false);
   const [cash, setCash] = useState(false);
+  const [received, setReceived] = useState('');
+  const [notice, setNotice] = useState('');
   const [cancelOpen, setCancelOpen] = useState(false);
+  // Tự làm mới mỗi 20 giây như web (đơn có thể bị khách hủy hoặc vừa thanh toán xong)
+  useEffect(() => { const t = setInterval(() => d.refresh(), 20000); return () => clearInterval(t); }, [d.refresh]);
   if (d.loading && !d.data) return <Loading />;
   if (d.error && !d.data) return <ErrorView message={d.error} onRetry={d.reload} />;
   const o = d.data;
   const next = o.nextTransition;
   const blocked = next?.to === 'preparing' && o.pickupSchedule?.isOpen === false;
+  const got = received === '' ? o.totalAmount : Number(received);
+  const cashBad = next?.needsCashConfirm && (!cash || !Number.isInteger(got) || got < o.totalAmount);
   const advance = async () => {
-    setBusy(true);
-    try { await A.staff.advance(o._id, { status: next.to, ...(next.needsCashConfirm ? { cashCollected: true } : {}) }); setCash(false); d.refresh(); }
-    catch (e) { Alert.alert('Không cập nhật được', errMsg(e)); d.refresh(); }
+    if (busy || !next) return;
+    setBusy(true); setNotice('');
+    try {
+      await A.staff.advance(o._id, { status: next.to, ...(next.needsCashConfirm ? { cashCollected: cash, received: got } : {}) });
+      setNotice(NEXT_NOTICE[next.to]); setCash(false); setReceived(''); d.refresh();
+    } catch (e) { Alert.alert('Không cập nhật được', errMsg(e, 'Không cập nhật được đơn. Làm mới rồi thử lại.')); d.refresh(); }
     finally { setBusy(false); }
   };
   return (
@@ -164,9 +184,14 @@ export function StaffOrderDetailScreen({ route }) {
         <Muted>Đặt lúc {formatDateTime(o.createdAt)}</Muted>
         <Row label="Khách hàng" value={o.customer?.fullName || 'Khách lẻ'} />
         {o.customer?.phone ? <Row label="Điện thoại" value={o.customer.phone} /> : null}
-        <Row label="Thanh toán" value={`${PAYMENT_STATUS[o.paymentStatus]?.label || o.paymentStatus} · ${PAYMENT_METHOD[o.paymentMethod] || ''}`} />
+        <Row label="Thanh toán" value={`${payText(o)}${o.paymentMethod ? ` · ${PAYMENT_METHOD[o.paymentMethod] || o.paymentMethod}` : ''}`} />
       </Card>
+      {notice ? <Banner tone="success" icon="checkmark-circle-outline" text={notice} /> : null}
+      {o.status === 'pending_payment' ? <Banner tone="info" icon="card-outline" title="Chờ khách thanh toán" text="Chỉ chuẩn bị sau khi thanh toán online được xác nhận." /> : null}
+      {o.status === 'confirmed' && !blocked ? <Banner tone="warn" icon="sparkles-outline" title="Đơn mới cần xác nhận" text="Kiểm tra hàng rồi bấm “Xác nhận & bắt đầu chuẩn bị”. Không làm được đơn thì hủy và chọn lý do." /> : null}
+      {o.status === 'preparing' ? <Banner tone="info" icon="cube-outline" title="Đang chuẩn bị" text="Lấy và đóng gói đủ sản phẩm rồi bấm “Đã chuẩn bị xong”. Hệ thống sẽ báo khách đến nhận." /> : null}
       {o.status === 'ready_for_pickup' ? <Banner tone="success" icon="storefront-outline" title="Đơn sẵn sàng" text={`Đối chiếu mã đơn ${o.orderCode} với khách trước khi giao hàng.`} /> : null}
+      {o.status === 'completed' ? <Banner tone="success" icon="bag-check-outline" text="Khách đã nhận hàng. Đơn đã hoàn thành." /> : null}
       {blocked ? <Banner tone="warn" icon="time-outline" title="Chưa đến giờ chuẩn bị" text={o.pickupSchedule.notice} /> : null}
       {o.status === 'cancelled' ? (
         <Banner tone="error" icon="close-circle-outline" title={`Đã hủy${o.cancelFault ? ` · ${o.cancelFault === 'store' ? 'do cửa hàng' : 'do khách'}` : ''}`}
@@ -191,12 +216,24 @@ export function StaffOrderDetailScreen({ route }) {
         <Card>
           <H>Bước tiếp theo</H>
           {next.needsCashConfirm ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Text style={{ flex: 1, color: colors.text }}>Đã thu đủ {formatCurrency(o.totalAmount)} tiền mặt</Text>
-              <Switch value={cash} onValueChange={setCash} />
+            <View style={{ gap: 8 }}>
+              <Field label="Tiền khách đưa (đ)" value={received} onChangeText={(v) => setReceived(v.replace(/\D/g, ''))} keyboardType="number-pad" placeholder={String(o.totalAmount)} editable={!busy} />
+              <Muted>Tiền thối: {formatCurrency(Math.max(0, (Number.isFinite(got) ? got : 0) - o.totalAmount))}{received !== '' && got < o.totalAmount ? ' · chưa đủ tiền' : ''}</Muted>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={{ flex: 1, color: colors.text }}>Tôi đã thu đủ tiền mặt</Text>
+                <Switch value={cash} onValueChange={setCash} disabled={busy} />
+              </View>
             </View>) : null}
-          <Button title={NEXT_LABEL[next.to]} icon={NEXT_ICON[next.to]} loading={busy} disabled={blocked || (next.needsCashConfirm && !cash)} onPress={advance} />
+          <Button title={NEXT_LABEL[next.to]} icon={NEXT_ICON[next.to]} loading={busy} disabled={blocked || cashBad} onPress={advance} />
           {next.to === 'ready_for_pickup' ? <Muted>Khách sẽ nhận thông báo đơn đã sẵn sàng.</Muted> : null}
+        </Card>) : null}
+      {o.store ? (
+        <Card>
+          <H>Nơi nhận hàng</H>
+          <T style={{ fontWeight: '700' }}>{o.store.name}</T>
+          {o.store.address ? <Muted>{o.store.address}</Muted> : null}
+          {o.store.phone ? <Muted>{o.store.phone}</Muted> : null}
+          <Muted>Chỉ nhận tại cửa hàng · Không giao hàng</Muted>
         </Card>) : null}
       {o.source === 'online' && CANCELLABLE.includes(o.status) ? <Button title="Hủy đơn" icon="close-circle-outline" variant="ghost" onPress={() => setCancelOpen(true)} /> : null}
       <CancelSheet visible={cancelOpen} order={o} mode="staff" onSubmit={(body) => A.staff.cancel(o._id, body)} onClose={(done) => { setCancelOpen(false); if (done) d.refresh(); }} />
