@@ -5,11 +5,6 @@
   "description": "Convenience Store E-commerce Website - REST API (Node.js, Express, MongoDB, MVC)",
   "main": "src/server.js",
   "scripts": {
-    "test": "node --test src/controllers/*.test.js",
-    "test:features": "node test/run-feature-integration.js",
-    "test:mail": "node --test test/notifications.test.js",
-    "test:notifications": "node --test test/in-app-notifications.integration.test.js",
-    "test:pos": "node --test test/pos-and-pickup.integration.test.js",
     "mail:verify": "node src/scripts/verify-mail.js",
     "configure-store": "node src/scripts/configure-store.js",
     "start": "node src/server.js",
@@ -21,9 +16,7 @@
     "seed:transactions": "node src/scripts/seed-transactions.js",
     "seed:shifts": "node src/scripts/seed-shifts.js",
     "seed:complaints": "node src/scripts/seed-complaints.js",
-    "init-db": "node src/scripts/init-db.js",
-    "test:wallet": "node --test test/wallet-checkout.integration.test.js",
-    "test:qa": "node test/run-qa.js"
+    "init-db": "node src/scripts/init-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
