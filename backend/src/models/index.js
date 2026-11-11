@@ -19,6 +19,7 @@ module.exports = {
   SupportRequest: require('./SupportRequest'),
   WorkShift: require('./WorkShift'),
   ShiftSlot: require('./ShiftSlot'),
+  WalletWithdrawal: require('./WalletWithdrawal'),
   ActivityLog: require('./ActivityLog'),
   Notification: require('./Notification'),
   NotificationReceipt: require('./NotificationReceipt'),

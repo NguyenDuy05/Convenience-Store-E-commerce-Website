@@ -16,4 +16,10 @@ router.get('/', authenticate, authorize('customer'), asyncHandler(async (req, re
   res.json({ balance: rows[0]?.balance || 0, items: rows[0]?.items || [], total: rows[0]?.total || 0,
     page, limit, points: user?.membership?.points || 0, pointsPerVnd: 10000 });
 }));
+// Rút tiền từ ví về ngân hàng: khách gửi yêu cầu, admin chuyển khoản rồi xác nhận
+const w = require('../controllers/withdrawal.controller');
+router.post('/withdrawals', authenticate, authorize('customer'), w.requestWithdrawal);
+router.get('/withdrawals', authenticate, authorize('customer'), w.listMyWithdrawals);
+router.get('/admin/withdrawals', authenticate, authorize('admin'), w.listWithdrawals);
+router.patch('/admin/withdrawals/:id', authenticate, authorize('admin'), w.processWithdrawal);
 module.exports = router;
