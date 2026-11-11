@@ -154,7 +154,7 @@ export default function AdminWorkShiftsPage() {
             <div className="ws-slot-top"><b>{s.startTime}–{s.endTime}</b><span className="ws-seats">{s.filled}/{s.capacity}</span></div>
             {s.note && <small>{s.note}</small>}
             <div className="ws-bar"><i style={{ width: `${Math.min(100, (s.filled / s.capacity) * 100)}%` }} /></div>
-            <ul>{s.staff.map((p) => <li key={p.shiftId}><span title={STATUS[p.status]?.[0]} className={`ws-dot ${p.status}`} />{p.fullName}{p.status === 'scheduled' && !s.started && <button className="ws-x" aria-label={`Remove ${p.fullName}`} onClick={() => open({ type: 'remove', shift: p, label: `${d(s.shiftDate)} ${s.startTime}–${s.endTime}` })}>×</button>}</li>)}
+            <ul>{s.staff.map((p) => <li key={p.shiftId}><span title={STATUS[p.status]?.[0]} className={`ws-dot ${p.status}`} /><span className="ws-name" title={p.fullName}>{p.fullName}</span>{p.status === 'scheduled' && !s.started && <button className="ws-x" aria-label={`Remove ${p.fullName}`} onClick={() => open({ type: 'remove', shift: p, label: `${d(s.shiftDate)} ${s.startTime}–${s.endTime}` })}>×</button>}</li>)}
               {!s.started && s.filled < s.capacity && <li className="ws-open">{s.capacity - s.filled} place{s.capacity - s.filled === 1 ? '' : 's'} open</li>}</ul>
             {!s.started && <div className="ws-slot-actions"><button onClick={() => open({ type: 'edit', slot: s })}>Edit</button>{s.filled === 0 && <button onClick={() => open({ type: 'deleteSlot', slot: s })}>Delete</button>}</div>}
           </article>)}
