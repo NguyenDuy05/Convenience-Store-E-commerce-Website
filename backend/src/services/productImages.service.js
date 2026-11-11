@@ -42,4 +42,36 @@ function clean(images, existing = []) {
     return prefix + name;
   });
 }
-module.exports = { directory, list, clean, format };
+// Danh sách tên file ảnh (đọc lại thư mục tối đa mỗi 10 giây)
+let cache = { at: 0, names: [] };
+function names() {
+  if (Date.now() - cache.at > 10000) {
+    try { cache = { at: Date.now(), names: fs.readdirSync(directory).filter((n) => supported.test(n)) }; }
+    catch { cache = { at: Date.now(), names: [] }; }
+  }
+  return cache.names;
+}
+// Đổi đường dẫn ảnh cũ / hỏng (vd /uploads/products/SP001.jpg) sang file thật trong thư viện ảnh, tìm theo mã SKU
+function resolveUrl(url, sku) {
+  const all = names();
+  if (typeof url === 'string' && url.startsWith(prefix)) {
+    let name = '';
+    try { name = decodeURIComponent(url.slice(prefix.length)); } catch { /* tên file lỗi */ }
+    if (all.includes(name)) return url;
+  }
+  if (typeof url === 'string' && /^(data:|https?:)/.test(url)) return url;
+  const key = (sku || (typeof url === 'string' ? path.basename(url).replace(/\.[^.]+$/, '') : '')).toUpperCase();
+  if (!key) return url;
+  const found = all.find((n) => n.toUpperCase().startsWith(key + '-')) || all.find((n) => n.replace(/\.[^.]+$/, '').toUpperCase() === key);
+  return found ? prefix + encodeURIComponent(found) : url;
+}
+// Sửa mảng ảnh của một sản phẩm; sản phẩm chưa có ảnh thì lấy ảnh theo SKU nếu có
+function resolveImages(doc) {
+  if (!doc || typeof doc !== 'object' || !('images' in doc || doc.sku)) return;
+  const list = Array.isArray(doc.images) ? doc.images : [];
+  const fixed = list.length ? list.map((u) => resolveUrl(u, list.length === 1 ? doc.sku : undefined)) : (doc.sku ? [resolveUrl('', doc.sku)].filter(Boolean) : []);
+  if (doc.images !== undefined || fixed.length) {
+    if (typeof doc.set === 'function') doc.set('images', fixed, { strict: false }); else doc.images = fixed;
+  }
+}
+module.exports = { directory, list, clean, format, resolveUrl, resolveImages };

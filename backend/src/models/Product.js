@@ -34,4 +34,8 @@ const productSchema = new Schema({
 
 productSchema.index({ name: 'text' });
 
+// Khi đọc sản phẩm: sửa đường dẫn ảnh cũ / hỏng sang file ảnh thật (không ghi lại DB)
+const fixImages = (res) => { const { resolveImages } = require('../services/productImages.service'); (Array.isArray(res) ? res : [res]).forEach(resolveImages); };
+productSchema.post(['find', 'findOne', 'findOneAndUpdate'], fixImages);
+
 module.exports = mongoose.model('Product', productSchema);
