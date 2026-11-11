@@ -2,6 +2,7 @@ const { Product, Category, StockBatch } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { log } = require('../services/activityLog.service');
+const { sellableMap } = require('../services/stock.service');
 
 const canManage = (req) => !!req.user && ['staff', 'admin'].includes(req.user.role);
 const MEAL_TYPES = Product.schema.path('mealType').enumValues;
@@ -90,6 +91,14 @@ const duplicateMessage = (err) => {
 };
 const guardDuplicate = (err) => { if (err && err.code === 11000) throw new ApiError(409, duplicateMessage(err), { fields: Object.keys(err.keyValue || {}) }); throw err; };
 
+// Khách/Guest chỉ thấy số lượng CÒN BÁN ĐƯỢC (lô chưa hết hạn), khớp với kiểm tra ở giỏ hàng/đặt hàng.
+// Staff/Admin vẫn thấy stockQuantity thực tế trong kho (kể cả hàng quá hạn chờ xử lý).
+const withSellableStock = async (products) => {
+  const rows = products.map((p) => (p.toObject ? p.toObject() : p));
+  const sellable = await sellableMap(rows.map((p) => p._id));
+  return rows.map((p) => ({ ...p, stockQuantity: sellable.get(String(p._id)) ?? 0 }));
+};
+
 const loadProduct = async (id) => {
   const p = await Product.findOne({ _id: id, status: { $ne: 'deleted' } }).catch(() => null);   // id sai định dạng -> 404
   if (!p) throw new ApiError(404, "Product not found");
@@ -129,7 +138,7 @@ exports.listProducts = asyncHandler(async (req, res) => {
     Product.countDocuments(filter),
   ]);
 
-  const body = { items, total, page, limit };
+  const body = { items: manage ? items : await withSellableStock(items), total, page, limit };
   if (manage && req.query.withCounts) {
     const live = { status: { $ne: 'deleted' } };
     const [all, active, inactive, low, out] = await Promise.all([
@@ -153,7 +162,8 @@ exports.getProduct = asyncHandler(async (req, res) => {
   if (manage && req.query.include === 'batches') query = query.populate('priceHistory.changedBy', 'fullName');
   const product = await query.catch(() => null);
   if (!product) throw new ApiError(404, "Product not found");
-  if (!(manage && req.query.include === 'batches')) return res.json(product);
+  if (!manage) return res.json((await withSellableStock([product]))[0]);
+  if (req.query.include !== 'batches') return res.json(product);
 
   const batches = await StockBatch.find({ productId: product._id }).sort({ expiryDate: 1, receivedAt: 1 }).lean();
   res.json({ ...product.toObject(), batches });
