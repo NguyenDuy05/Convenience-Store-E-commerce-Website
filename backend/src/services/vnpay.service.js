@@ -25,10 +25,10 @@ const sign = (params, secret) => crypto.createHmac('sha512', secret).update(Buff
 const plain = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9 ]/g, ' ');
 
 // Tạo URL chuyển khách sang trang thanh toán VNPay
-exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new Date(), expireAt, returnTo = 'web' }) => {
+exports.createPaymentUrl = ({ txnRef, amount, ipAddr, orderInfo, createdAt = new Date(), expireAt, returnTo = 'web', appBase = null }) => {
   const { tmnCode, secret, url, returnUrl } = cfg();
   const callback = returnTo === 'mobile'
-    ? process.env.VNPAY_MOBILE_RETURN_URL || new URL('/api/payments/vnpay/mobile-return', returnUrl).href
+    ? process.env.VNPAY_MOBILE_RETURN_URL || new URL('/api/payments/vnpay/mobile-return', appBase || returnUrl).href
     : returnUrl;
   if (returnTo === 'mobile') {
     const callbackUrl = new URL(callback);

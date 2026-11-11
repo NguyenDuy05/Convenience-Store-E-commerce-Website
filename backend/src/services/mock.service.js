@@ -16,7 +16,8 @@ exports.verify = (txnRef, result, sig) => {
 };
 
 // Tạo link tới trang thanh toán giả lập
-exports.createPaymentUrl = (txnRef) => `${backendUrl()}/api/payments/mock/pay?txnRef=${encodeURIComponent(txnRef)}`;
+// base: địa chỉ backend mà app đang gọi (máy ảo / điện thoại không mở được localhost); app: thanh toán từ app mobile
+exports.createPaymentUrl = (txnRef, { base, app } = {}) => `${base || backendUrl()}/api/payments/mock/pay?txnRef=${encodeURIComponent(txnRef)}${app ? '&app=1' : ''}`;
 // Tạo link hoàn tất có chữ ký cho trang giả lập
-exports.completeUrl = (txnRef, result) => `/api/payments/mock/complete?txnRef=${encodeURIComponent(txnRef)}&result=${result}&sig=${sign(txnRef, result)}`;
+exports.completeUrl = (txnRef, result, app) => `/api/payments/mock/complete?txnRef=${encodeURIComponent(txnRef)}&result=${result}&sig=${sign(txnRef, result)}${app ? '&app=1' : ''}`;
 exports.RESULTS = ['success', 'failed', 'pending'];

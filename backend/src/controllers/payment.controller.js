@@ -26,7 +26,9 @@ exports.createOnlinePayment = asyncHandler(async (req, res) => {
   if (!orderId || !mongoose.isValidObjectId(orderId)) throw new ApiError(404, "Order not found");
   const order = await Order.findOne({ _id: orderId, customerId: req.user.id }).lean();
   if (!order) throw new ApiError(404, "Order not found");
-  const out = await payment.startOnlinePayment({ order, method, ipAddr: clientIp(req), returnTo });
+  // App mobile (máy ảo, điện thoại) không mở được "localhost": dùng đúng địa chỉ backend mà app đang gọi
+  const appBase = returnTo === 'mobile' && process.env.NODE_ENV !== 'production' ? `${req.protocol}://${req.get('host')}` : null;
+  const out = await payment.startOnlinePayment({ order, method, ipAddr: clientIp(req), returnTo, appBase });
   res.json(out);
 });
 
@@ -44,12 +46,27 @@ exports.vnpayReturn = asyncHandler(async (req, res) => {
   res.redirect(resultUrl(r.orderId));
 });
 
-// VNPay chuyển về cho app mobile: ghi nhận kết quả rồi mở app bằng deep link cố định
+// Trang báo kết quả cho người thanh toán trên app: đóng trình duyệt để quay lại app (app tự kiểm tra trạng thái đơn)
+async function appDonePage(res, orderId) {
+  const order = orderId ? await Order.findById(orderId).select('orderCode paymentStatus').lean() : null;
+  const ok = order?.paymentStatus === 'paid';
+  const title = !order ? 'Không xác định được giao dịch' : ok ? 'Thanh toán thành công' : 'Thanh toán chưa thành công';
+  const color = ok ? '#356b0a' : '#ba1a1a';
+  res.type('html').send(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<body style="font-family:system-ui,sans-serif;background:#f3f2ff;margin:0;padding:24px">
+<div style="max-width:420px;margin:60px auto;background:#fff;border-radius:16px;padding:28px;text-align:center;box-shadow:0 6px 18px rgba(25,36,78,.12)">
+<h2 style="margin:0 0 8px;color:${color}">${title}</h2>
+${order ? `<p style="margin:0 0 16px;color:#555">Đơn ${esc(order.orderCode)}</p>` : ''}
+<p style="margin:0;font-weight:600">Đóng trang này để quay lại app QUICK.</p>
+</div></body></html>`);
+}
+
+// VNPay chuyển về cho app mobile: ghi nhận kết quả rồi hiện trang "đóng để quay lại app"
 exports.vnpayMobileReturn = asyncHandler(async (req, res) => {
   const v = vnpay.verifyCallback(req.query);
-  if (!v.valid) return res.redirect('quickstore://payment-result?error=invalid_signature');
+  if (!v.valid) return res.status(400).send('Invalid signature');
   const r = await applyVerified(v);
-  res.redirect(r.orderId ? `quickstore://payment-result?orderId=${encodeURIComponent(r.orderId)}` : 'quickstore://payment-result?error=unknown');
+  await appDonePage(res, r.orderId);
 });
 
 // VNPay gọi server báo kết quả (IPN), trả mã phản hồi theo quy định VNPay
@@ -72,7 +89,8 @@ exports.mockPay = asyncHandler(async (req, res) => {
   const txn = await Transaction.findOne({ txnRef: String(req.query.txnRef || '') }).lean();
   if (!txn) return res.status(404).send("Transaction not found");
   const order = await Order.findById(txn.orderId).select('orderCode').lean();
-  const btn = (result, label, color) => `<a href="${esc(mock.completeUrl(txn.txnRef, result))}" style="display:block;margin:10px 0;padding:14px;border-radius:10px;background:${color};color:#fff;text-decoration:none;font-weight:700;text-align:center">${label}</a>`;
+  const app = req.query.app === '1';
+  const btn = (result, label, color) => `<a href="${esc(mock.completeUrl(txn.txnRef, result, app))}" style="display:block;margin:10px 0;padding:14px;border-radius:10px;background:${color};color:#fff;text-decoration:none;font-weight:700;text-align:center">${label}</a>`;
   res.type('html').send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mock payment gateway</title></head>
 <body style="font-family:system-ui,sans-serif;background:#f3f2ff;margin:0;padding:24px">
 <div style="max-width:420px;margin:40px auto;background:#fff;border-radius:16px;padding:28px;box-shadow:0 6px 18px rgba(25,36,78,.12)">
@@ -96,6 +114,7 @@ exports.mockComplete = asyncHandler(async (req, res) => {
     gateway: { provider: 'mock', transactionNo: `MOCK${Date.now()}`, responseCode: result === 'success' ? '00' : result === 'pending' ? '07' : '24' },
     reason: result === 'failed' ? "Customer cancelled / mock payment failed" : undefined,
   });
+  if (req.query.app === '1') return appDonePage(res, r.orderId || txn.orderId);
   res.redirect(resultUrl(r.orderId || String(txn.orderId)));
 });
 

@@ -68,7 +68,7 @@ async function raiseSystemIssue(orderId, description) {
 const txnRefFor = (order, attempt) => `${order.orderCode.replace(/-/g, '')}T${attempt}`;
 
 // Bắt đầu thanh toán online: tạo giao dịch chờ và link VNPay (dùng lại link cũ nếu còn hạn)
-async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
+async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web', appBase = null }) {
   if (!ONLINE.includes(method)) throw new ApiError(400, "Website payments use VNPay only");
   const useMock = mock.enabled();
   if (!useMock) {
@@ -109,9 +109,9 @@ async function startOnlinePayment({ order, method, ipAddr, returnTo = 'web' }) {
 
   try {
     let paymentUrl;
-    if (useMock) paymentUrl = mock.createPaymentUrl(txnRef);
+    if (useMock) paymentUrl = mock.createPaymentUrl(txnRef, { base: appBase, app: returnTo === 'mobile' });
     else if (method === 'vnpay') {
-      paymentUrl = vnpay.createPaymentUrl({ txnRef, amount: fresh.payableAmount ?? fresh.totalAmount, ipAddr, orderInfo: `Thanh toan don hang ${fresh.orderCode}`, expireAt: expiresAt, returnTo });
+      paymentUrl = vnpay.createPaymentUrl({ txnRef, amount: fresh.payableAmount ?? fresh.totalAmount, ipAddr, orderInfo: `Thanh toan don hang ${fresh.orderCode}`, expireAt: expiresAt, returnTo, appBase });
     }
     await Transaction.updateOne({ _id: txn._id }, { $set: { paymentUrl } });
     return { paymentUrl, txnRef, expiresAt, method, reused: false };
