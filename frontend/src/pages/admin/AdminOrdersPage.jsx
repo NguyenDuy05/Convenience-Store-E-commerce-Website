@@ -159,7 +159,7 @@ export default function AdminOrdersPage() {
                       {o.openIssues > 0 && <span className="aord-issue" title="Unresolved issues"><Icon name="report" size="sm" fill />{o.openIssues}</span>}
                       <small>{o.itemCount} items</small>
                     </td>
-                    <td>{o.customer ? <><b>{o.customer.fullName}</b><small>{o.customer.email}{o.customer.phone ? ` • ${o.customer.phone}` : ''}</small></> : <span className="aord-muted">Walk-in customer</span>}</td>
+                    <td>{o.customer ? <><Link className="aord-customer-link" to={`/admin/customers?view=${o.customer._id}`} title="View customer details"><b>{o.customer.fullName}</b></Link><small>{o.customer.email}{o.customer.phone ? ` • ${o.customer.phone}` : ''}</small></> : <span className="aord-muted">Walk-in customer</span>}</td>
                     <td>{ORDER_SOURCE[o.source]}</td>
                     <td><OrderStatusBadge status={o.status} /></td>
                     <td><span className={`aord-pay ${o.paymentStatus}`}>{PAYMENT_STATUS[o.paymentStatus]?.label}</span><small>{PAYMENT_METHOD[o.paymentMethod] || '—'}</small></td>

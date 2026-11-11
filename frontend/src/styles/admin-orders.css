@@ -58,3 +58,7 @@
 .aord-state p { margin: 0; max-width: 380px; font-size: 14px; }
 .aord-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 11px 22px; border: 0; border-radius: 12px; background: var(--qk-primary); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .aord-btn:hover { background: var(--qk-primary-dark); }
+
+/* Tên khách bấm được -> chi tiết khách hàng */
+.aord-customer-link { display: inline-flex; align-items: center; gap: 4px; color: #0058bc; text-decoration: none; }
+.aord-customer-link:hover { text-decoration: underline; }

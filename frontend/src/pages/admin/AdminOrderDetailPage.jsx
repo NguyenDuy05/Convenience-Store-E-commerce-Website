@@ -13,7 +13,7 @@ import OrderIssues from '../../components/admin/OrderIssues';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 import { ORDER_SOURCE, ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS } from '../../utils/orderMeta';
 
-const TXN_STATUS = { success: "Successful", failed: "Failed", pending: "Pending" };
+const TXN_STATUS = { success: "Successful", failed: "Failed", pending: "Pending", refunded: "Refunded to wallet" };
 
 // UC-34.3 View Order Details (Admin) + thao tác chuyển trạng thái và xử lý sự cố (UC-34.4)
 export default function AdminOrderDetailPage() {
@@ -134,7 +134,7 @@ export default function AdminOrderDetailPage() {
           <section className="aod-card">
             <h2><Icon name="person" />Customer</h2>
             {order.customer ? (
-              <div className="aod-kv"><b>{order.customer.fullName}</b><span>{order.customer.email}</span>{order.customer.phone && <span>{order.customer.phone}</span>}</div>
+              <div className="aod-kv"><Link className="aord-customer-link" to={`/admin/customers?view=${order.customer._id}`} title="View customer details"><b>{order.customer.fullName}</b><Icon name="open_in_new" size="sm" /></Link><span>{order.customer.email}</span>{order.customer.phone && <span>{order.customer.phone}</span>}</div>
             ) : <p className="aod-muted">Walk-in customer (no account).</p>}
             {order.createdBy && <p className="aod-muted">Order created by: <b>{order.createdBy}</b></p>}
             {order.customerNote && <div className="aod-note"><Icon name="sticky_note_2" size="md" /><span>{order.customerNote}</span></div>}

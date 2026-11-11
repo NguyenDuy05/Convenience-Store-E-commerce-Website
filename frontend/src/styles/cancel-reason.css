@@ -1,0 +1,17 @@
+/* Bộ chọn lý do hủy đơn (khách, staff, admin dùng chung) */
+.crp { margin: 8px 0 12px; padding: 0; border: 0; min-width: 0; }
+.crp legend { margin-bottom: 8px; padding: 0; color: #0c1842; font: 600 14px/20px Inter, system-ui, sans-serif; }
+.crp legend span { color: #ba1a1a; }
+.crp-list { display: grid; gap: 6px; }
+.crp-opt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #dde1ff; border-radius: 10px; background: #fff; color: #0c1842; font: 400 14px/20px Inter, system-ui, sans-serif; cursor: pointer; transition: border-color .15s, background .15s; }
+.crp-opt:hover { border-color: #b4c5ff; }
+.crp-opt.on { border-color: #0058bc; background: #f3f2ff; font-weight: 600; }
+.crp-opt input { width: 16px; height: 16px; margin: 0; padding: 0; accent-color: #0058bc; flex-shrink: 0; }
+.crp-other { width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid #c2c6d6; border-radius: 10px; font: 400 14px/20px Inter, system-ui, sans-serif; resize: vertical; box-sizing: border-box; }
+.crp-other:focus { outline: 2px solid #0058bc; outline-offset: 1px; border-color: transparent; }
+.crp:disabled { opacity: .7; }
+
+/* Thắng CSS cũ của hộp hủy phía khách (.customer-cancel label/input) */
+.crp .crp-opt { flex-direction: row; justify-content: flex-start; text-align: left; gap: 10px; margin: 0; }
+.crp .crp-opt input { width: 16px; height: 16px; margin: 0; padding: 0; border: 0; }
+.crp .crp-other { margin-bottom: 0; }

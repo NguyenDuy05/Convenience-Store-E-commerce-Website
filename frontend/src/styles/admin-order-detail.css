@@ -82,3 +82,8 @@
 .aod-state h2 { margin: 16px 0 4px; font-family: var(--qk-font-display); font-size: 22px; color: var(--qk-text); }
 .aod-state p { margin: 0; max-width: 380px; font-size: 14px; }
 .aod-state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }
+
+/* Tên khách bấm được -> chi tiết khách hàng */
+.aord-customer-link { display: inline-flex; align-items: center; gap: 4px; color: #0058bc; text-decoration: none; }
+.aord-customer-link:hover { text-decoration: underline; }
+.aod-txn-st.refunded { background: #e4e7ff; color: #424754; }

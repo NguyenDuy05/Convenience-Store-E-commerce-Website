@@ -3,14 +3,16 @@ import '../../styles/qk-tokens.css';
 import '../../styles/admin-status-actions.css';
 import Icon from '../common/Icon';
 import { cancelOrder } from '../../api/order.api';
+import CancelReasonPicker, { reasonText } from '../order/CancelReasonPicker';
 import { formatCurrency, formatDateTime } from '../../utils/format';
 
 const CANCELLABLE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 
 // Admin hủy đơn chưa hoàn tất. Đơn đã thanh toán sẽ được ghi hoàn tiền (xem ở Admin > Refunds).
-export default function AdminCancelOrder({ order, onChanged, onAuthError }) {
+export default function AdminCancelOrder({ order, onChanged, onAuthError = async () => false, cancelFn = cancelOrder }) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState('');
+  const [pick, setPick] = useState({ choice: '', other: '' });
+  const reason = reasonText(pick);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const lock = useRef(false);
@@ -28,10 +30,10 @@ export default function AdminCancelOrder({ order, onChanged, onAuthError }) {
   const paid = order.paymentStatus === 'paid';
   const submit = async () => {
     if (lock.current) return;
-    if (reason.trim().length < 3) { setError("Enter a cancellation reason (at least 3 characters)."); return; }
+    if (reason.length < 3) { setError(pick.choice ? "Describe the reason (at least 3 characters)." : "Choose a cancellation reason."); return; }
     lock.current = true; setBusy(true); setError('');
     try {
-      await cancelOrder(order._id, { reason: reason.trim() });
+      await cancelFn(order._id, { reason });
       await onChanged();
     } catch (err) {
       if (await onAuthError(err)) return;
@@ -49,11 +51,10 @@ export default function AdminCancelOrder({ order, onChanged, onAuthError }) {
       <div className="asa-head"><Icon name="warning" size="lg" />
         <div><strong>Cancel order #{order.orderCode}?</strong>
           <span>Items in this order will be returned to stock.{paid ? ` This order was paid, so the customer wallet will be credited ${formatCurrency(order.totalAmount)}.` : ''}</span></div></div>
-      <label className="asa-label" htmlFor="asa-cancel">Cancellation reason (required)</label>
-      <input id="asa-cancel" className="asa-note" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
+      <CancelReasonPicker kind="store" value={pick} onChange={(v) => { setPick(v); setError(''); }} disabled={busy} name={`cancel-${order._id}`} />
       {error && <p className="asa-error" role="alert"><Icon name="error" size="md" />{error}</p>}
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <button type="button" className="asa-btn" style={{ background: '#ba1a1a' }} onClick={submit} disabled={busy}>{busy ? "Cancelling…" : "Confirm cancellation"}</button>
+        <button type="button" className="asa-btn" style={{ background: '#ba1a1a' }} onClick={submit} disabled={busy || reason.length < 3}>{busy ? "Cancelling…" : "Confirm cancellation"}</button>
         <button type="button" className="asa-btn" style={{ background: '#fff', color: '#0c1842', border: '1px solid #c2c6d6' }} onClick={() => { setOpen(false); setError(''); }} disabled={busy}>Keep order</button>
       </div>
     </div>

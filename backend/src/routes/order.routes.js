@@ -22,6 +22,8 @@ router.post('/store/checkout', authenticate, authorize('staff'), c.checkoutStore
 router.get('/staff', authenticate, authorize('staff'), staff.list);
 router.get('/staff/:id', authenticate, authorize('staff'), staff.get);
 router.patch('/staff/:id/status', authenticate, authorize('staff'), c.updateOrderStatus);
+// Staff hủy đơn đang xử lý (kể cả sau khi đã nhận/chuẩn bị). Khách chỉ hủy được trước khi staff bắt đầu chuẩn bị.
+router.post('/staff/:id/cancel', authenticate, authorize('staff'), c.cancelOrder);
 
 router.get('/refunds', authenticate, authorize('admin'), c.listRefunds);
 // UC-34.1 View Orders, UC-34.2 Search Orders (query: q, status, source, paymentStatus, paymentMethod, from, to, hasIssue, sort, page, limit)

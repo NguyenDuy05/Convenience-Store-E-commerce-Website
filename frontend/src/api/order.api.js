@@ -27,6 +27,7 @@ export const checkoutPosSale = (data) => api.post('/orders/store/checkout', data
 export const listStaffOrders = (params) => api.get('/orders/staff', { params });
 export const getStaffOrder = (id) => api.get(`/orders/staff/${id}`);
 export const updateStaffOrder = (id, data) => api.patch(`/orders/staff/${id}/status`, data);
+export const cancelStaffOrder = (id, data) => api.post(`/orders/staff/${id}/cancel`, data);
 
 // UC-34.1 View Orders + UC-34.2 Search Orders (Admin)
 // params: { q, status, source, paymentStatus, paymentMethod, from, to (ISO), hasIssue: '1', sort, page, limit }

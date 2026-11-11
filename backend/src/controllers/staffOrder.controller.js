@@ -7,7 +7,7 @@ const payment = require('../services/payment.service');
 const ACTIVE = ['pending_payment', 'confirmed', 'preparing', 'ready_for_pickup'];
 const HISTORY = ['completed', 'cancelled', 'failed'];
 const NEXT = { confirmed: 'preparing', preparing: 'ready_for_pickup', ready_for_pickup: 'completed' };
-const customerOf = (customer) => customer ? { fullName: customer.fullName, phone: customer.phone || '' } : null;
+const customerOf = (customer) => customer ? { _id: customer._id, fullName: customer.fullName, phone: customer.phone || '' } : null;
 exports.list = asyncHandler(async (req, res) => {
   const page = Number(req.query.page || 1), limit = Number(req.query.limit || 20);
   if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new ApiError(400, 'Invalid page or page size');
@@ -39,6 +39,7 @@ exports.get = asyncHandler(async (req, res) => {
     customer: customerOf(customer), items: order.items.map(toItem), store, createdAt: order.createdAt,
     pickupSchedule: require('../services/pickupSchedule.service').pickupSchedule(store), preparationStartsAt: order.preparationStartsAt || null,
     readyAt: order.readyAt, pickedUpAt: order.pickedUpAt,
+    cancelledAt: order.cancelledAt || null, cancelReason: order.cancelReason || '', refund: order.refund?.refundedAt ? { amount: order.refund.amount, refundedAt: order.refund.refundedAt } : null,
     statusHistory: (order.statusHistory || []).map(({ status, changedAt }) => ({ status, changedAt })),
     nextTransition: order.source === 'online' && NEXT[order.status] ? { to: NEXT[order.status], needsCashConfirm: NEXT[order.status] === 'completed' && order.paymentStatus !== 'paid' } : null,
   });

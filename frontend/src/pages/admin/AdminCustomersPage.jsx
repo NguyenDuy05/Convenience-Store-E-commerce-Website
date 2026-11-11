@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { deleteCustomer, getCustomer, listCustomers, unlockCustomer, updateCustomer } from '../../api/customer.api';
 import { Badge, Confirm, Notice, Pager, STATUS_TONE, Tabs, d, dt, money, useAction, useFetch } from '../../components/admin/kit';
 
@@ -58,7 +59,9 @@ export default function AdminCustomersPage() {
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [panel, setPanel] = useState(null); // { type: 'view'|'edit'|'unlock'|'delete', customer }
+  const [params, setParams] = useSearchParams();
+  // Mở sẵn chi tiết khách khi đi từ trang đơn hàng: /admin/customers?view=<customerId>
+  const [panel, setPanel] = useState(() => (params.get('view') ? { type: 'view', customer: { _id: params.get('view') } } : null)); // { type: 'view'|'edit'|'unlock'|'delete', customer }
   const [searchError, setSearchError] = useState('');
   const { data, loading, error, reload } = useFetch(listCustomers, { status: status || undefined, q: q || undefined, page, limit: 10 });
   const act = useAction(reload);
@@ -77,7 +80,7 @@ export default function AdminCustomersPage() {
     <header className="pm-heading"><div><span className="pm-eyebrow">CUSTOMERS</span><h1>Manage Customers</h1><p>Search customer accounts, update their details and unlock or remove accounts.</p></div></header>
     <Notice success={act.success} error={!panel ? act.error : ''} />
 
-    {panel?.type === 'view' && <CustomerDetail id={panel.customer._id} onClose={() => setPanel(null)} />}
+    {panel?.type === 'view' && <CustomerDetail id={panel.customer._id} onClose={() => { setPanel(null); if (params.get('view')) setParams({}, { replace: true }); }} />}
     {panel?.type === 'edit' && <CustomerEditor customer={panel.customer} busy={act.busy} error={act.error}
       onCancel={() => setPanel(null)} onSave={(f) => run(() => updateCustomer(panel.customer._id, f), 'Customer updated.')} />}
     {panel?.type === 'unlock' && <Confirm title="Unlock account?" confirmLabel="Unlock" busy={act.busy} error={act.error} onCancel={() => setPanel(null)}
