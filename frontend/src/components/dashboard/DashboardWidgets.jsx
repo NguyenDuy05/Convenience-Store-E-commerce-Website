@@ -49,22 +49,26 @@ export function KpiCard({ icon, tone = '', label, value, note, pct, showDelta })
 }
 
 // Biểu đồ cột doanh thu theo giờ / ngày (SVG, không cần thư viện)
-export function SalesChart({ series }) {
-    const total = series.reduce((s, r) => s + r.sales, 0);
-    if (!total) return <Empty icon="bar_chart" text="No sales in this period yet. Revenue will appear here once orders are placed." />;
+// metric="sales": doanh thu (admin) | metric="orders": số đơn (staff không được xem doanh thu)
+export function SalesChart({ series, metric = 'sales' }) {
+    const byOrders = metric === 'orders';
+    const val = (r) => (byOrders ? r.orders : r.sales) || 0;
+    const total = series.reduce((s, r) => s + val(r), 0);
+    if (!total) return <Empty icon="bar_chart" text={byOrders ? 'No orders in this period yet.' : 'No sales in this period yet. Revenue will appear here once orders are placed.'} />;
     const W = 640; const H = 250; const L = 44; const B = 28; const T = 10; const plotH = H - B - T; const plotW = W - L - 8;
-    const max = Math.max(...series.map((r) => r.sales));
+    const max = Math.max(...series.map(val));
     const mag = 10 ** Math.floor(Math.log10(max)); const n = max / mag;
-    const top = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;          // trần "đẹp": 1, 2, 5, 10 × 10^k
+    const nice = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;          // trần "đẹp": 1, 2, 5, 10 × 10^k
+    const top = byOrders ? Math.max(5, nice) : nice;
     const ticks = [0, 1, 2, 3, 4, 5].map((i) => (top * i) / 5);
     const step = Math.ceil(series.length / 12); const bw = plotW / series.length;
     return (
-        <svg className="db-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Revenue chart">
+        <svg className="db-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={byOrders ? 'Orders chart' : 'Revenue chart'}>
             {ticks.map((t) => { const y = T + plotH - (t / top) * plotH; return <g key={t}><line className="grid" x1={L} x2={W - 8} y1={y} y2={y} /><text className="axis" x={L - 6} y={y + 4} textAnchor="end">{compact(t)}</text></g>; })}
             {series.map((r, i) => {
-                const h = (r.sales / top) * plotH; const x = L + i * bw + bw * 0.15;
+                const h = (val(r) / top) * plotH; const x = L + i * bw + bw * 0.15;
                 return <g key={r.key}>
-                    <rect className={`bar${r.sales ? '' : ' zero'}`} x={x} y={T + plotH - Math.max(h, r.sales ? 2 : 1.5)} width={bw * 0.7} height={Math.max(h, r.sales ? 2 : 1.5)} rx="3"><title>{`${r.label}: ${vnd(r.sales)} · ${r.orders} order${r.orders === 1 ? '' : 's'}`}</title></rect>
+                    <rect className={`bar${val(r) ? '' : ' zero'}`} x={x} y={T + plotH - Math.max(h, val(r) ? 2 : 1.5)} width={bw * 0.7} height={Math.max(h, val(r) ? 2 : 1.5)} rx="3"><title>{byOrders ? `${r.label}: ${r.orders} order${r.orders === 1 ? '' : 's'}` : `${r.label}: ${vnd(r.sales)} · ${r.orders} order${r.orders === 1 ? '' : 's'}`}</title></rect>
                     {i % step === 0 && <text className="axis" x={x + (bw * 0.7) / 2} y={H - 8} textAnchor="middle">{r.label}</text>}
                 </g>;
             })}
@@ -121,7 +125,7 @@ export function TopProducts({ items }) {
         <ul className="db-list">{items.map((p, i) => (
             <li key={String(p.productId)}><span className="db-rank">{i + 1}</span><Thumb src={p.image} />
                 <div className="grow"><b>{p.name}</b><small>{p.sku || '—'}</small></div>
-                <div className="end"><b>{num(p.units)} sold</b><small>{vnd(p.revenue)}</small></div></li>
+                <div className="end"><b>{num(p.units)} sold</b>{p.revenue !== undefined && <small>{vnd(p.revenue)}</small>}</div></li>
         ))}</ul>
     );
 }

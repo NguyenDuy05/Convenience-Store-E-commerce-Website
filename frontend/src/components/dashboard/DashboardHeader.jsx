@@ -49,7 +49,9 @@ export default function DashboardHeader({ title, pill, description, ranges, para
 export function exportCsv(data, filename) {
     const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const k = data.kpis;
-    const rows = [
+    // Báo cáo của staff không có số tiền (backend đã bỏ) -> chỉ xuất số đơn, số món
+    const money = k.sales !== undefined;
+    const rows = money ? [
         ['Report', rangeLabel(data.range)], [],
         ['Metric', 'Value'],
         ['Sales (VND)', k.sales.value], ['Orders', k.orders.value], ['Average order value (VND)', k.avgOrderValue],
@@ -57,6 +59,12 @@ export function exportCsv(data, filename) {
         [data.range.hourly ? 'Hour' : 'Date', 'Sales (VND)', 'Orders'], ...data.series.map((r) => [r.label, r.sales, r.orders]), [],
         ['Category', 'Revenue (VND)', 'Share %'], ...data.salesByCategory.map((c) => [c.name, c.revenue, c.share]), [],
         ['Top product', 'Units', 'Revenue (VND)'], ...data.topProducts.map((p) => [p.name, p.units, p.revenue]),
+    ] : [
+        ['Report', rangeLabel(data.range)], [],
+        ['Metric', 'Value'],
+        ['Orders', k.orders.value], ['Customers served', k.customersServed], ['Low stock products', k.lowStock], ['Out of stock products', k.outOfStock], [],
+        [data.range.hourly ? 'Hour' : 'Date', 'Orders'], ...data.series.map((r) => [r.label, r.orders]), [],
+        ['Top product', 'Units'], ...data.topProducts.map((p) => [p.name, p.units]),
     ];
     const blob = new Blob([`\uFEFF${rows.map((r) => r.map(q).join(',')).join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
