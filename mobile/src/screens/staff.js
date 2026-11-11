@@ -262,6 +262,8 @@ export function PosScreen({ navigation }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(null);
+  // Bill đã gửi nhưng chưa rõ kết quả (mất mạng / lỗi server): khóa lại, chỉ cho thử lại đúng bill đó (giống web)
+  const [pending, setPending] = useState(null);
   const key = useRef(newIdempotencyKey());
 
   const items = lines.map((l) => ({ productId: l.product._id, quantity: l.quantity }));
@@ -271,10 +273,10 @@ export function PosScreen({ navigation }) {
   }, [JSON.stringify(items), promotionId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { refreshQuote(); key.current = newIdempotencyKey(); }, [refreshQuote]);
 
-  const add = (p) => setLines((cur) => { const f = cur.find((l) => l.product._id === p._id); return f ? cur.map((l) => (l === f ? { ...l, quantity: Math.min(l.quantity + 1, p.stockQuantity) } : l)) : [...cur, { product: p, quantity: 1 }]; });
-  const setQty = (id, n) => setLines((cur) => cur.map((l) => (l.product._id === id ? { ...l, quantity: n } : l)));
-  const remove = (id) => setLines((cur) => cur.filter((l) => l.product._id !== id));
-  const pickMethod = (m) => { setMethod(m); setApproved(false); setReference(m === 'vnpay' ? newQrRef() : ''); key.current = newIdempotencyKey(); };
+  const add = (p) => !pending && setLines((cur) => { const f = cur.find((l) => l.product._id === p._id); return f ? cur.map((l) => (l === f ? { ...l, quantity: Math.min(l.quantity + 1, p.stockQuantity) } : l)) : [...cur, { product: p, quantity: 1 }]; });
+  const setQty = (id, n) => !pending && setLines((cur) => cur.map((l) => (l.product._id === id ? { ...l, quantity: n } : l)));
+  const remove = (id) => !pending && setLines((cur) => cur.filter((l) => l.product._id !== id));
+  const pickMethod = (m) => { if (pending) return; setMethod(m); setApproved(false); setReference(m === 'vnpay' ? newQrRef() : ''); key.current = newIdempotencyKey(); };
   const findMember = async () => {
     if (memberQ.trim().length < 3) return;
     setMemberMsg('');
@@ -284,15 +286,19 @@ export function PosScreen({ navigation }) {
   const total = quote?.totalAmount || 0;
   const payable = method === 'cash' ? received !== '' && Number(received) >= total : approved && /^[A-Za-z0-9-]{4,40}$/.test(reference.trim());
   const submit = async () => {
+    if (busy) return;
+    const body = pending || { idempotencyKey: key.current, items, promotionId: promotionId || undefined, customerId: member?._id, expectedTotal: total, method,
+      ...(method === 'cash' ? { received: Number(received) } : { reference: reference.trim(), paymentConfirmed: true }) };
     setBusy(true); setError('');
-    try {
-      const r = await A.staff.checkout({ idempotencyKey: key.current, items, promotionId: promotionId || undefined, customerId: member?._id, expectedTotal: total, method,
-        ...(method === 'cash' ? { received: Number(received) } : { reference: reference.trim(), paymentConfirmed: true }) });
-      setDone(r.data);
-    } catch (e) { setError(errMsg(e, 'Không chốt được bill. Thử lại sẽ dùng cùng mã, không tạo bill trùng.')); }
+    try { const r = await A.staff.checkout(body); setPending(null); setDone(r.data); }
+    catch (e) {
+      const code = e.response?.status;
+      if (!code || code >= 500 || e.response?.data?.code === 'CHECKOUT_PENDING') { setPending(body); setError('Chưa xác minh được kết quả chốt bill. Bấm thử lại (không tạo bill trùng) hoặc kiểm tra lịch sử đơn trước khi bán bill khác.'); }
+      else setError(errMsg(e, 'Không chốt được bill.'));
+    }
     finally { setBusy(false); }
   };
-  const reset = () => { setDone(null); setLines([]); setMember(null); setPromotionId(''); setQuote(null); setReceived(''); setApproved(false); setReference(method === 'vnpay' ? newQrRef() : ''); setError(''); key.current = newIdempotencyKey(); products.refresh(); };
+  const reset = () => { setPending(null); setDone(null); setLines([]); setMember(null); setPromotionId(''); setQuote(null); setReceived(''); setApproved(false); setReference(method === 'vnpay' ? newQrRef() : ''); setError(''); key.current = newIdempotencyKey(); products.refresh(); };
 
   if (done) {
     return (
@@ -319,7 +325,12 @@ export function PosScreen({ navigation }) {
         <View style={{ backgroundColor: '#fff', padding: 14, gap: 8, borderTopWidth: 1, borderTopColor: colors.surfaceContainer }}>
           <Row label="Tổng cần thu" value={formatCurrency(total)} bold valueStyle={{ color: colors.primary }} />
           {error ? <Text style={{ color: colors.error, fontSize: 13 }}>{error}</Text> : null}
-          <Button title="Chốt bill" icon="checkmark-done-outline" loading={busy} disabled={!payable || !quote?.canCreate} onPress={submit} />
+          {pending ? (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Button title="Thử lại" icon="refresh-outline" loading={busy} style={{ flex: 1 }} onPress={submit} />
+              <Button title="Lịch sử đơn" variant="soft" style={{ flex: 1 }} onPress={() => navigation.navigate('StaffOrderHistory')} />
+            </View>
+          ) : <Button title="Chốt bill" icon="checkmark-done-outline" loading={busy} disabled={!payable || !quote?.canCreate} onPress={submit} />}
         </View>) : null}>
         <H style={{ fontSize: 22 }}>Bán tại quầy</H>
         <Field value={q} onChangeText={setQ} placeholder="Tìm tên, SKU hoặc mã vạch" />
@@ -506,9 +517,9 @@ export function StaffMembersScreen() {
       <Card>
         <H>Đăng ký thành viên tại quầy</H>
         <Muted>Khách chưa có tài khoản: nhập tên và số điện thoại hoặc email để bắt đầu tích điểm.</Muted>
-        <Field label="Họ tên" value={f.fullName} onChangeText={(v) => setF({ ...f, fullName: v })} maxLength={100} />
-        <Field label="Số điện thoại" value={f.phone} onChangeText={(v) => setF({ ...f, phone: v })} keyboardType="phone-pad" />
-        <Field label="Email" value={f.email} onChangeText={(v) => setF({ ...f, email: v })} keyboardType="email-address" autoCapitalize="none" />
+        <Field label="Họ tên" value={f.fullName} onChangeText={(v) => setF((cur) => ({ ...cur, fullName: v }))} maxLength={100} />
+        <Field label="Số điện thoại" value={f.phone} onChangeText={(v) => setF((cur) => ({ ...cur, phone: v }))} keyboardType="phone-pad" />
+        <Field label="Email" value={f.email} onChangeText={(v) => setF((cur) => ({ ...cur, email: v }))} keyboardType="email-address" autoCapitalize="none" />
         <Button title="Đăng ký" icon="person-add-outline" loading={busy} onPress={register} />
         {created ? <Banner tone="success" icon="checkmark-circle-outline" title={`Đã đăng ký ${created.member.fullName}`} text={`Mã thành viên ${created.member.memberCode}${created.invited ? '. Đã gửi email mời khách đặt mật khẩu.' : ''}`} /> : null}
       </Card>
@@ -578,10 +589,19 @@ export function StaffComplaintDetailScreen({ route }) {
   if (d.loading && !d.data) return <Loading />;
   if (d.error && !d.data) return <ErrorView message={d.error} onRetry={d.reload} />;
   const r = d.data;
+  // Giống web: đóng khiếu nại (Đã giải quyết) bắt buộc có phản hồi cho khách
+  const needMsg = target === 'resolved';
+  const canSend = !busy && (msg.trim().length > 0 || (target && target !== r.status)) && !(needMsg && !msg.trim());
   const send = async () => {
+    if (!canSend) return;
     setBusy(true);
     try { await A.staff.handleComplaint(id, { message: msg.trim() || undefined, status: target || undefined }, key.current); key.current = newIdempotencyKey(); setMsg(''); setTarget(''); d.refresh(); }
-    catch (e) { Alert.alert('Không gửi được', errMsg(e)); } finally { setBusy(false); }
+    catch (e) {
+      const st = e.response?.status;
+      // Mất mạng / lỗi server: giữ mã để gửi lại không tạo phản hồi trùng; lỗi khác thì đổi mã mới
+      if (!e.response || st >= 500) Alert.alert('Chưa rõ đã lưu chưa', 'Không nhận được phản hồi từ server. Bấm Gửi lại sẽ không tạo phản hồi trùng.');
+      else { key.current = newIdempotencyKey(); Alert.alert('Không gửi được', errMsg(e)); if (['INVALID_TRANSITION', 'STALE_STATUS', 'CLOSED'].includes(e.response?.data?.code)) { setTarget(''); d.refresh(); } }
+    } finally { setBusy(false); }
   };
   return (
     <Screen onRefresh={d.refresh} refreshing={d.refreshing}>
@@ -603,7 +623,8 @@ export function StaffComplaintDetailScreen({ route }) {
             <Chip label="Giữ trạng thái" active={!target} onPress={() => setTarget('')} />
             {r.allowedStatuses.map((s) => <Chip key={s} label={SUP_STATUS[s]?.[0] || s} active={target === s} onPress={() => setTarget(s)} />)}
           </View> : null}
-          <Button title="Gửi" icon="send-outline" loading={busy} disabled={!msg.trim() && !target} onPress={send} />
+          {needMsg && !msg.trim() ? <Muted>Nhập phản hồi cho khách trước khi đánh dấu đã giải quyết.</Muted> : null}
+          <Button title="Gửi" icon="send-outline" loading={busy} disabled={!canSend} onPress={send} />
         </Card>) : null}
     </Screen>
   );
