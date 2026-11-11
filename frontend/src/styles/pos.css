@@ -62,3 +62,9 @@
 @media (max-width: 1200px) { .pos-workspace { grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; } .pos-catalog, .pos-bill { padding: 16px; } }
 @media (max-width: 1000px) { .pos-workspace { grid-template-columns: 1fr; } .pos-bill { position: static; } .pos-products { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .pos-lines { max-height: 380px; } }
 @media (max-width: 480px) { .pos-products { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .pos-product { padding: 10px; } .pos-search { gap: 8px; } .pos-search > button { padding-inline: 12px; } .pos-steps { font-size: 10px; gap: 7px; } .pos-success { padding: 24px 18px; } .pos-methods { gap: 8px; } }
+.pos-qr { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 20px; border: 1px solid #dde1ff; border-radius: 14px; background: #fff; }
+.pos-qr-code { padding: 8px; border-radius: 12px; background: #fff; box-shadow: 0 1px 4px rgba(12, 24, 66, .12); line-height: 0; }
+.pos-qr-info { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+.pos-qr-info strong { font-size: 28px; color: #0058bc; }
+.pos-qr-info p { margin: 0; }
+.pos-qr-info b { font-family: ui-monospace, monospace; letter-spacing: .5px; }
