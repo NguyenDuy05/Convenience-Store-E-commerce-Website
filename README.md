@@ -28,7 +28,7 @@ convenience-store/
 │       ├── middlewares/       authenticate, authorize, xử lý lỗi
 │       ├── services/          Logic dùng chung: mã đơn, kho, gợi ý giỏ hàng, VNPay, Momo
 │       ├── utils/             ApiError, asyncHandler, notImplemented
-│       └── scripts/           seed.js, init-db.js
+│       └── scripts/           init-db.js, configure-store.js, verify-mail.js, attach-catalog-images.js
 └── frontend/
     └── src/
         ├── api/               Hàm gọi API, mỗi module một file (khớp với routes backend)
