@@ -14,8 +14,9 @@ const addressSchema = new Schema({
 const userSchema = new Schema({
   role: { type: String, enum: ['customer', 'staff', 'admin'], required: true, index: true },
   fullName: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  phone: { type: String, trim: true },
+  // Email không bắt buộc với thành viên đăng ký tại quầy (chỉ có số điện thoại). Có email thì không được trùng (index bên dưới).
+  email: { type: String, lowercase: true, trim: true },
+  phone: { type: String, trim: true, index: true },
   passwordHash: { type: String, required: true, select: false },   // bcrypt
   avatarUrl: String,                                                 // URL ảnh hoặc data URL (ảnh đã thu nhỏ)
   dateOfBirth: Date,
@@ -26,6 +27,8 @@ const userSchema = new Schema({
   failedLoginCount: { type: Number, default: 0 },
   lockedUntil: Date,                                                // UC-29.5 Unlock Customer Account
   lastLoginAt: Date,
+  signupChannel: { type: String, enum: ['online', 'google', 'counter'] },   // nơi tạo tài khoản
+  registeredBy: { type: Schema.Types.ObjectId, ref: 'User' },             // staff tạo hộ (đăng ký tại quầy)
 
   // UC-05, UC-16 Forgot Password (chỉ lưu hash của token)
   passwordReset: {
@@ -49,5 +52,8 @@ const userSchema = new Schema({
     hiredAt: Date,
   },
 }, { timestamps: true });
+
+// Email duy nhất nhưng chỉ áp cho tài khoản CÓ email (thành viên tại quầy có thể chỉ có số điện thoại)
+userSchema.index({ email: 1 }, { name: 'email_1', unique: true, partialFilterExpression: { email: { $type: 'string' } } });
 
 module.exports = mongoose.model('User', userSchema);

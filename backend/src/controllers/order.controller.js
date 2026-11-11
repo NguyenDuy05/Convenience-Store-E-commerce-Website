@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { notImplemented } = require('../utils/notImplemented');
-const { Order, Store, Transaction } = require('../models');
+const { Order, Store, Transaction, User } = require('../models');
 const storeOrder = require('../services/storeOrder.service');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
@@ -278,6 +278,13 @@ exports.createStoreOrder = asyncHandler(async (req, res) => {
 
 exports.checkoutStoreSale = asyncHandler(async (req, res) => {
   const sale = await storeOrder.checkoutSale(req.user.id, { ...req.body, idempotencyKey: req.get('Idempotency-Key') || req.body?.idempotencyKey });
-  if (!sale.replayed) await require('../services/activity.service').logActivity(req, { action: 'POS_SALE', targetType: 'Order', targetId: sale.order._id, detail: { orderCode: sale.order.orderCode, method: sale.order.paymentMethod, amount: sale.order.totalAmount } });
-  res.status(sale.replayed ? 200 : 201).json(sale);
+  if (!sale.replayed) await require('../services/activity.service').logActivity(req, { action: 'POS_SALE', targetType: 'Order', targetId: sale.order._id, detail: { orderCode: sale.order.orderCode, method: sale.order.paymentMethod, amount: sale.order.totalAmount, member: sale.order.customerId ? String(sale.order.customerId) : undefined } });
+  // Đơn có gắn thành viên -> cộng điểm ngay (đơn tại quầy đã hoàn tất + đã thanh toán). Gọi lại vẫn an toàn (chỉ cộng 1 lần/đơn).
+  let points = null;
+  if (sale.order.customerId) {
+    await require('../services/points.service').awardPointsForOrder(sale.order._id);
+    const [o, u] = await Promise.all([Order.findById(sale.order._id).select('pointsEarned').lean(), User.findById(sale.order.customerId).select('fullName membership.points').lean()]);
+    points = { earned: o?.pointsEarned || 0, balance: u?.membership?.points || 0, member: u?.fullName || '' };
+  }
+  res.status(sale.replayed ? 200 : 201).json({ ...sale, points });
 });

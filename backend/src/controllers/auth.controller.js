@@ -18,10 +18,10 @@ const escapeHtml = value => String(value || '').replace(/[&<>"']/g, character =>
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 
 // Tạo tài khoản customer (dùng chung cho Register và Google)
-async function createCustomer({ fullName, email, phone, passwordHash, avatarUrl, googleId }) {
+async function createCustomer({ fullName, email, phone, passwordHash, avatarUrl, googleId, signupChannel = 'online' }) {
   const tier = await MembershipTier.findOne().sort({ minPoints: 1 });   // hạng thấp nhất
   return User.create({
-    role: 'customer', fullName, email, phone, passwordHash, avatarUrl, googleId,
+    role: 'customer', fullName, email, phone, passwordHash, avatarUrl, googleId, signupChannel,
     membership: tier ? { tierId: tier._id } : undefined,
   });
 }
@@ -40,7 +40,7 @@ exports.register = asyncHandler(async (req, res) => {
   if (cleanPhone && !/^(\+?84|0)\d{9,10}$/.test(cleanPhone)) throw new ApiError(400, 'Phone number is invalid');
 
   const exists = await User.findOne({ email: email.toLowerCase().trim() });
-  if (exists) throw new ApiError(409, 'This email is already in use');
+  if (exists) throw new ApiError(409, exists.signupChannel === 'counter' ? 'This email is already a store member. Use "Forgot password" to set a password for it.' : 'This email is already in use');
 
   const user = await createCustomer({ fullName: fullName.trim(), email: email.toLowerCase().trim(), phone: cleanPhone || undefined, passwordHash: await bcrypt.hash(password, 10) });
   res.status(201).json({ token: signToken(user), user: publicUser(user) });
@@ -112,7 +112,7 @@ exports.googleLogin = asyncHandler(async (req, res) => {
     const randomHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
     user = await createCustomer({
       fullName: payload.name || email.split('@')[0],
-      email, passwordHash: randomHash, avatarUrl: payload.picture, googleId: payload.sub,
+      email, passwordHash: randomHash, avatarUrl: payload.picture, googleId: payload.sub, signupChannel: 'google',
     });
   }
 

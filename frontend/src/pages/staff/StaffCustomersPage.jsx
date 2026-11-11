@@ -8,6 +8,7 @@ import Icon from '../../components/common/Icon';
 import { formatDate } from '../../utils/format';
 import { CUSTOMER_STATUS } from '../../utils/complaintMeta';
 import MemberCodeLookup from '../../components/membership/MemberCodeLookup';
+import RegisterMemberForm from '../../components/staff/RegisterMemberForm';
 
 const LIMIT = 20;
 
@@ -67,6 +68,7 @@ export default function StaffCustomersPage() {
   const totalPages = Math.max(Math.ceil((data?.total || 0) / (data?.limit || LIMIT)), 1);
   const fromPath = `${location.pathname}${location.search}`;
   const shortQuery = qInput.trim().length === 1;
+  const [registering, setRegistering] = useState(false);
 
   return (
     <div className="scus">
@@ -74,7 +76,9 @@ export default function StaffCustomersPage() {
       <div className="scus-head">
         <h1>Customer</h1>
         <p><Icon name="shield_person" size="md" />Contact details are partially masked for customer privacy. This information is read-only.</p>
+        {!registering && <button type="button" className="ui-button" onClick={() => setRegistering(true)}><Icon name="person_add" size="md" />Register member</button>}
       </div>
+      {registering && <div style={{ maxWidth: 520 }}><RegisterMemberForm onDone={(m) => navigate(`/staff/customers/${m._id}`)} onCancel={() => setRegistering(false)} /></div>}
 
       <form className="scus-filters" onSubmit={(e) => { e.preventDefault(); if (qInput.trim().length !== 1) update({ q: qInput.trim() }); }} role="search">
         <div className="scus-search">

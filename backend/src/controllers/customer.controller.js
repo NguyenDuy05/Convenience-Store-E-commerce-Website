@@ -165,3 +165,89 @@ exports.deleteCustomer = asyncHandler(async (req, res) => {
   await logActivity(req, { action: 'CUSTOMER_DELETE', targetType: 'User', targetId: u._id, detail: { fullName: u.fullName } });
   res.json({ message: 'Customer account deleted' });
 });
+
+// ===== Đăng ký thành viên tại quầy (staff/admin) =====
+// Khách mua tại quầy chưa có tài khoản: staff tạo thành viên để tích điểm.
+// Bắt buộc họ tên + EMAIL (để khách nhận link tự đặt mật khẩu, đăng nhập web/app và lấy lại mật khẩu); số điện thoại tùy chọn.
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const { memberCode, memberIdFromCode } = require('../utils/memberCode');
+const { sendSetPasswordInvite } = require('../services/memberInvite.service');
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Chuẩn hóa số điện thoại: bỏ khoảng trắng/chấm/gạch, +84/84 -> 0
+const normPhone = (v) => {
+  const d = String(v || '').trim().replace(/[\s.-]/g, '');
+  if (!d) return '';
+  return d.replace(/^\+?84/, '0');
+};
+const phoneVariants = (p) => [p, p.replace(/^0/, '+84'), p.replace(/^0/, '84')];
+
+// Thông tin tối thiểu staff cần ở quầy (che bớt liên hệ với staff)
+const memberCard = async (u, role) => {
+  const tiers = await tierNames([u]);
+  return {
+    _id: u._id, fullName: u.fullName, memberCode: memberCode(u._id),
+    ...contact(u, role),
+    hasEmail: !!u.email,
+    points: u.membership?.points || 0,
+    tier: tiers.get(String(u.membership?.tierId)) || null,
+  };
+};
+
+// POST /api/customers/members  body: { fullName, email, phone? }
+exports.registerMember = asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const fullName = typeof body.fullName === 'string' ? body.fullName.trim().replace(/\s+/g, ' ') : '';
+  const phone = normPhone(body.phone);
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (fullName.length < 2 || fullName.length > 100) throw new ApiError(400, "Enter the customer's full name (2–100 characters)");
+  if (!email) throw new ApiError(400, "Enter the customer's email address (required so they can sign in and receive their password link)");
+  if (phone && !PHONE_RE.test(phone)) throw new ApiError(400, 'Phone number is invalid (e.g. 0901234567)');
+  if (email && (!EMAIL_RE.test(email) || email.length > 254)) throw new ApiError(400, 'Email address is invalid');
+
+  // Đã là thành viên? Trả lại thẻ thành viên để staff chọn luôn thay vì tạo trùng
+  const or = [...(email ? [{ email }] : []), ...(phone ? [{ phone: { $in: phoneVariants(phone) } }] : [])];
+  const existing = await User.findOne({ $or: or, status: { $ne: 'deleted' } }).lean();
+  if (existing) {
+    if (existing.role !== 'customer') throw new ApiError(409, 'This phone number or email belongs to a staff account');
+    const field = email && existing.email === email ? 'email' : 'phone number';
+    throw new ApiError(409, `A member with this ${field} already exists`, { code: 'MEMBER_EXISTS', member: await memberCard(existing, req.user.role) });
+  }
+
+  const tier = await MembershipTier.findOne().sort({ minPoints: 1 }).lean();
+  let user;
+  try {
+    user = await User.create({
+      role: 'customer', fullName, ...(email ? { email } : {}), ...(phone ? { phone } : {}),
+      passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),   // khách tự đặt mật khẩu qua email
+      signupChannel: 'counter', registeredBy: req.user.id,
+      membership: tier ? { tierId: tier._id } : undefined,
+    });
+  } catch (e) {
+    if (e.code === 11000) throw new ApiError(409, 'This email is already in use', { code: 'MEMBER_EXISTS' });
+    throw e;
+  }
+  const code = memberCode(user._id);
+  const invited = email ? await sendSetPasswordInvite(user, code) : false;
+  await logActivity(req, { action: 'CUSTOMER_REGISTER_COUNTER', targetType: 'User', targetId: user._id, detail: { fullName, hasPhone: !!phone, hasEmail: !!email } });
+  res.status(201).json({ member: await memberCard(user.toObject(), req.user.role), invited });
+});
+
+// GET /api/customers/members/lookup?q=  (số điện thoại, email hoặc mã thành viên QUICK-...) -> { member }
+exports.findMember = asyncHandler(async (req, res) => {
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (q.length < 3 || q.length > 254) throw new ApiError(400, 'Enter a phone number, email or member code');
+  let filter;
+  const id = memberIdFromCode(q);
+  if (id) filter = { _id: id };
+  else if (q.includes('@')) filter = { email: q.toLowerCase() };
+  else {
+    const phone = normPhone(q);
+    if (!PHONE_RE.test(phone)) throw new ApiError(400, 'Enter a full phone number, an email or a member code');
+    filter = { phone: { $in: phoneVariants(phone) } };
+  }
+  const u = await User.findOne({ ...filter, role: 'customer', status: 'active' }).lean();
+  if (!u) throw new ApiError(404, 'No active member found', { code: 'MEMBER_NOT_FOUND' });
+  res.json({ member: await memberCard(u, req.user.role) });
+});

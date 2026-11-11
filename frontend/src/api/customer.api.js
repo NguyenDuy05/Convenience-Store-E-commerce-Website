@@ -14,3 +14,9 @@ export const unlockCustomer = (id, data) => api.patch(`/customers/${id}/unlock`,
 
 // UC-29.6 Delete Customer Account
 export const deleteCustomer = (id) => api.delete(`/customers/${id}`);
+
+// Đăng ký thành viên tại quầy (staff/admin): { fullName, phone?, email? } — cần ít nhất 1 trong 2
+export const registerMember = (data) => api.post('/customers/members', data);
+
+// Tìm thành viên khi bán tại quầy: số điện thoại, email hoặc mã thành viên (QUICK-...)
+export const findMember = (q) => api.get('/customers/members/lookup', { params: { q } });

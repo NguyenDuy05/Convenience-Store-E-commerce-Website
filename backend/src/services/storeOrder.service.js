@@ -1,7 +1,7 @@
 // Tính tiền đơn tại quầy (UC-21) từ dữ liệu có thẩm quyền: giá lấy từ Product, khuyến mãi tính bằng promotion.service.
 // Không bao giờ tin số tiền client gửi lên. Dùng chung cho "báo giá" (quote) và "tạo đơn".
 const mongoose = require('mongoose');
-const { Product, Promotion, Order } = require('../models');
+const { Product, Promotion, Order, User } = require('../models');
 const { runAtomic } = require('../utils/atomic');
 const { generateOrderCode } = require('./orderCode.service');
 const stock = require('./stock.service');
@@ -39,7 +39,15 @@ exports.checkoutSale = async (staffId, body = {}) => {
   if (method === 'cash' && (!Number.isSafeInteger(received) || received < 0 || received > 1e9)) throw new ApiError(400, 'Enter a valid cash amount');
   if (method !== 'cash' && (!/^[A-Za-z0-9-]{4,40}$/.test(reference) || body.paymentConfirmed !== true)) throw new ApiError(400, 'Confirm the approved terminal/QR payment and enter its transaction reference');
   const note = typeof body.customerNote === 'string' ? body.customerNote.trim().slice(0, 500) : '';
-  const hash = crypto.createHash('sha256').update(JSON.stringify({ items, method, payment: method === 'cash' ? received : reference, promotion: body.promotionId || '', note })).digest('hex');
+  // Thành viên (tùy chọn): gắn đơn cho khách để tích điểm
+  let customerId = null;
+  if (body.customerId !== undefined && body.customerId !== null && body.customerId !== '') {
+    if (typeof body.customerId !== 'string' || !/^[a-f\d]{24}$/i.test(body.customerId)) throw new ApiError(400, 'Invalid member');
+    const member = await User.findOne({ _id: body.customerId, role: 'customer', status: 'active' }).select('_id').lean();
+    if (!member) throw new ApiError(404, 'This member is not available', { code: 'MEMBER_NOT_FOUND' });
+    customerId = member._id;
+  }
+  const hash = crypto.createHash('sha256').update(JSON.stringify({ items, method, payment: method === 'cash' ? received : reference, promotion: body.promotionId || '', note, customer: customerId ? String(customerId) : '' })).digest('hex');
   const key = `pos:${staffId}:${body.idempotencyKey}`;
   const resultOf = async (order, replayed) => {
     if (order.checkoutHash !== hash) throw new ApiError(409, 'This checkout key was used for a different sale', { code: 'CHECKOUT_KEY_REUSED' });
@@ -62,7 +70,7 @@ exports.checkoutSale = async (staffId, body = {}) => {
       const opts = session ? { session } : {};
       const now = new Date();
       const [order] = await Order.create([{
-        orderCode: await generateOrderCode(), source: 'store', createdBy: staffId, idempotencyKey: key, checkoutHash: hash,
+        orderCode: await generateOrderCode(), source: 'store', createdBy: staffId, idempotencyKey: key, checkoutHash: hash, ...(customerId ? { customerId } : {}),
         items: quote.lines.map((l) => ({ productId: l.productId, name: l.name, sku: l.sku, unitPrice: l.unitPrice, quantity: l.quantity, discountAmount: l.discountAmount, lineTotal: l.lineTotal })),
         subtotal: quote.subtotal, promotionDiscount: quote.discount, totalAmount: quote.totalAmount,
         appliedPromotions: quote.promotion ? [{ promotionId: quote.promotion._id, name: quote.promotion.name, amount: quote.discount }] : [],
@@ -73,7 +81,7 @@ exports.checkoutSale = async (staffId, body = {}) => {
       await stock.deductStock(quote.lines, { orderId: order._id, userId: staffId, session, reason: 'POS counter sale' });
       onRollback(() => stock.releaseStock(order._id));
       const [transaction] = await Transaction.create([{
-        orderId: order._id, processedBy: staffId, method, amount: quote.totalAmount, status: 'success', paidAt: now,
+        orderId: order._id, ...(customerId ? { customerId } : {}), processedBy: staffId, method, amount: quote.totalAmount, status: 'success', paidAt: now,
         ...(method === 'cash' ? { cash: { received, change: received - quote.totalAmount } } : { gateway: { provider: 'pos', transactionNo: reference, payDate: now } }),
       }], opts);
       onRollback(() => Transaction.deleteOne({ _id: transaction._id }));
