@@ -149,7 +149,7 @@ export function CartScreen({ navigation }) {
 
 // Mở trang thanh toán (VNPay / cổng giả lập) bằng trình duyệt, xong thì sang màn hình kết quả để kiểm tra trạng thái đơn.
 async function payOnline(navigation, orderId, method) {
-  const res = await A.payments.online({ orderId, method });
+  const res = await A.payments.online({ orderId, method, returnTo: 'mobile' });
   await WebBrowser.openBrowserAsync(res.data.paymentUrl);
   navigation.replace('PaymentResult', { orderId });
 }

@@ -44,14 +44,13 @@ npm run dev
 
 Backend lắng nghe trên mọi địa chỉ mạng nên điện thoại truy cập được qua IP máy tính.
 
-> Chỉ khi demo thanh toán **VNPay/MoMo giả lập** mới cần thêm `BACKEND_URL`, vì link cổng giả lập mặc định là `localhost`
-> (điện thoại không mở được). Đặt khi chạy, không cần sửa file (IP lấy bằng `ipconfig getifaddr en0` trên Mac, `ipconfig` trên Windows):
->
-> ```
-> BACKEND_URL=http://192.168.1.10:5000 npm run dev
-> ```
->
-> Không đổi `FRONTEND_URL` (dùng cho CORS của trang web). Sau khi thanh toán xong, trình duyệt trên điện thoại có thể hiện trang lỗi, chỉ cần đóng lại để về app.
+**Thanh toán VNPay trên app** (điện thoại, máy ảo BlueStacks / Android Emulator): không cần cấu hình thêm.
+Link thanh toán và link quay về tự dùng đúng địa chỉ backend mà app đang gọi (không dùng `localhost`).
+Thanh toán xong, trình duyệt hiện "Thanh toán thành công – đóng trang này để quay lại app"; đóng lại, app tự cập nhật trạng thái đơn.
+
+- **Không muốn dùng VNPay sandbox** (máy ảo hay lỗi): đặt `PAYMENT_MOCK=true` trong `backend/.env`.
+  App sẽ mở trang thanh toán giả lập, người dùng bấm **Payment successful** để xác nhận đã trả tiền.
+- **Dùng VNPay sandbox**: thẻ test NCB `9704198526191432198`, chủ thẻ `NGUYEN VAN A`, ngày phát hành `07/15`, OTP `123456`.
 
 ### 2. Chạy app
 
